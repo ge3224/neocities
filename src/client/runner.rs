@@ -1,10 +1,15 @@
-use std::{fs, error::Error};
+use std::{error::Error};
+
 use crate::Config;
 
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
-    let contents = fs::read_to_string(config.file_path)?;
+    let args = config.args.expect("Problem reading command");
 
-    println!("With text:\n{contents}");
+    let cmd = args.command;
+    println!("cmd = {}", cmd);
+
+    let params = args.params;
+    println!("params = {:?}", params);
 
     Ok(())
 }
