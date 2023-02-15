@@ -8,7 +8,7 @@
 
 # A Neocities client written in Rust
 
-Upload files to your [Neocities](https://neocities.org/) website your terminal.
+Upload files to your [Neocities](https://neocities.org/) website from your terminal.
 
 ## Installation
 
