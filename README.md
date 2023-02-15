@@ -1,3 +1,5 @@
+![image](https://user-images.githubusercontent.com/75739874/219054552-5a4de465-9498-4cb8-b3bb-42e9c4b4ac76.png)
+
 # A Neocities client written in Rust
 
 Upload files to your [Neocities](https://neocities.org/) website your terminal.
