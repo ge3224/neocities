@@ -1,9 +1,7 @@
 <div align="center">
-   
    <img src="https://user-images.githubusercontent.com/75739874/219054552-5a4de465-9498-4cb8-b3bb-42e9c4b4ac76.png" alt="Neocities.org">
    &ensp;
    <img src="https://user-images.githubusercontent.com/75739874/219058662-fa6f155b-18aa-465d-8b73-f2c064ba3777.png" alt="The Rust Programming Language" width="100" height="100">
-   
 </div>
 
 # A Neocities client written in Rust
@@ -12,7 +10,7 @@ Upload files to your [Neocities](https://neocities.org/) website from your termi
 
 ## Installation
 
-// TODO
+ - [ ]  TODO
 
 ## Setup
 
