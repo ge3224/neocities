@@ -1,14 +1,14 @@
-use std::{error::Error};
+use std::error::Error;
 
 use crate::Config;
 
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
-    let args = config.args.expect("Problem reading command");
+    let args = config.args;
 
-    let cmd = args.command;
+    let cmd = args.command.unwrap();
     println!("cmd = {}", cmd);
 
-    let params = args.params;
+    let params = args.file_paths;
     println!("params = {:?}", params);
 
     Ok(())

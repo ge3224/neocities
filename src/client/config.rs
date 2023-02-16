@@ -1,7 +1,7 @@
 use super::{Args, Credentials};
 
 pub struct Config {
-    pub args: Result<Args, &'static str>,
+    pub args: Args,
     credentials: Credentials,
 }
 
