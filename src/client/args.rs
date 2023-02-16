@@ -5,7 +5,8 @@ pub struct Args {
 }
 
 impl Args {
-    /// build an instance of Args by parsing command line arguments passed to neocities
+    /// build an instance of Args by parsing command line arguments passed in as an
+    /// array of Strings
     pub fn build(inputs: &[String]) -> Args {
         let mut inputs_iter = inputs.iter();
 
@@ -37,44 +38,20 @@ mod tests {
 
     #[test]
     fn no_args() {
-        let input = vec![String::from("neocities")];
-        let args = Args::build(&input);
+        let args = Args::build(vec!["neocities".to_string()].as_ref());
         assert_eq!(args.command.is_none(), true);
         assert_eq!(args.file_paths.len(), 0);
     }
 
     #[test]
-    fn one_arg() {
-        let input = vec![String::from("neocities"), String::from("help")];
-        let args = Args::build(&input);
-        assert_eq!(args.command.unwrap(), "help");
-        assert_eq!(args.file_paths.len(), 0);
-    }
+    fn with_args() {
+        let str = "neocities upload foo.html bar.js images/baz.png";
 
-    #[test]
-    fn two_args() {
-        let input = vec![
-            String::from("neocities"),
-            String::from("upload"),
-            String::from("foo.html"),
-        ];
+        let input: Vec<String> = str.split(" ").map(|x| x.to_string()).collect();
         let args = Args::build(&input);
-        assert_eq!(args.command.unwrap(), "upload");
-        assert_eq!(args.file_paths.len(), 1);
-        assert_eq!(args.file_paths[0], "foo.html");
-    }
 
-    #[test]
-    fn three_args() {
-        let input = vec![
-            String::from("neocities"),
-            String::from("upload"),
-            String::from("foo.html"),
-            String::from("bar.js"),
-        ];
-        let args = Args::build(&input);
         assert_eq!(args.command.unwrap(), "upload");
-        assert_eq!(args.file_paths.len(), 2);
+        assert_eq!(args.file_paths.len(), 3);
         assert_eq!(args.file_paths[0], "foo.html");
         assert_eq!(args.file_paths[1], "bar.js");
     }
