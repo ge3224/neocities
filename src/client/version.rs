@@ -21,8 +21,8 @@ impl Version {
 }
 
 impl Executable for Version {
-    fn run(&self, args: Vec<String>) -> Result<(), &'static str> {
-        println!("Version' implementation of Executable: {:?}", args);
+    fn run(&self, _args: Vec<String>) -> Result<(), &'static str> {
+        println!("\nNeocities: version {}\n", env!("CARGO_PKG_VERSION"));
         Ok(())
     }
 
