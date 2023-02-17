@@ -1,17 +1,31 @@
-use super::Args;
-
-type Exec = Box<dyn Fn(Args) -> Result<(), &'static str>>;
+pub type Exec = Box<dyn Fn(Vec<String>) -> Result<(), &'static str>>;
 
 /// Command contains a function to run, a flagset, and usage instructions
 pub struct Command {
     run: Exec,
     key: String,
     usage: String,
-    short: String,
-    long: String,
+    short_desc: String,
+    long_desc: String,
 }
 
 impl Command {
+    pub fn new(
+        run_fn: Exec,
+        key: String,
+        usage: String,
+        short_desc: String,
+        long_desc: String,
+    ) -> Command {
+        Command {
+            run: run_fn,
+            key,
+            usage,
+            short_desc,
+            long_desc,
+        }
+    }
+
     pub fn get_name(&self) -> &String {
         &self.key
     }
@@ -21,22 +35,20 @@ impl Command {
     }
 
     pub fn get_short_desc(&self) -> &String {
-        &self.short
+        &self.short_desc
     }
 
     pub fn get_long_desc(&self) -> &String {
-        &self.long
+        &self.long_desc
     }
 
-    pub fn call(&self, args: Args) -> Result<(), &'static str> {
+    pub fn call(&self, args: Vec<String>) -> Result<(), &'static str> {
         (self.run)(args)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::client::Args;
-
     use super::Command;
 
     #[test]
@@ -45,8 +57,8 @@ mod tests {
             run: Box::new(|_args| Ok(())),
             key: String::from("foo"),
             usage: String::from("bar"),
-            short: String::from("baz"),
-            long: String::from("foo bar baz"),
+            short_desc: String::from("baz"),
+            long_desc: String::from("foo bar baz"),
         };
 
         assert_eq!(cmd.get_name(), "foo");
@@ -54,8 +66,7 @@ mod tests {
         assert_eq!(cmd.get_short_desc(), "baz");
         assert_eq!(cmd.get_long_desc(), "foo bar baz");
 
-        let args = vec![String::from("arg")];
-        assert_eq!(cmd.call(Args::build(&args)).is_ok(), true);
+        assert_eq!(cmd.call(vec![String::from("arg")]).is_ok(), true);
     }
 
     #[test]
@@ -64,11 +75,10 @@ mod tests {
             run: Box::new(|_args| Err("bad run function")),
             key: String::from("foo"),
             usage: String::from("bar"),
-            short: String::from("baz"),
-            long: String::from("foo bar baz"),
+            short_desc: String::from("baz"),
+            long_desc: String::from("foo bar baz"),
         };
 
-        let args = vec![String::from("arg")];
-        assert_eq!(cmd.call(Args::build(&args)), Err("bad run function"));
+        assert_eq!(cmd.call(vec![String::from("arg")]), Err("bad run function"));
     }
 }

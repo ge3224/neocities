@@ -8,4 +8,7 @@ pub mod runner;
 pub use runner::run;
 
 pub mod command;
-pub use command::*;
+pub use command::{Command, Exec};
+
+pub mod help;
+pub use help::Help;

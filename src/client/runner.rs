@@ -1,27 +1,8 @@
-use std::{collections::HashMap, error::Error};
+use std::error::Error;
 
-use crate::{client::Command, Config};
-
-pub struct Runner {
-    commands: HashMap<String, Command>,
-}
-
-impl Runner {
-    pub fn new() -> Runner {
-        Runner {
-            commands: HashMap::new(),
-        }
-    }
-}
+use crate::Config;
 
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
-    let args = config.args;
-
-    let cmd = args.command.unwrap();
-    println!("cmd = {}", cmd);
-
-    let params = args.params;
-    println!("params = {:?}", params);
-
+    config.run_cmd()?;
     Ok(())
 }
