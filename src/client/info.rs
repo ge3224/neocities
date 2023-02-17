@@ -1,3 +1,5 @@
+use crate::client::help::HELP_MSG;
+
 use super::command::Executable;
 
 pub const INFO: &'static str = "info";
@@ -21,8 +23,8 @@ impl Info {
 }
 
 impl Executable for Info {
-    fn run(&self, args: Vec<String>) -> Result<(), &'static str> {
-        println!("Info' implementation of Executable: {:?}", args);
+    fn run(&self, _args: Vec<String>) -> Result<(), &'static str> {
+        println!("{HELP_MSG}");
         Ok(())
     }
 

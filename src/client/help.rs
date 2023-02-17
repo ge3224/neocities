@@ -23,20 +23,20 @@ impl Help {
     }
 
     fn print_usage(&self) {
-        println!("{}\n", self.get_long_desc());
-        println!("usage: {}", self.usage);
+        println!("\n{}\n", self.get_long_desc());
+        println!("usage: {}\n", self.usage);
     }
 
     fn print_other_usage(&self, cmd: Command) {
-        println!("{}\n", cmd.get_long_desc());
-        println!("usage: {}", cmd.get_usage());
+        println!("\n{}\n", cmd.get_long_desc());
+        println!("usage: {}\n", cmd.get_usage());
     }
 }
 
 impl Executable for Help {
     fn run(&self, args: Vec<String>) -> Result<(), &'static str> {
         if args.len() < 1 {
-            println!("{HELP_MESSAGE}");
+            println!("{HELP_MSG}");
             return Ok(());
         }
 
@@ -70,7 +70,7 @@ impl Executable for Help {
     }
 }
 
-const HELP_MESSAGE: &'static str = "
+pub const HELP_MSG: &'static str = "
 usage: neocities <command> [<args>]
 
 Commands:
@@ -80,8 +80,10 @@ Commands:
    key       Neocities API key
    list      List files on Neocities
    version   Show neocities client version
+
 Help for a specific command:
    help [command]
+
 Environment setup:
    export NEOCITIES_USER=<username>
    export NEOCITIES_PASS=<password>
