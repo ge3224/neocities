@@ -20,11 +20,26 @@ impl Credentials {
 
         Credentials { user, pass, key }
     }
+
+    pub fn api_key_is_set(&self) -> bool {
+        self.key.is_some()
+    }
+
+    pub fn username_is_set(&self) -> bool {
+      self.user.is_some()
+    }
+
+    pub fn password_is_set(&self) -> bool {
+      self.pass.is_some()
+    }
 }
 
 impl Authenticator for Credentials {
-  fn authenticate(&self, r: String) {
-      // TODO
-      println!("test k: {:?}, u: {:?}, p:{:?}", self.key, self.user, self.pass);
-  }
+    fn authenticate(&self, r: String) {
+        // TODO
+        println!(
+            "test k: {:?}, u: {:?}, p:{:?}",
+            self.key, self.user, self.pass
+        );
+    }
 }
