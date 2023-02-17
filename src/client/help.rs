@@ -1,8 +1,76 @@
-use super::{Command, Exec};
+use super::{
+    command::{Command, CommandKind, Executable},
+    DEL, INFO, LIST, UP, VER,
+};
 
-pub struct Help {}
+pub const HELP: &'static str = "help";
 
-const HELP_MESSAGE: &'static str = "\
+pub struct Help {
+    key: String,
+    usage: String,
+    short: String,
+    long: String,
+}
+
+impl Help {
+    pub fn new() -> Help {
+        Help {
+            key: String::from(HELP),
+            usage: String::from(format!("{HELP} [command]")),
+            short: String::from("Show help"),
+            long: String::from("Show usage instructions for a command"),
+        }
+    }
+
+    fn print_usage(&self) {
+        println!("{}\n", self.get_long_desc());
+        println!("usage: {}", self.usage);
+    }
+
+    fn print_other_usage(&self, cmd: Command) {
+        println!("{}\n", cmd.get_long_desc());
+        println!("usage: {}", cmd.get_usage());
+    }
+}
+
+impl Executable for Help {
+    fn run(&self, args: Vec<String>) -> Result<(), &'static str> {
+        if args.len() < 1 {
+            println!("{HELP_MESSAGE}");
+            return Ok(());
+        }
+
+        match args[0].as_str() {
+            LIST => self.print_other_usage(Command::new(CommandKind::List)),
+            INFO => self.print_other_usage(Command::new(CommandKind::Info)),
+            VER => self.print_other_usage(Command::new(CommandKind::Version)),
+            UP => self.print_other_usage(Command::new(CommandKind::Upload)),
+            DEL => self.print_other_usage(Command::new(CommandKind::Delete)),
+            HELP => self.print_usage(),
+            _ => return Err("invalid command"),
+        };
+
+        Ok(())
+    }
+
+    fn get_key(&self) -> &str {
+        self.key.as_str()
+    }
+
+    fn get_usage(&self) -> &str {
+        self.usage.as_str()
+    }
+
+    fn get_short_desc(&self) -> &str {
+        self.short.as_str()
+    }
+
+    fn get_long_desc(&self) -> &str {
+        self.long.as_str()
+    }
+}
+
+const HELP_MESSAGE: &'static str = "
 usage: neocities <command> [<args>]
 
 Commands:
@@ -21,22 +89,3 @@ Environment setup:
   (OR)
    export NEOCITIES_KEY=<key>
 ";
-
-impl Help {
-    pub fn new() -> Command {
-        let run_fn: Exec = Box::new(|args: Vec<String>| {
-            if args.len() < 1 {
-              println!("{}", HELP_MESSAGE);
-            }
-            Ok(())
-        });
-
-        Command::new(
-            run_fn,
-            String::from("help"),
-            String::from("help [command]"),
-            String::from("Show help"),
-            String::from("Show usage instructions for a command"),
-        )
-    }
-}
