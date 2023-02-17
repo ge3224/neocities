@@ -1,7 +1,7 @@
 /// Args contains a command and its params
 pub struct Args {
     pub command: Option<String>,
-    pub file_paths: Vec<String>,
+    pub params: Vec<String>,
 }
 
 impl Args {
@@ -27,7 +27,7 @@ impl Args {
 
         Args {
             command,
-            file_paths: params,
+            params,
         }
     }
 }
@@ -40,7 +40,7 @@ mod tests {
     fn no_args() {
         let args = Args::build(vec!["neocities".to_string()].as_ref());
         assert_eq!(args.command.is_none(), true);
-        assert_eq!(args.file_paths.len(), 0);
+        assert_eq!(args.params.len(), 0);
     }
 
     #[test]
@@ -51,8 +51,8 @@ mod tests {
         let args = Args::build(&input);
 
         assert_eq!(args.command.unwrap(), "upload");
-        assert_eq!(args.file_paths.len(), 3);
-        assert_eq!(args.file_paths[0], "foo.html");
-        assert_eq!(args.file_paths[1], "bar.js");
+        assert_eq!(args.params.len(), 3);
+        assert_eq!(args.params[0], "foo.html");
+        assert_eq!(args.params[1], "bar.js");
     }
 }

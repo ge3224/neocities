@@ -8,7 +8,7 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let cmd = args.command.unwrap();
     println!("cmd = {}", cmd);
 
-    let params = args.file_paths;
+    let params = args.params;
     println!("params = {:?}", params);
 
     Ok(())
