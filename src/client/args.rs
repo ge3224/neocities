@@ -46,7 +46,6 @@ mod tests {
     #[test]
     fn with_args() {
         let str = "neocities upload foo.html bar.js images/baz.png";
-
         let input: Vec<String> = str.split(" ").map(|x| x.to_string()).collect();
         let args = Args::build(&input);
 
