@@ -1,5 +1,3 @@
-use crate::client::help::HELP_MSG;
-
 use super::command::Executable;
 
 pub const INFO: &'static str = "info";
@@ -15,7 +13,7 @@ impl Info {
     pub fn new() -> Info {
         Info {
             key: String::from(INFO),
-            usage: String::from("{INFO} [sitename]"),
+            usage: String::from(format!("{INFO} [sitename]")),
             short: String::from("Info about Neocities websites"),
             long: String::from("Info about your Neocities website, or somebody else's"),
         }
@@ -24,7 +22,7 @@ impl Info {
 
 impl Executable for Info {
     fn run(&self, _args: Vec<String>) -> Result<(), &'static str> {
-        println!("{HELP_MSG}");
+        println!("TODO: Info run");
         Ok(())
     }
 

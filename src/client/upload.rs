@@ -13,7 +13,7 @@ impl Upload {
     pub fn new() -> Upload {
         Upload {
             key: String::from(UP),
-            usage: String::from("{UP} <filename> [<another filename>]"),
+            usage: String::from(format!("{UP} <filename> [<another filename>]")),
             short: String::from("Upload files to Neocities"),
             long: String::from("Upload files to your Neocities website"),
         }

@@ -13,7 +13,7 @@ impl Delete {
     pub fn new() -> Delete {
         Delete {
             key: String::from(DEL),
-            usage: String::from("{DEL} <filename> [<another filename>]"),
+            usage: String::from(format!("{DEL} <filename> [<another filename>]")),
             short: String::from("Delete files from Neocities"),
             long: String::from("Delete files from your Neocities website"),
         }
