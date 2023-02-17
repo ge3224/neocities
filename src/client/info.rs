@@ -14,8 +14,8 @@ pub struct Info {
 impl Info {
     pub fn new() -> Info {
         Info {
-            key: String::from("info"),
-            usage: String::from("info [sitename]"),
+            key: String::from(INFO),
+            usage: String::from("{INFO} [sitename]"),
             short: String::from("Info about Neocities websites"),
             long: String::from("Info about your Neocities website, or somebody else's"),
         }

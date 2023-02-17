@@ -12,8 +12,8 @@ pub struct Upload {
 impl Upload {
     pub fn new() -> Upload {
         Upload {
-            key: String::from("upload"),
-            usage: String::from("upload <filename> [<another filename>]"),
+            key: String::from(UP),
+            usage: String::from("{UP} <filename> [<another filename>]"),
             short: String::from("Upload files to Neocities"),
             long: String::from("Upload files to your Neocities website"),
         }

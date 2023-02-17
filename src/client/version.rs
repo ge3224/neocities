@@ -12,8 +12,8 @@ pub struct Version {
 impl Version {
     pub fn new() -> Version {
         Version {
-            key: String::from("version"),
-            usage: String::from("version"),
+            key: String::from(VER),
+            usage: String::from(VER),
             short: String::from("Show neocities version"),
             long: String::from("Show the version number of the neocities client"),
         }

@@ -12,8 +12,8 @@ pub struct List {
 impl List {
     pub fn new() -> List {
         List {
-            key: String::from("list"),
-            usage: String::from("list"),
+            key: String::from(LIST),
+            usage: String::from(LIST),
             short: String::from("List files on Neocities"),
             long: String::from("List files in your Neocities website"),
         }
