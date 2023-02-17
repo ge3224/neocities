@@ -1,84 +1,98 @@
-pub type Exec = Box<dyn Fn(Vec<String>) -> Result<(), &'static str>>;
+use super::{Delete, Help, Info, List, Upload, Version};
 
-/// Command contains a function to run, a flagset, and usage instructions
+pub enum CommandKind {
+    Help,
+    Upload,
+    Delete,
+    Info,
+    List,
+    Version,
+}
+
+pub trait Executable {
+    fn run(&self, args: Vec<String>) -> Result<(), &'static str>;
+    fn get_key(&self) -> &str;
+    fn get_usage(&self) -> &str;
+    fn get_short_desc(&self) -> &str;
+    fn get_long_desc(&self) -> &str;
+}
+
 pub struct Command {
-    run: Exec,
-    key: String,
-    usage: String,
-    short_desc: String,
-    long_desc: String,
+    exec: Box<dyn Executable>,
 }
 
 impl Command {
-    pub fn new(
-        run_fn: Exec,
-        key: String,
-        usage: String,
-        short_desc: String,
-        long_desc: String,
-    ) -> Command {
-        Command {
-            run: run_fn,
-            key,
-            usage,
-            short_desc,
-            long_desc,
-        }
+    pub fn new(kind: CommandKind) -> Command {
+        let exec: Box<dyn Executable> = match kind {
+            CommandKind::Help => Box::new(Help::new()),
+            CommandKind::List => Box::new(List::new()),
+            CommandKind::Version => Box::new(Version::new()),
+            CommandKind::Upload => Box::new(Upload::new()),
+            CommandKind::Info => Box::new(Info::new()),
+            CommandKind::Delete => Box::new(Delete::new()),
+        };
+
+        Command { exec }
     }
 
-    pub fn get_name(&self) -> &String {
-        &self.key
+    pub fn get_key(&self) -> &str {
+        self.exec.get_key()
     }
 
-    pub fn get_usage(&self) -> &String {
-        &self.usage
+    pub fn get_usage(&self) -> &str {
+        self.exec.get_usage()
     }
 
-    pub fn get_short_desc(&self) -> &String {
-        &self.short_desc
+    pub fn get_short_desc(&self) -> &str {
+        self.exec.get_short_desc()
     }
 
-    pub fn get_long_desc(&self) -> &String {
-        &self.long_desc
+    pub fn get_long_desc(&self) -> &str {
+        self.exec.get_long_desc()
     }
 
-    pub fn call(&self, args: Vec<String>) -> Result<(), &'static str> {
-        (self.run)(args)
+    pub fn execute(&self, args: Vec<String>) -> Result<(), &'static str> {
+        self.exec.run(args)?;
+        Ok(())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::Command;
+
+    use super::{Command, CommandKind};
 
     #[test]
-    fn create_command() {
-        let cmd = Command {
-            run: Box::new(|_args| Ok(())),
-            key: String::from("foo"),
-            usage: String::from("bar"),
-            short_desc: String::from("baz"),
-            long_desc: String::from("foo bar baz"),
-        };
-
-        assert_eq!(cmd.get_name(), "foo");
-        assert_eq!(cmd.get_usage(), "bar");
-        assert_eq!(cmd.get_short_desc(), "baz");
-        assert_eq!(cmd.get_long_desc(), "foo bar baz");
-
-        assert_eq!(cmd.call(vec![String::from("arg")]).is_ok(), true);
+    fn get_key() {
+        let cmd = Command::new(CommandKind::Info);
+        assert_eq!(cmd.get_key(), "info");
     }
 
     #[test]
-    fn bad_run_fn() {
-        let cmd = Command {
-            run: Box::new(|_args| Err("bad run function")),
-            key: String::from("foo"),
-            usage: String::from("bar"),
-            short_desc: String::from("baz"),
-            long_desc: String::from("foo bar baz"),
-        };
+    fn get_usage() {
+        let cmd = Command::new(CommandKind::Help);
+        assert_eq!(cmd.get_usage(), "help [command]")
+    }
 
-        assert_eq!(cmd.call(vec![String::from("arg")]), Err("bad run function"));
+    #[test]
+    fn get_short_desc() {
+        let cmd = Command::new(CommandKind::Version);
+        assert_eq!(cmd.get_short_desc(), "Show neocities version");
+    }
+
+    #[test]
+    fn get_long_desc() {
+        let cmd = Command::new(CommandKind::Upload);
+        assert_eq!(
+            cmd.get_long_desc(),
+            "Upload files to your Neocities website"
+        );
+    }
+
+    #[test]
+    fn execute() {
+        let cmd = Command::new(CommandKind::List);
+        let empty = vec![];
+        assert_eq!(cmd.execute(empty).is_ok(), true)
     }
 }
