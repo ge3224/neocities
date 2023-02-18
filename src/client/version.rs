@@ -1,10 +1,9 @@
 use crate::api::Credentials;
 use super::command::Executable;
 
-pub const VER: &'static str = "version";
+pub const KEY: &'static str = "version";
 
 pub struct Version {
-    key: String,
     usage: String,
     short: String,
     long: String,
@@ -13,8 +12,7 @@ pub struct Version {
 impl Version {
     pub fn new() -> Version {
         Version {
-            key: String::from(VER),
-            usage: String::from(VER),
+            usage: String::from(KEY),
             short: String::from("Show neocities version"),
             long: String::from("Show the version number of the neocities client"),
         }
@@ -22,13 +20,9 @@ impl Version {
 }
 
 impl Executable for Version {
-    fn run(&self, cred: Credentials, args: Vec<String>) -> Result<(), &'static str> {
+    fn run(&self, _cred: Credentials, _args: Vec<String>) -> Result<(), &'static str> {
         println!("\nNeocities: version {}\n", env!("CARGO_PKG_VERSION"));
         Ok(())
-    }
-
-    fn get_key(&self) -> &str {
-        self.key.as_str()
     }
 
     fn get_usage(&self) -> &str {

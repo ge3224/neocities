@@ -1,10 +1,9 @@
 use crate::api::Credentials;
 use super::command::Executable;
 
-pub const INFO: &'static str = "info";
+pub const KEY: &'static str = "info";
 
 pub struct Info {
-    key: String,
     usage: String,
     short: String,
     long: String,
@@ -13,8 +12,7 @@ pub struct Info {
 impl Info {
     pub fn new() -> Info {
         Info {
-            key: String::from(INFO),
-            usage: String::from(format!("{INFO} [sitename]")),
+            usage: String::from(format!("{KEY} [sitename]")),
             short: String::from("Info about Neocities websites"),
             long: String::from("Info about your Neocities website, or somebody else's"),
         }
@@ -22,13 +20,9 @@ impl Info {
 }
 
 impl Executable for Info {
-    fn run(&self,cred: Credentials, args: Vec<String>) -> Result<(), &'static str> {
+    fn run(&self,_cred: Credentials, _args: Vec<String>) -> Result<(), &'static str> {
         println!("TODO: Info run");
         Ok(())
-    }
-
-    fn get_key(&self) -> &str {
-        self.key.as_str()
     }
 
     fn get_usage(&self) -> &str {

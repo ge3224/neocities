@@ -1,6 +1,6 @@
 use crate::api::Credentials;
 
-use super::{delete::Delete, help::Help, info::Info, list::List, upload::Upload, version::Version};
+use super::*;
 
 pub enum CommandKind {
     Help,
@@ -13,7 +13,6 @@ pub enum CommandKind {
 
 pub trait Executable {
     fn run(&self, cred: Credentials, args: Vec<String>) -> Result<(), &'static str>;
-    fn get_key(&self) -> &str;
     fn get_usage(&self) -> &str;
     fn get_short_desc(&self) -> &str;
     fn get_long_desc(&self) -> &str;
@@ -26,19 +25,15 @@ pub struct Command {
 impl Command {
     pub fn new(kind: CommandKind) -> Command {
         let exec: Box<dyn Executable> = match kind {
-            CommandKind::Help => Box::new(Help::new()),
-            CommandKind::List => Box::new(List::new()),
-            CommandKind::Version => Box::new(Version::new()),
-            CommandKind::Upload => Box::new(Upload::new()),
-            CommandKind::Info => Box::new(Info::new()),
-            CommandKind::Delete => Box::new(Delete::new()),
+            CommandKind::Help => Box::new(help::Help::new()),
+            CommandKind::List => Box::new(list::List::new()),
+            CommandKind::Version => Box::new(version::Version::new()),
+            CommandKind::Upload => Box::new(upload::Upload::new()),
+            CommandKind::Info => Box::new(info::Info::new()),
+            CommandKind::Delete => Box::new(delete::Delete::new()),
         };
 
         Command { exec }
-    }
-
-    pub fn get_key(&self) -> &str {
-        self.exec.get_key()
     }
 
     pub fn get_usage(&self) -> &str {
@@ -63,12 +58,6 @@ impl Command {
 mod tests {
 
     use super::{Command, CommandKind};
-
-    #[test]
-    fn get_key() {
-        let cmd = Command::new(CommandKind::Info);
-        assert_eq!(cmd.get_key(), "info");
-    }
 
     #[test]
     fn get_usage() {

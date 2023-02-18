@@ -1,10 +1,9 @@
-use crate::api::Credentials;
 use super::command::Executable;
+use crate::api::Credentials;
 
-pub const DEL: &'static str = "delete";
+pub const KEY: &'static str = "delete";
 
 pub struct Delete {
-    key: String,
     usage: String,
     short: String,
     long: String,
@@ -13,8 +12,7 @@ pub struct Delete {
 impl Delete {
     pub fn new() -> Delete {
         Delete {
-            key: String::from(DEL),
-            usage: String::from(format!("{DEL} <filename> [<another filename>]")),
+            usage: String::from(format!("{KEY} <filename> [<another filename>]")),
             short: String::from("Delete files from Neocities"),
             long: String::from("Delete files from your Neocities website"),
         }
@@ -22,13 +20,9 @@ impl Delete {
 }
 
 impl Executable for Delete {
-    fn run(&self, cred: Credentials, args: Vec<String>) -> Result<(), &'static str> {
+    fn run(&self, _cred: Credentials, args: Vec<String>) -> Result<(), &'static str> {
         println!("Delete implementation of Executable: {:?}", args);
         Ok(())
-    }
-
-    fn get_key(&self) -> &str {
-        self.key.as_str()
     }
 
     fn get_usage(&self) -> &str {

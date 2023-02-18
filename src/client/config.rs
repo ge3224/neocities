@@ -1,14 +1,9 @@
-use crate::{api::Credentials};
 use super::{
-    command::{Command, CommandKind},
-    delete::DEL,
-    info::INFO,
-    list::LIST,
-    upload::UP,
-    version::VER,
     args::Args,
+    command::{Command, CommandKind},
+    delete, info, list, upload, version,
 };
-
+use crate::api::Credentials;
 
 pub struct Config {
     pub args: Args,
@@ -28,11 +23,11 @@ impl Config {
     pub fn use_command(self) -> Result<(), &'static str> {
         let cmd = match self.args.command {
             Some(c) => match c.as_str() {
-                LIST => Command::new(CommandKind::List),
-                UP => Command::new(CommandKind::Upload),
-                VER => Command::new(CommandKind::Version),
-                DEL => Command::new(CommandKind::Delete),
-                INFO => Command::new(CommandKind::Info),
+                list::KEY => Command::new(CommandKind::List),
+                upload::KEY => Command::new(CommandKind::Upload),
+                version::KEY => Command::new(CommandKind::Version),
+                delete::KEY => Command::new(CommandKind::Delete),
+                info::KEY => Command::new(CommandKind::Info),
                 _ => Command::new(CommandKind::Help),
             },
             _ => Command::new(CommandKind::Help),

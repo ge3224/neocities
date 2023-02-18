@@ -1,10 +1,9 @@
 use crate::api::Credentials;
 use super::command::Executable;
 
-pub const LIST: &'static str = "list";
+pub const KEY: &'static str = "list";
 
 pub struct List {
-    key: String,
     usage: String,
     short: String,
     long: String,
@@ -13,8 +12,7 @@ pub struct List {
 impl List {
     pub fn new() -> List {
         List {
-            key: String::from(LIST),
-            usage: String::from(LIST),
+            usage: String::from(KEY),
             short: String::from("List files on Neocities"),
             long: String::from("List files in your Neocities website"),
         }
@@ -22,13 +20,9 @@ impl List {
 }
 
 impl Executable for List {
-    fn run(&self, cred: Credentials, args: Vec<String>) -> Result<(), &'static str> {
+    fn run(&self, _cred: Credentials, args: Vec<String>) -> Result<(), &'static str> {
         println!("List's implementation of Executable: {:?}", args);
         Ok(())
-    }
-
-    fn get_key(&self) -> &str {
-        self.key.as_str()
     }
 
     fn get_usage(&self) -> &str {

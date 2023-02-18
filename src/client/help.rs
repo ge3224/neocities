@@ -1,17 +1,12 @@
-use crate::api::Credentials;
 use super::{
     command::{Command, CommandKind, Executable},
-    delete::DEL,
-    info::INFO,
-    list::LIST,
-    upload::UP,
-    version::VER,
+    delete, help, info, list, upload, version,
 };
+use crate::api::Credentials;
 
 pub const HELP: &'static str = "help";
 
 pub struct Help {
-    key: String,
     usage: String,
     short: String,
     long: String,
@@ -20,8 +15,7 @@ pub struct Help {
 impl Help {
     pub fn new() -> Help {
         Help {
-            key: String::from(HELP),
-            usage: String::from(format!("{HELP} [command]")),
+            usage: String::from(format!("{} [command]", HELP)),
             short: String::from("Show help"),
             long: String::from("Show usage instructions for a command"),
         }
@@ -46,20 +40,16 @@ impl Executable for Help {
         }
 
         match args[0].as_str() {
-            LIST => self.print_other_usage(Command::new(CommandKind::List)),
-            INFO => self.print_other_usage(Command::new(CommandKind::Info)),
-            VER => self.print_other_usage(Command::new(CommandKind::Version)),
-            UP => self.print_other_usage(Command::new(CommandKind::Upload)),
-            DEL => self.print_other_usage(Command::new(CommandKind::Delete)),
-            HELP => self.print_usage(),
+            list::KEY => self.print_other_usage(Command::new(CommandKind::List)),
+            info::KEY => self.print_other_usage(Command::new(CommandKind::Info)),
+            version::KEY => self.print_other_usage(Command::new(CommandKind::Version)),
+            upload::KEY => self.print_other_usage(Command::new(CommandKind::Upload)),
+            delete::KEY => self.print_other_usage(Command::new(CommandKind::Delete)),
+            help::HELP => self.print_usage(),
             _ => return Err("invalid command"),
         };
 
         Ok(())
-    }
-
-    fn get_key(&self) -> &str {
-        self.key.as_str()
     }
 
     fn get_usage(&self) -> &str {

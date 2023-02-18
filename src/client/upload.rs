@@ -1,10 +1,9 @@
 use crate::api::Credentials;
 use super::command::Executable;
 
-pub const UP: &'static str = "upload";
+pub const KEY: &'static str = "upload";
 
 pub struct Upload {
-    key: String,
     usage: String,
     short: String,
     long: String,
@@ -13,8 +12,7 @@ pub struct Upload {
 impl Upload {
     pub fn new() -> Upload {
         Upload {
-            key: String::from(UP),
-            usage: String::from(format!("{UP} <filename> [<another filename>]")),
+            usage: String::from(format!("{} <filename> [<another filename>]", KEY)),
             short: String::from("Upload files to Neocities"),
             long: String::from("Upload files to your Neocities website"),
         }
@@ -22,13 +20,9 @@ impl Upload {
 }
 
 impl Executable for Upload {
-    fn run(&self, cred: Credentials, args: Vec<String>) -> Result<(), &'static str> {
+    fn run(&self, _cred: Credentials, _args: Vec<String>) -> Result<(), &'static str> {
         println!("Implementation of Executable for Upload");
         Ok(())
-    }
-
-    fn get_key(&self) -> &str {
-        self.key.as_str()
     }
 
     fn get_usage(&self) -> &str {

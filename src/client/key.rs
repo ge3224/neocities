@@ -4,7 +4,6 @@ use crate::api::Credentials;
 pub const KEY: &'static str = "key";
 
 pub struct Key {
-    key: String,
     usage: String,
     short: String,
     long: String,
@@ -13,7 +12,6 @@ pub struct Key {
 impl Key {
     pub fn new() -> Key {
         Key {
-            key: String::from(KEY),
             usage: String::from(KEY),
             short: String::from("Neocities API Key"),
             long: String::from("Retrieve an API Key for your Neocities user"),
@@ -27,10 +25,6 @@ impl Executable for Key {
           println!("TODO")
         }
         Ok(())
-    }
-
-    fn get_key(&self) -> &str {
-        self.key.as_str()
     }
 
     fn get_usage(&self) -> &str {
