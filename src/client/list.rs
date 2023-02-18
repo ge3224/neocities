@@ -21,7 +21,7 @@ impl List {
 }
 
 impl Executable for List {
-    fn run(&self, args: Vec<String>) -> Result<(), &'static str> {
+    fn run(&self, cred: crate::Credentials, args: Vec<String>) -> Result<(), &'static str> {
         println!("List's implementation of Executable: {:?}", args);
         Ok(())
     }

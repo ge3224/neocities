@@ -21,7 +21,7 @@ impl Upload {
 }
 
 impl Executable for Upload {
-    fn run(&self, args: Vec<String>) -> Result<(), &'static str> {
+    fn run(&self, cred: crate::Credentials, args: Vec<String>) -> Result<(), &'static str> {
         println!("Implementation of Executable for Upload");
         Ok(())
     }
@@ -39,6 +39,6 @@ impl Executable for Upload {
     }
 
     fn get_long_desc(&self) -> &str {
-       self.long.as_str() 
+        self.long.as_str()
     }
 }

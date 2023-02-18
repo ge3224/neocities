@@ -21,7 +21,7 @@ impl Version {
 }
 
 impl Executable for Version {
-    fn run(&self, _args: Vec<String>) -> Result<(), &'static str> {
+    fn run(&self, cred: crate::Credentials, args: Vec<String>) -> Result<(), &'static str> {
         println!("\nNeocities: version {}\n", env!("CARGO_PKG_VERSION"));
         Ok(())
     }

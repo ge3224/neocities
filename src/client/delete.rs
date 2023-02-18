@@ -21,7 +21,7 @@ impl Delete {
 }
 
 impl Executable for Delete {
-    fn run(&self, args: Vec<String>) -> Result<(), &'static str> {
+    fn run(&self, cred: crate::Credentials, args: Vec<String>) -> Result<(), &'static str> {
         println!("Delete implementation of Executable: {:?}", args);
         Ok(())
     }

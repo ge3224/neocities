@@ -21,8 +21,10 @@ impl Key {
 }
 
 impl Executable for Key {
-    fn run(&self, _args: Vec<String>) -> Result<(), &'static str> {
-        println!("TODO: Key run");
+    fn run(&self, cred: crate::Credentials, _args: Vec<String>) -> Result<(), &'static str> {
+        if cred.api_key_is_set() {
+          println!("TODO")
+        }
         Ok(())
     }
 

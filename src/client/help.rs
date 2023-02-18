@@ -34,7 +34,7 @@ impl Help {
 }
 
 impl Executable for Help {
-    fn run(&self, args: Vec<String>) -> Result<(), &'static str> {
+    fn run(&self, _cred: crate::Credentials, args: Vec<String>) -> Result<(), &'static str> {
         if args.len() < 1 {
             println!("{HELP_MSG}");
             return Ok(());

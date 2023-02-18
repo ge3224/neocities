@@ -21,7 +21,7 @@ impl Info {
 }
 
 impl Executable for Info {
-    fn run(&self, _args: Vec<String>) -> Result<(), &'static str> {
+    fn run(&self,cred: crate::Credentials, args: Vec<String>) -> Result<(), &'static str> {
         println!("TODO: Info run");
         Ok(())
     }

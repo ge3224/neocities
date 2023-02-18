@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use super::{command::CommandKind, Args, Command, LIST, UP, VER, DEL, INFO};
 use crate::Credentials;
 
@@ -31,7 +29,7 @@ impl Config {
             _ => Command::new(CommandKind::Help),
         };
 
-        cmd.execute(self.args.params)?;
+        cmd.execute(self.credentials, self.args.params)?;
 
         Ok(())
     }
