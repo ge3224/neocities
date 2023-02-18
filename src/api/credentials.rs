@@ -21,16 +21,16 @@ impl Credentials {
         Credentials { user, pass, key }
     }
 
-    pub fn api_key_is_set(&self) -> bool {
-        self.key.is_some()
+    pub fn get_api_key(&self) -> Option<&str> {
+        self.key
     }
 
-    pub fn username_is_set(&self) -> bool {
-      self.user.is_some()
+    pub fn get_username(&self) -> Option<&str> {
+      self.user
     }
 
-    pub fn password_is_set(&self) -> bool {
-      self.pass.is_some()
+    pub fn get_password(&self) -> Option<&str> {
+      self.pass
     }
 }
 

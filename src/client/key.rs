@@ -21,8 +21,10 @@ impl Key {
 
 impl Executable for Key {
     fn run(&self, cred: Credentials, _args: Vec<String>) -> Result<(), &'static str> {
-        if cred.api_key_is_set() {
-          println!("TODO")
+        if let Some(key) = cred.get_api_key() {
+          println!("{key}");
+        } else {
+          println!("A Neocities API Key has not yet been set.")
         }
         Ok(())
     }

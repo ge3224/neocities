@@ -26,7 +26,7 @@ impl Help {
         println!("usage: {}\n", self.usage);
     }
 
-    fn print_other_usage(&self, cmd: Command) {
+    fn print_usage_other_command(&self, cmd: Command) {
         println!("\n{}\n", cmd.get_long_desc());
         println!("usage: {}\n", cmd.get_usage());
     }
@@ -40,11 +40,11 @@ impl Executable for Help {
         }
 
         match args[0].as_str() {
-            list::KEY => self.print_other_usage(Command::new(CommandKind::List)),
-            info::KEY => self.print_other_usage(Command::new(CommandKind::Info)),
-            version::KEY => self.print_other_usage(Command::new(CommandKind::Version)),
-            upload::KEY => self.print_other_usage(Command::new(CommandKind::Upload)),
-            delete::KEY => self.print_other_usage(Command::new(CommandKind::Delete)),
+            list::KEY => self.print_usage_other_command(Command::new(CommandKind::List)),
+            info::KEY => self.print_usage_other_command(Command::new(CommandKind::Info)),
+            version::KEY => self.print_usage_other_command(Command::new(CommandKind::Version)),
+            upload::KEY => self.print_usage_other_command(Command::new(CommandKind::Upload)),
+            delete::KEY => self.print_usage_other_command(Command::new(CommandKind::Delete)),
             help::HELP => self.print_usage(),
             _ => return Err("invalid command"),
         };
