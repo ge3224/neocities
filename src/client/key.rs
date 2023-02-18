@@ -1,4 +1,5 @@
 use super::command::Executable;
+use crate::api::Credentials;
 
 pub const KEY: &'static str = "key";
 
@@ -21,7 +22,7 @@ impl Key {
 }
 
 impl Executable for Key {
-    fn run(&self, cred: crate::Credentials, _args: Vec<String>) -> Result<(), &'static str> {
+    fn run(&self, cred: Credentials, _args: Vec<String>) -> Result<(), &'static str> {
         if cred.api_key_is_set() {
           println!("TODO")
         }

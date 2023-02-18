@@ -1,3 +1,4 @@
+use crate::api::Credentials;
 use super::command::Executable;
 
 pub const DEL: &'static str = "delete";
@@ -21,7 +22,7 @@ impl Delete {
 }
 
 impl Executable for Delete {
-    fn run(&self, cred: crate::Credentials, args: Vec<String>) -> Result<(), &'static str> {
+    fn run(&self, cred: Credentials, args: Vec<String>) -> Result<(), &'static str> {
         println!("Delete implementation of Executable: {:?}", args);
         Ok(())
     }

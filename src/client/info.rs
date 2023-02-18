@@ -1,3 +1,4 @@
+use crate::api::Credentials;
 use super::command::Executable;
 
 pub const INFO: &'static str = "info";
@@ -21,7 +22,7 @@ impl Info {
 }
 
 impl Executable for Info {
-    fn run(&self,cred: crate::Credentials, args: Vec<String>) -> Result<(), &'static str> {
+    fn run(&self,cred: Credentials, args: Vec<String>) -> Result<(), &'static str> {
         println!("TODO: Info run");
         Ok(())
     }

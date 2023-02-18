@@ -1,5 +1,14 @@
-use super::{command::CommandKind, Args, Command, LIST, UP, VER, DEL, INFO};
-use crate::Credentials;
+use crate::{api::Credentials};
+use super::{
+    command::{Command, CommandKind},
+    delete::DEL,
+    info::INFO,
+    list::LIST,
+    upload::UP,
+    version::VER,
+    args::Args,
+};
+
 
 pub struct Config {
     pub args: Args,
@@ -37,7 +46,7 @@ impl Config {
 
 #[cfg(test)]
 mod tests {
-    use crate::Config;
+    use super::Config;
 
     #[test]
     fn build() {
@@ -50,7 +59,11 @@ mod tests {
 
     #[test]
     fn use_command() {
-        let args = vec![String::from("neocities"), String::from("help"), String::from("list")];
+        let args = vec![
+            String::from("neocities"),
+            String::from("help"),
+            String::from("list"),
+        ];
 
         let cfg = Config::build(&args);
 

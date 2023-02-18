@@ -42,7 +42,5 @@
 */
 
 pub mod client;
-pub use client::{config::Config, runner::run};
 
 pub mod api;
-pub use api::Credentials;

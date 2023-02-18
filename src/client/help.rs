@@ -1,6 +1,11 @@
+use crate::api::Credentials;
 use super::{
     command::{Command, CommandKind, Executable},
-    DEL, INFO, LIST, UP, VER,
+    delete::DEL,
+    info::INFO,
+    list::LIST,
+    upload::UP,
+    version::VER,
 };
 
 pub const HELP: &'static str = "help";
@@ -34,7 +39,7 @@ impl Help {
 }
 
 impl Executable for Help {
-    fn run(&self, _cred: crate::Credentials, args: Vec<String>) -> Result<(), &'static str> {
+    fn run(&self, _cred: Credentials, args: Vec<String>) -> Result<(), &'static str> {
         if args.len() < 1 {
             println!("{HELP_MSG}");
             return Ok(());

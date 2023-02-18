@@ -1,3 +1,4 @@
+use crate::api::Credentials;
 use super::command::Executable;
 
 pub const UP: &'static str = "upload";
@@ -21,7 +22,7 @@ impl Upload {
 }
 
 impl Executable for Upload {
-    fn run(&self, cred: crate::Credentials, args: Vec<String>) -> Result<(), &'static str> {
+    fn run(&self, cred: Credentials, args: Vec<String>) -> Result<(), &'static str> {
         println!("Implementation of Executable for Upload");
         Ok(())
     }

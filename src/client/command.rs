@@ -1,6 +1,6 @@
-use crate::Credentials;
+use crate::api::Credentials;
 
-use super::{Delete, Help, Info, List, Upload, Version};
+use super::{delete::Delete, help::Help, info::Info, list::List, upload::Upload, version::Version};
 
 pub enum CommandKind {
     Help,
@@ -12,7 +12,7 @@ pub enum CommandKind {
 }
 
 pub trait Executable {
-    fn run(&self,cred: Credentials, args: Vec<String>) -> Result<(), &'static str>;
+    fn run(&self, cred: Credentials, args: Vec<String>) -> Result<(), &'static str>;
     fn get_key(&self) -> &str;
     fn get_usage(&self) -> &str;
     fn get_short_desc(&self) -> &str;
