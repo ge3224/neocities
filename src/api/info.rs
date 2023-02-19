@@ -1,30 +1,38 @@
-// use super::API_URL;
-use hyper::{body::HttpBody as _, Client, Uri};
-use hyper_tls::HttpsConnector;
-use tokio::io::{stdout, AsyncWriteExt as _};
+use serde_derive::Deserialize;
+use serde_derive::Serialize;
+use serde_json::Value;
+
+use crate::api::API_URL;
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ResponseInfo {
+    pub result: String,
+    pub info: SiteInfo,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SiteInfo {
+    pub sitename: String,
+    pub views: i64,
+    pub hits: i64,
+    #[serde(rename = "created_at")]
+    pub created_at: String,
+    #[serde(rename = "last_updated")]
+    pub last_updated: String,
+    pub domain: Value,
+    pub tags: Vec<String>,
+    #[serde(rename = "latest_ipfs_hash")]
+    pub latest_ipfs_hash: Value,
+}
 
 #[tokio::main]
-pub async fn request_info(
-    sitename: &String,
-) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let https = HttpsConnector::new();
-    let client = Client::builder().build::<_, hyper::Body>(https);
-
-    let p_q = format!("/api/info?sitename={}", sitename);
-    let uri = Uri::builder()
-        .scheme("https")
-        .authority("neocities.org")
-        .path_and_query(p_q.as_str())
-        .build()
-        .unwrap();
-    
-    let mut resp = client.get(uri).await?;
-    
-    println!("Response: {}", resp.status());
-    
-    while let Some(chunk) = resp.body_mut().data().await {
-        stdout().write_all(&chunk?).await?;
-    }
-
-    Ok(())
+pub async fn request_info(sitename: &String) -> Result<ResponseInfo, Box<dyn std::error::Error>> {
+    let uri = format!("{}/info?sitename={}", API_URL, sitename);
+    let resp = reqwest::get(uri.as_str())
+        .await?
+        .json::<ResponseInfo>()
+        .await?;
+    Ok(resp)
 }

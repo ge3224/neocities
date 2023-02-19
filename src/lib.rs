@@ -1,4 +1,4 @@
-/*! 
+/*!
  A Neocities API client written in Rust
 
  # Installation:
@@ -25,7 +25,7 @@
  $ neocities
 
  // output ...
- 
+
  usage: neocities <command> [<args>]
 
  Commands:
@@ -40,6 +40,8 @@
     help [command]
  ```
 */
+
+pub mod error;
 
 pub mod client;
 

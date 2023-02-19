@@ -30,12 +30,61 @@ impl Executable for Info {
             self.print_usage();
         }
 
-        if let Err(_e) = info::request_info(&args[0]) {
-            // todo handle e
-            return Err("error making request")
+        match info::request_info(&args[0]) {
+            Ok(data) => {
+                // output site info
+                println!(
+                    "\x1b[92m{0: <20}\x1b[0m {1:}",
+                    "sitename", data.info.sitename
+                );
+
+                println!("\x1b[92m{0: <20}\x1b[0m {1:}", "views", data.info.views);
+
+                println!("\x1b[92m{0: <20}\x1b[0m {1:}", "views", data.info.views);
+
+                println!("\x1b[92m{0: <20}\x1b[0m {1:}", "hits", data.info.hits);
+
+                println!(
+                    "\x1b[92m{0: <20}\x1b[0m {1:}",
+                    "created_at", data.info.created_at
+                );
+                println!(
+                    "\x1b[92m{0: <20}\x1b[0m {1:}",
+                    "last_updated", data.info.last_updated
+                );
+
+                let domain_value: String;
+                if let serde_json::Value::String(v) = data.info.domain {
+                    domain_value = v;
+                } else {
+                    domain_value = String::from("null");
+                }
+
+                println!("\x1b[92m{0: <20}\x1b[0m {1:}", "domain", domain_value);
+
+                println!("\x1b[92m{0: <20}\x1b[0m {1:?}", "tags", data.info.tags);
+
+                let hash_value: String;
+                if let serde_json::Value::String(v) = data.info.latest_ipfs_hash {
+                    hash_value = v
+                } else {
+                    hash_value = String::from("null");
+                }
+                println!(
+                    "\x1b[92m{0: <20}\x1b[0m {1:}",
+                    "latest_ipfs_hash", hash_value
+                );
+
+                Ok(())
+            }
+            Err(_e) => Err("TODO"),
         }
 
-        Ok(())
+        // if let Err(e) = site_info {
+        //   return Err(k)
+        // }
+        //
+        // Ok(())
     }
 
     fn get_usage(&self) -> &str {
