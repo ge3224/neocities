@@ -6,14 +6,14 @@ use crate::api::API_URL;
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ResponseInfo {
+pub struct SiteInfo {
     pub result: String,
-    pub info: SiteInfo,
+    pub info: Info,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct SiteInfo {
+pub struct Info {
     pub sitename: String,
     pub views: i64,
     pub hits: i64,
@@ -28,11 +28,11 @@ pub struct SiteInfo {
 }
 
 #[tokio::main]
-pub async fn request_info(sitename: &String) -> Result<ResponseInfo, Box<dyn std::error::Error>> {
+pub async fn request_info(sitename: &String) -> Result<SiteInfo, Box<dyn std::error::Error>> {
     let uri = format!("{}/info?sitename={}", API_URL, sitename);
     let resp = reqwest::get(uri.as_str())
         .await?
-        .json::<ResponseInfo>()
+        .json::<SiteInfo>()
         .await?;
     Ok(resp)
 }
