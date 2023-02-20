@@ -37,9 +37,13 @@ pub async fn api_call(sitename: &String) -> Result<SiteInfo, Box<dyn std::error:
         reqwest::StatusCode::OK => {
             let body = res.json::<SiteInfo>().await?;
             return Ok(body);
-        },
-        _ => { 
-            let e: Box<dyn std::error::Error> = format!("could not find site '{}'", sitename).into();
+        }
+        _ => {
+            let e: Box<dyn std::error::Error> = format!(
+                "The Neocities API could not find site '{}'. Please try a different sitename.",
+                sitename
+            )
+            .into();
             return Err(e);
         }
     }

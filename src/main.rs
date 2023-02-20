@@ -8,7 +8,7 @@ fn main() {
     let config = Config::build(&input);
 
     if let Err(e) = run(config) {
-        eprintln!("Application error: {e}");
+        eprintln!("\x1b[1mError: \x1b[0m{e}");
         process::exit(1);
     }
 }

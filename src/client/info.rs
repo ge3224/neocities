@@ -24,7 +24,7 @@ impl Info {
     }
 
     fn print_info(&self, key: &str, value: String) {
-        println!("\x1b[92m{0: <20}\x1b[0m {1:}", key, value);
+        println!("\x1b[1;92m{0: <20}\x1b[0m {1:}", key, value);
     }
 }
 
