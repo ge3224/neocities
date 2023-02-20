@@ -1,8 +1,6 @@
 use thiserror::Error;
 
-use std::{error::Error, fmt};
-
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, Error)]
 pub enum NeocitiesErr {
     #[error("invalid command")]
     InvalidCommand,
