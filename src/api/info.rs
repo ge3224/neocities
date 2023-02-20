@@ -1,12 +1,13 @@
 use std::error::Error;
 
+use reqwest::header::AUTHORIZATION;
+use reqwest::Response;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 use serde_json::Value;
 use url::form_urlencoded::byte_serialize;
 
 use crate::api::API_URL;
-use crate::client::help;
 
 use super::Credentials;
 
@@ -39,12 +40,14 @@ pub async fn api_call(
     args: &Vec<String>,
 ) -> Result<SiteInfo, Box<dyn std::error::Error>> {
     let url: String;
+    let mut api_key: Option<String> = None;
 
     if args.len() > 0 {
         url = format!("https://{}/info?sitename={}", API_URL, args[0]);
     } else {
-        if let Some(_k) = cred.get_api_key() {
-            todo!()
+        if let Some(k) = cred.get_api_key() {
+            api_key = Some(k.to_string());
+            url = format!("https://{}/info", API_URL);
         } else {
             let user = match cred.get_username() {
                 Some(u) => {
@@ -76,7 +79,17 @@ pub async fn api_call(
         }
     }
 
-    let res = reqwest::get(url.as_str()).await?;
+    let req = reqwest::Client::new();
+    let res: Response;
+    if let Some(k) = api_key {
+        res = req
+            .get(url.as_str())
+            .header(AUTHORIZATION, format!("Bearer {}", k))
+            .send()
+            .await?;
+    } else {
+        res = req.get(url.as_str()).send().await?;
+    }
 
     match res.status() {
         reqwest::StatusCode::OK => {
