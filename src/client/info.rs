@@ -22,6 +22,10 @@ impl Info {
         println!("\n{}\n", self.get_long_desc());
         println!("usage: {}\n", self.usage);
     }
+
+    fn print_info(&self, key: &str, value: String) {
+        println!("\x1b[92m{0: <20}\x1b[0m {1:}", key, value);
+    }
 }
 
 impl Executable for Info {
@@ -32,26 +36,15 @@ impl Executable for Info {
 
         match info::request_info(&args[0]) {
             Ok(data) => {
-                // output site info
-                println!(
-                    "\x1b[92m{0: <20}\x1b[0m {1:}",
-                    "sitename", data.info.sitename
-                );
+                self.print_info("sitename", data.info.sitename);
 
-                println!("\x1b[92m{0: <20}\x1b[0m {1:}", "views", data.info.views);
+                self.print_info("views", data.info.views.to_string());
 
-                println!("\x1b[92m{0: <20}\x1b[0m {1:}", "views", data.info.views);
+                self.print_info("hits", data.info.hits.to_string());
 
-                println!("\x1b[92m{0: <20}\x1b[0m {1:}", "hits", data.info.hits);
-
-                println!(
-                    "\x1b[92m{0: <20}\x1b[0m {1:}",
-                    "created_at", data.info.created_at
-                );
-                println!(
-                    "\x1b[92m{0: <20}\x1b[0m {1:}",
-                    "last_updated", data.info.last_updated
-                );
+                self.print_info("created_at", data.info.created_at);
+                    
+                self.print_info("last_updated", data.info.last_updated);
 
                 let domain_value: String;
                 if let serde_json::Value::String(v) = data.info.domain {
@@ -60,9 +53,9 @@ impl Executable for Info {
                     domain_value = String::from("null");
                 }
 
-                println!("\x1b[92m{0: <20}\x1b[0m {1:}", "domain", domain_value);
+                self.print_info("domain", domain_value);
 
-                println!("\x1b[92m{0: <20}\x1b[0m {1:?}", "tags", data.info.tags);
+                self.print_info("tags", format!("{:?}", data.info.tags));
 
                 let hash_value: String;
                 if let serde_json::Value::String(v) = data.info.latest_ipfs_hash {
@@ -70,21 +63,13 @@ impl Executable for Info {
                 } else {
                     hash_value = String::from("null");
                 }
-                println!(
-                    "\x1b[92m{0: <20}\x1b[0m {1:}",
-                    "latest_ipfs_hash", hash_value
-                );
+
+                self.print_info("latest_ipfs_hash", hash_value);
 
                 Ok(())
             }
-            Err(_e) => Err("TODO"),
+            Err(_e) => todo!(),
         }
-
-        // if let Err(e) = site_info {
-        //   return Err(k)
-        // }
-        //
-        // Ok(())
     }
 
     fn get_usage(&self) -> &str {
@@ -97,13 +82,5 @@ impl Executable for Info {
 
     fn get_long_desc(&self) -> &str {
         self.long.as_str()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn general_sitename() {
-        // TODO
     }
 }
