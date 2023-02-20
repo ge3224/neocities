@@ -10,4 +10,3 @@ pub enum NeocitiesErr {
     #[error(transparent)]
     HttpRequestError(#[from] Box<dyn std::error::Error>),
 }
-
