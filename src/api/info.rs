@@ -29,14 +29,14 @@ pub struct Info {
 
 #[tokio::main]
 pub async fn api_call(sitename: &String) -> Result<SiteInfo, Box<dyn std::error::Error>> {
-    let url = format!("{}/info?sitename={}", API_URL, sitename);
+    let url = format!("https://{}/info?sitename={}", API_URL, sitename);
 
     let res = reqwest::get(url.as_str()).await?;
 
     match res.status() {
         reqwest::StatusCode::OK => {
             let body = res.json::<SiteInfo>().await?;
-            return Ok(body);
+            Ok(body)
         }
         _ => {
             let e: Box<dyn std::error::Error> = format!(
@@ -44,7 +44,7 @@ pub async fn api_call(sitename: &String) -> Result<SiteInfo, Box<dyn std::error:
                 sitename
             )
             .into();
-            return Err(e);
+            Err(e)
         }
     }
 }

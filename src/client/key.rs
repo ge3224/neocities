@@ -1,5 +1,11 @@
+use url::form_urlencoded::byte_serialize;
+
 use super::command::Executable;
-use crate::{api::Credentials, error::NeocitiesErr};
+use crate::{
+    api::{key, Credentials},
+    client::help,
+    error::NeocitiesErr,
+};
 
 pub const KEY: &'static str = "key";
 
@@ -17,12 +23,21 @@ impl Key {
             long: String::from("Retrieve an API Key for your Neocities user"),
         }
     }
+
+    fn print_new_key(&self, key: &str, value: String) {
+        println!("\x1b[1;92m{0: <10}\x1b[0m {1:}", key, value);
+    }
 }
+
+const KEY_SET_MSG: &'static str = "
+You Neocities API key has already been set for the NEOCITIES_KEY environment 
+variable 
+";
 
 impl Executable for Key {
     fn run(&self, cred: Credentials, _args: Vec<String>) -> Result<(), NeocitiesErr> {
         if let Some(key) = cred.get_api_key() {
-            println!("You API key has already been set: {key}");
+            println!("{KEY_SET_MSG}: {}", key);
             return Ok(());
         }
 
@@ -30,9 +45,17 @@ impl Executable for Key {
         let pass = cred.get_password();
 
         if user.is_some() && pass.is_some() {
-            todo!();
+            let user_urlencoded: String = byte_serialize(user.unwrap().as_bytes()).collect();
+            let pass_urlencoded: String = byte_serialize(pass.unwrap().as_bytes()).collect();
+
+            match key::api_call(user_urlencoded, pass_urlencoded) {
+                Ok(data) => {
+                    self.print_new_key("API Key:", data.api_key);
+                }
+                Err(e) => return Err(NeocitiesErr::HttpRequestError(e)),
+            }
         } else {
-            println!("{ENV_VAR_MSG}");
+            println!("{}", help::ENV_VAR_MSG);
         }
 
         Ok(())
@@ -50,13 +73,3 @@ impl Executable for Key {
         self.long.as_str()
     }
 }
-
-const ENV_VAR_MSG: &'static str = "
-Before you can retrieve an API key from Neocities, you must first set the following 
-environment variables:
-
-Example (Linux):
-
-    export NEOCITIES_USER=<your_username>
-    export NEOCITIES_USER=<your_password>
-";
