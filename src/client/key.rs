@@ -25,13 +25,21 @@ impl Key {
     }
 
     fn print_new_key(&self, key: &str, value: String) {
-        println!("\x1b[1;92m{0: <10}\x1b[0m {1:}", key, value);
+        println!("\n\x1b[1;92m{}: \x1b[0m {}", key, value);
     }
 }
 
 const KEY_SET_MSG: &'static str = "
 You Neocities API key has already been set for the NEOCITIES_KEY environment 
 variable 
+";
+
+const USE_KEY_MSG: &'static str = "
+Use your API by setting the following environment variable: 
+
+Example (Linux):
+
+    export NEOCITIES_KEY=<your_api_key>
 ";
 
 impl Executable for Key {
@@ -42,15 +50,19 @@ impl Executable for Key {
         }
 
         let user = cred.get_username();
+
         let pass = cred.get_password();
 
         if user.is_some() && pass.is_some() {
             let user_urlencoded: String = byte_serialize(user.unwrap().as_bytes()).collect();
+
             let pass_urlencoded: String = byte_serialize(pass.unwrap().as_bytes()).collect();
 
             match key::api_call(user_urlencoded, pass_urlencoded) {
                 Ok(data) => {
-                    self.print_new_key("API Key:", data.api_key);
+                    self.print_new_key("API Key", data.api_key);
+
+                    println!("{USE_KEY_MSG}");
                 }
                 Err(e) => return Err(NeocitiesErr::HttpRequestError(e)),
             }
