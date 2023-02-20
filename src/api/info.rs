@@ -42,11 +42,19 @@ pub async fn api_call(
     let url: String;
     let mut api_key: Option<String> = None;
 
+    // give precedence to args so a user can run `neocities info [sitename]` to lookup other
+    // websites, although her or she has set environment variables.
     if args.len() > 0 {
+        // [sitename] argument url format
         url = format!("https://{}/info?sitename={}", API_URL, args[0]);
     } else {
+        // check environment variables in the following order: (1) api key, (2) username and
+        // password.
         if let Some(k) = cred.get_api_key() {
+            // this key is added to the request header below
             api_key = Some(k.to_string());
+
+            // api key url format
             url = format!("https://{}/info", API_URL);
         } else {
             let user = match cred.get_username() {
@@ -55,6 +63,9 @@ pub async fn api_call(
                     user_urlencoded
                 }
                 None => {
+                    // the client::info module already validates that `get_username` returns a
+                    // Some(u), but we create an error to return as a fallback, since match
+                    // expressions must be exhaustive  
                     let err: Box<dyn Error> =
                         String::from("problem accessing environment variable NEOCITIES_USER")
                             .into();
@@ -68,6 +79,9 @@ pub async fn api_call(
                     pass_urlencoded
                 }
                 None => {
+                    // the client::info module already validates that `get_password` returns a
+                    // Some(p), but we create an error to return as a fallback, since match
+                    // expressions must be exhaustive  
                     let err: Box<dyn Error> =
                         String::from("problem accessing environment variable NEOCITIES_PASS")
                             .into();
@@ -75,6 +89,7 @@ pub async fn api_call(
                 }
             };
 
+            // user:pass url
             url = format!("https://{}:{}@{}info", user, pass, API_URL);
         }
     }
@@ -98,7 +113,7 @@ pub async fn api_call(
         }
         _ => {
             let e: Box<dyn std::error::Error> = format!(
-                "The Neocities API could not find site '{}'. Please try a different sitename.",
+                "The Neocities API could not find site '{}'.",
                 args[0]
             )
             .into();
