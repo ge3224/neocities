@@ -1,4 +1,4 @@
-use crate::api::Credentials;
+use crate::{api::Credentials, error::NeocitiesErr};
 use super::command::Executable;
 
 pub const KEY: &'static str = "version";
@@ -20,7 +20,7 @@ impl Version {
 }
 
 impl Executable for Version {
-    fn run(&self, _cred: Credentials, _args: Vec<String>) -> Result<(), &'static str> {
+    fn run(&self, _cred: Credentials, _args: Vec<String>) -> Result<(), NeocitiesErr> {
         println!("\nNeocities: version {}\n", env!("CARGO_PKG_VERSION"));
         Ok(())
     }

@@ -1,5 +1,5 @@
 use super::command::Executable;
-use crate::api::{info, Credentials};
+use crate::{api::{info, Credentials}, error::NeocitiesErr};
 
 pub const KEY: &'static str = "info";
 
@@ -29,12 +29,12 @@ impl Info {
 }
 
 impl Executable for Info {
-    fn run(&self, _cred: Credentials, args: Vec<String>) -> Result<(), &'static str> {
+    fn run(&self, _cred: Credentials, args: Vec<String>) -> Result<(), NeocitiesErr> {
         if args.len() < 1 {
             self.print_usage();
         }
 
-        match info::request_info(&args[0]) {
+        match info::api_call(&args[0]) {
             Ok(data) => {
                 self.print_info("sitename", data.info.sitename);
 
@@ -47,6 +47,7 @@ impl Executable for Info {
                 self.print_info("last_updated", data.info.last_updated);
 
                 let domain_value: String;
+
                 if let serde_json::Value::String(v) = data.info.domain {
                     domain_value = v;
                 } else {
@@ -58,6 +59,7 @@ impl Executable for Info {
                 self.print_info("tags", format!("{:?}", data.info.tags));
 
                 let hash_value: String;
+
                 if let serde_json::Value::String(v) = data.info.latest_ipfs_hash {
                     hash_value = v
                 } else {
@@ -68,7 +70,7 @@ impl Executable for Info {
 
                 Ok(())
             }
-            Err(_e) => todo!(),
+            Err(e) => return Err(NeocitiesErr::HttpRequestError(e)),
         }
     }
 

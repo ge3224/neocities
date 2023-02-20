@@ -2,7 +2,7 @@ use super::{
     command::{Command, CommandKind, Executable},
     delete, help, info, list, upload, version,
 };
-use crate::api::Credentials;
+use crate::{api::Credentials, error::NeocitiesErr};
 
 pub const HELP: &'static str = "help";
 
@@ -33,7 +33,7 @@ impl Help {
 }
 
 impl Executable for Help {
-    fn run(&self, _cred: Credentials, args: Vec<String>) -> Result<(), &'static str> {
+    fn run(&self, _cred: Credentials, args: Vec<String>) -> Result<(), NeocitiesErr> {
         if args.len() < 1 {
             println!("{HELP_MSG}");
             return Ok(());
@@ -46,7 +46,7 @@ impl Executable for Help {
             upload::KEY => self.print_usage_other_command(Command::new(CommandKind::Upload)),
             delete::KEY => self.print_usage_other_command(Command::new(CommandKind::Delete)),
             help::HELP => self.print_usage(),
-            _ => return Err("invalid command"),
+            _ => return Err(NeocitiesErr::InvalidCommand),
         };
 
         Ok(())

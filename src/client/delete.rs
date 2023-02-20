@@ -1,5 +1,5 @@
 use super::command::Executable;
-use crate::api::Credentials;
+use crate::{api::Credentials, error::NeocitiesErr};
 
 pub const KEY: &'static str = "delete";
 
@@ -20,7 +20,7 @@ impl Delete {
 }
 
 impl Executable for Delete {
-    fn run(&self, _cred: Credentials, args: Vec<String>) -> Result<(), &'static str> {
+    fn run(&self, _cred: Credentials, args: Vec<String>) -> Result<(), NeocitiesErr> {
         println!("Delete implementation of Executable: {:?}", args);
         Ok(())
     }

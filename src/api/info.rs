@@ -28,7 +28,7 @@ pub struct Info {
 }
 
 #[tokio::main]
-pub async fn request_info(sitename: &String) -> Result<SiteInfo, Box<dyn std::error::Error>> {
+pub async fn api_call(sitename: &String) -> Result<SiteInfo, Box<dyn std::error::Error>> {
     let uri = format!("{}/info?sitename={}", API_URL, sitename);
     let resp = reqwest::get(uri.as_str())
         .await?

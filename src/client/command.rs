@@ -1,4 +1,4 @@
-use crate::api::Credentials;
+use crate::{api::Credentials, error::NeocitiesErr};
 
 use super::*;
 
@@ -12,7 +12,7 @@ pub enum CommandKind {
 }
 
 pub trait Executable {
-    fn run(&self, cred: Credentials, args: Vec<String>) -> Result<(), &'static str>;
+    fn run(&self, cred: Credentials, args: Vec<String>) -> Result<(), NeocitiesErr>;
     fn get_usage(&self) -> &str;
     fn get_short_desc(&self) -> &str;
     fn get_long_desc(&self) -> &str;
@@ -48,7 +48,7 @@ impl Command {
         self.exec.get_long_desc()
     }
 
-    pub fn execute(&self, cred: Credentials, args: Vec<String>) -> Result<(), &'static str> {
+    pub fn execute(&self, cred: Credentials, args: Vec<String>) -> Result<(), NeocitiesErr> {
         self.exec.run(cred, args)?;
         Ok(())
     }

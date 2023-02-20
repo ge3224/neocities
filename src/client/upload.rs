@@ -1,4 +1,4 @@
-use crate::api::Credentials;
+use crate::{api::Credentials, error::NeocitiesErr};
 use super::command::Executable;
 
 pub const KEY: &'static str = "upload";
@@ -20,7 +20,7 @@ impl Upload {
 }
 
 impl Executable for Upload {
-    fn run(&self, _cred: Credentials, _args: Vec<String>) -> Result<(), &'static str> {
+    fn run(&self, _cred: Credentials, _args: Vec<String>) -> Result<(), NeocitiesErr> {
         println!("Implementation of Executable for Upload");
         Ok(())
     }

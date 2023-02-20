@@ -1,4 +1,4 @@
-use crate::api::Credentials;
+use crate::{api::Credentials, error::NeocitiesErr};
 use super::command::Executable;
 
 pub const KEY: &'static str = "list";
@@ -20,7 +20,7 @@ impl List {
 }
 
 impl Executable for List {
-    fn run(&self, _cred: Credentials, args: Vec<String>) -> Result<(), &'static str> {
+    fn run(&self, _cred: Credentials, args: Vec<String>) -> Result<(), NeocitiesErr> {
         println!("List's implementation of Executable: {:?}", args);
         Ok(())
     }

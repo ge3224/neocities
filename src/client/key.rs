@@ -1,5 +1,5 @@
 use super::command::Executable;
-use crate::api::Credentials;
+use crate::{api::Credentials, error::NeocitiesErr};
 
 pub const KEY: &'static str = "key";
 
@@ -20,7 +20,7 @@ impl Key {
 }
 
 impl Executable for Key {
-    fn run(&self, cred: Credentials, _args: Vec<String>) -> Result<(), &'static str> {
+    fn run(&self, cred: Credentials, _args: Vec<String>) -> Result<(), NeocitiesErr> {
         if let Some(key) = cred.get_api_key() {
           println!("{key}");
         } else {

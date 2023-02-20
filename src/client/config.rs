@@ -3,7 +3,7 @@ use super::{
     command::{Command, CommandKind},
     delete, info, list, upload, version,
 };
-use crate::api::Credentials;
+use crate::{api::Credentials, error::NeocitiesErr};
 
 pub struct Config {
     pub args: Args,
@@ -20,7 +20,7 @@ impl Config {
         Config { args, credentials }
     }
 
-    pub fn use_command(self) -> Result<(), &'static str> {
+    pub fn use_command(self) -> Result<(), NeocitiesErr> {
         let cmd = match self.args.command {
             Some(c) => match c.as_str() {
                 list::KEY => Command::new(CommandKind::List),
