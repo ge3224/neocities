@@ -1,7 +1,7 @@
 use super::{
     args::Args,
     command::{Command, CommandKind},
-    delete, info, list, upload, version,
+    delete, info, list, upload, version, key
 };
 use crate::{api::Credentials, error::NeocitiesErr};
 
@@ -28,6 +28,7 @@ impl Config {
                 version::KEY => Command::new(CommandKind::Version),
                 delete::KEY => Command::new(CommandKind::Delete),
                 info::KEY => Command::new(CommandKind::Info),
+                key::KEY => Command::new(CommandKind::Key),
                 _ => Command::new(CommandKind::Help),
             },
             _ => Command::new(CommandKind::Help),

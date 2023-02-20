@@ -9,6 +9,7 @@ pub enum CommandKind {
     Info,
     List,
     Version,
+    Key,
 }
 
 pub trait Executable {
@@ -31,6 +32,7 @@ impl Command {
             CommandKind::Upload => Box::new(upload::Upload::new()),
             CommandKind::Info => Box::new(info::Info::new()),
             CommandKind::Delete => Box::new(delete::Delete::new()),
+            CommandKind::Key => Box::new(key::Key::new()),
         };
 
         Command { exec }

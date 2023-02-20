@@ -22,10 +22,19 @@ impl Key {
 impl Executable for Key {
     fn run(&self, cred: Credentials, _args: Vec<String>) -> Result<(), NeocitiesErr> {
         if let Some(key) = cred.get_api_key() {
-          println!("{key}");
-        } else {
-          println!("A Neocities API Key has not yet been set.")
+            println!("You API key has already been set: {key}");
+            return Ok(());
         }
+
+        let user = cred.get_username();
+        let pass = cred.get_password();
+
+        if user.is_some() && pass.is_some() {
+            todo!();
+        } else {
+            println!("{ENV_VAR_MSG}");
+        }
+
         Ok(())
     }
 
@@ -41,3 +50,13 @@ impl Executable for Key {
         self.long.as_str()
     }
 }
+
+const ENV_VAR_MSG: &'static str = "
+Before you can retrieve an API key from Neocities, you must first set the following 
+environment variables:
+
+Example (Linux):
+
+    export NEOCITIES_USER=<your_username>
+    export NEOCITIES_USER=<your_password>
+";
