@@ -30,13 +30,13 @@ pub struct File {
 }
 
 #[tokio::main]
-pub async fn api_call(cred: Credentials, args: Vec<String>) -> Result<FileList, Box<dyn Error>> {
+pub async fn api_call(cred: Credentials, path: Option<String>) -> Result<FileList, Box<dyn Error>> {
     let mut query_string: Option<QueryString> = None;
 
-    if args.len() > 0 {
+    if let Some(p) = path {
         query_string = Some(QueryString {
             key: String::from("path"),
-            value: format!("{}", args[0]),
+            value: format!("{}", p),
         });
     }
 
