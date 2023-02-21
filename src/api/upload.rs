@@ -7,17 +7,14 @@ use super::credentials::{Auth, Credentials};
 
 #[tokio::main]
 pub async fn api_call(cred: Credentials, args: Vec<String>) -> Result<(), Box<dyn Error>> {
-    println!("starting api call");
     if args.len() < 1 {
         let err: Box<dyn Error> = String::from("no arguments given").into();
         return Err(err);
     }
 
-    // let filename = args[0].as_str();
     let url: String;
     let api_key: Option<String>;
 
-    println!("starting authentication");
     let auth = Auth::authenticate(cred, String::from("upload"), None);
 
     match auth {
@@ -32,16 +29,21 @@ pub async fn api_call(cred: Credentials, args: Vec<String>) -> Result<(), Box<dy
     }
 
     let client = Client::new();
-    let file = File::open(&args[0]).await?;
+    let mut form = multipart::Form::new();
 
-    let stream = FramedRead::new(file, BytesCodec::new());
-    let file_body = Body::wrap_stream(stream);
+    let mut count = 0;
+    for path in args.iter() {
+        println!("{} - {}", path, count);
+        let file = File::open(path).await?;
+        let stream = FramedRead::new(file, BytesCodec::new());
+        let file_body = Body::wrap_stream(stream);
+        let some_file = multipart::Part::stream(file_body)
+            .file_name(format!("file_{}", count))
+            .mime_str("text/plain")?;
+        form = form.part(format!("file_{}", count), some_file);
+        count += 1;
+    }
 
-    let some_file = multipart::Part::stream(file_body)
-        .file_name("test.txt")
-        .mime_str("text/plain")?;
-
-    let form = multipart::Form::new().part("file", some_file);
 
     let res: Response;
     if let Some(k) = api_key {
