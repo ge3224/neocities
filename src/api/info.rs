@@ -10,6 +10,7 @@ use url::form_urlencoded::byte_serialize;
 use crate::api::API_URL;
 
 use super::Credentials;
+use super::credentials::Auth;
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -45,53 +46,65 @@ pub async fn api_call(
     // give precedence to args so a user can run `neocities info [sitename]` to lookup other
     // websites, although her or she has set environment variables.
     if args.len() > 0 {
-        // [sitename] argument url format
         url = format!("https://{}/info?sitename={}", API_URL, args[0]);
     } else {
-        // check environment variables in the following order: (1) api key, (2) username and
-        // password.
-        if let Some(k) = cred.get_api_key() {
-            // this key is added to the request header below
-            api_key = Some(k.to_string());
+        let auth = Auth::authenticate(cred, String::from("info"), None);
 
-            // api key url format
-            url = format!("https://{}/info", API_URL);
-        } else {
-            let user = match cred.get_username() {
-                Some(u) => {
-                    let user_urlencoded: String = byte_serialize(u.as_bytes()).collect();
-                    user_urlencoded
-                }
-                None => {
-                    // the client::info module already validates that `get_username` returns a
-                    // Some(u), but we create an error to return as a fallback, since match
-                    // expressions must be exhaustive  
-                    let err: Box<dyn Error> =
-                        String::from("problem accessing environment variable NEOCITIES_USER")
-                            .into();
-                    return Err(err);
-                }
-            };
-
-            let pass = match cred.get_password() {
-                Some(p) => {
-                    let pass_urlencoded: String = byte_serialize(p.as_bytes()).collect();
-                    pass_urlencoded
-                }
-                None => {
-                    // the client::info module already validates that `get_password` returns a
-                    // Some(p), but we create an error to return as a fallback, since match
-                    // expressions must be exhaustive  
-                    let err: Box<dyn Error> =
-                        String::from("problem accessing environment variable NEOCITIES_PASS")
-                            .into();
-                    return Err(err);
-                }
-            };
-
-            // user:pass url
-            url = format!("https://{}:{}@{}info", user, pass, API_URL);
+        match auth {
+          Err(e) => {
+            let err: Box<dyn Error> = format!("problem authenticating credentials: {e}").into();
+            return Err(err);
+          },
+          Ok(a) => {
+            url = a.url;
+            api_key = a.api_key;
+          }
         }
+
+        // // check environment variables in the following order: (1) api key, (2) username and
+        // // password.
+        // if let Some(k) = cred.get_api_key() {
+        //     // this key is added to the request header below
+        //     api_key = Some(k.to_string());
+        //
+        //     // api key url format
+        //     url = format!("https://{}/info", API_URL);
+        // } else {
+        //     let user = match cred.get_username() {
+        //         Some(u) => {
+        //             let user_urlencoded: String = byte_serialize(u.as_bytes()).collect();
+        //             user_urlencoded
+        //         }
+        //         None => {
+        //             // the client::info module already validates that `get_username` returns a
+        //             // Some(u), but we create an error to return as a fallback, since match
+        //             // expressions must be exhaustive  
+        //             let err: Box<dyn Error> =
+        //                 String::from("problem accessing environment variable NEOCITIES_USER")
+        //                     .into();
+        //             return Err(err);
+        //         }
+        //     };
+        //
+        //     let pass = match cred.get_password() {
+        //         Some(p) => {
+        //             let pass_urlencoded: String = byte_serialize(p.as_bytes()).collect();
+        //             pass_urlencoded
+        //         }
+        //         None => {
+        //             // the client::info module already validates that `get_password` returns a
+        //             // Some(p), but we create an error to return as a fallback, since match
+        //             // expressions must be exhaustive  
+        //             let err: Box<dyn Error> =
+        //                 String::from("problem accessing environment variable NEOCITIES_PASS")
+        //                     .into();
+        //             return Err(err);
+        //         }
+        //     };
+        //
+        //     // user:pass url
+        //     url = format!("https://{}:{}@{}info", user, pass, API_URL);
+        // }
     }
 
     let req = reqwest::Client::new();
