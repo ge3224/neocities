@@ -89,11 +89,15 @@ Environment setup:
 
 
 pub const ENV_VAR_MSG: &'static str = "
-Before you can retrieve an API key from Neocities, you must first set the following 
+Before you can interact with Neocities, you must first set the following 
 environment variables:
 
 Example (Linux):
 
     export NEOCITIES_USER=<your_username>
     export NEOCITIES_USER=<your_password>
+
+You can also use your Neocities API key (Optional): 
+
+    export NEOCITIES_KEY=<your_key>
 ";

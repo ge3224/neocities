@@ -1,5 +1,5 @@
-use crate::{api::Credentials, error::NeocitiesErr};
 use super::command::Executable;
+use crate::{api::{Credentials, list}, error::NeocitiesErr, client::help};
 
 pub const KEY: &'static str = "list";
 
@@ -17,12 +17,29 @@ impl List {
             long: String::from("List files in your Neocities website"),
         }
     }
+
+    fn print_usage(&self) {
+        println!("\n{}\n", self.get_long_desc());
+        println!("usage: {}\n", self.usage);
+    }
 }
 
 impl Executable for List {
-    fn run(&self, _cred: Credentials, args: Vec<String>) -> Result<(), NeocitiesErr> {
-        println!("List's implementation of Executable: {:?}", args);
-        Ok(())
+    fn run(&self, cred: Credentials, args: Vec<String>) -> Result<(), NeocitiesErr> {
+        if args.len() < 1 {
+            self.print_usage();
+            return Ok(());
+        }
+
+        if cred.get_username().is_none() || cred.get_password().is_none() {
+            println!("{}", help::ENV_VAR_MSG);
+            return Ok(());
+        }
+
+        let data = list::api_call(cred, args);
+        println!("{:?}", data);
+
+        todo!();
     }
 
     fn get_usage(&self) -> &str {
