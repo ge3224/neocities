@@ -32,23 +32,29 @@ impl List {
     }
 
     fn output_detailed(&self, path: &String, is_dir: bool, size: Option<i64>, date: &String) {
-        let byte_amount: i64;
+        let file_size: String;
         if let Some(n) = size {
-            byte_amount = n;
+            if n < 1000 {
+                file_size = format!("{} B", n);
+            } else if n < 1000000 {
+              file_size = format!("{:.2} KB", n as f64/1000.0);
+            } else {
+              file_size = format!("{:.2} KB", n as f64/1000000.0);
+            }
         } else {
-            byte_amount = 0;
+            file_size = String::from("0");
         }
 
         let output: String;
         if is_dir {
             output = format!(
-                "{}{}\x1b[90m {}\x1b[0m",
+                "{}{}/\x1b[90m {}\x1b[0m",
                 self.dir_color, path, date
             );
         } else {
             output = format!(
                 "{}{}\x1b[0m ({})\x1b[90m {}\x1b[0m",
-                self.file_color, path, byte_amount, date
+                self.file_color, path, file_size, date
             );
         }
         println!("{output}");
