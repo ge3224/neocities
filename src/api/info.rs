@@ -5,7 +5,6 @@ use reqwest::Response;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 use serde_json::Value;
-use url::form_urlencoded::byte_serialize;
 
 use crate::api::API_URL;
 
