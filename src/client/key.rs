@@ -30,12 +30,11 @@ impl Key {
 }
 
 const KEY_SET_MSG: &'static str = "
-You Neocities API key has already been set for the NEOCITIES_KEY environment 
-variable 
+Your Neocities API key has already been set for the NEOCITIES_KEY environment variable 
 ";
 
 const USE_KEY_MSG: &'static str = "
-Use your API by setting the following environment variable: 
+Use your API key by setting the following environment variable: 
 
 Example (Linux):
 

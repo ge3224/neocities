@@ -21,8 +21,7 @@ impl Upload {
 
 impl Executable for Upload {
     fn run(&self, _cred: Credentials, _args: Vec<String>) -> Result<(), NeocitiesErr> {
-        println!("Implementation of Executable for Upload");
-        Ok(())
+        todo!();
     }
 
     fn get_usage(&self) -> &str {

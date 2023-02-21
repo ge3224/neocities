@@ -20,9 +20,8 @@ impl Delete {
 }
 
 impl Executable for Delete {
-    fn run(&self, _cred: Credentials, args: Vec<String>) -> Result<(), NeocitiesErr> {
-        println!("Delete implementation of Executable: {:?}", args);
-        Ok(())
+    fn run(&self, _cred: Credentials, _args: Vec<String>) -> Result<(), NeocitiesErr> {
+        todo!();
     }
 
     fn get_usage(&self) -> &str {
