@@ -1,6 +1,6 @@
 use super::{command::Executable, help};
 use crate::{
-    api::{info, Credentials},
+    api::{info, credentials::Credentials},
     error::NeocitiesErr,
 };
 

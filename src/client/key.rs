@@ -2,7 +2,7 @@ use url::form_urlencoded::byte_serialize;
 
 use super::command::Executable;
 use crate::{
-    api::{key, Credentials},
+    api::{key, credentials::Credentials},
     client::help,
     error::NeocitiesErr,
 };

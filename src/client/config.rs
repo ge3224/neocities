@@ -3,7 +3,7 @@ use super::{
     command::{Command, CommandKind},
     delete, info, list, upload, version, key
 };
-use crate::{api::Credentials, error::NeocitiesErr};
+use crate::{api::credentials::Credentials, error::NeocitiesErr};
 
 pub struct Config {
     pub args: Args,

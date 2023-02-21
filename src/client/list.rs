@@ -1,6 +1,6 @@
 use super::command::Executable;
 use crate::{
-    api::{list, Credentials},
+    api::{list, credentials::Credentials},
     client::help,
     error::NeocitiesErr,
 };

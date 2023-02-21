@@ -1,4 +1,4 @@
-use crate::{api::Credentials, error::NeocitiesErr};
+use crate::{api::credentials::Credentials, error::NeocitiesErr};
 use super::command::Executable;
 
 pub const KEY: &'static str = "upload";

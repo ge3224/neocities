@@ -1,15 +1,11 @@
 use std::error::Error;
-
 use reqwest::header::AUTHORIZATION;
 use reqwest::Response;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 use serde_json::Value;
-
 use crate::api::API_URL;
-
-use super::credentials::Auth;
-use super::Credentials;
+use super::credentials::{Auth, Credentials};
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

@@ -1,13 +1,8 @@
+use super::credentials::{Auth, Credentials, QueryString};
 use reqwest::{header::AUTHORIZATION, Response};
-
-use super::{
-    credentials::{Auth, QueryString},
-    Credentials,
-};
-use std::error::Error;
-
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
+use std::error::Error;
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

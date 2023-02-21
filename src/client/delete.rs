@@ -1,5 +1,5 @@
 use super::command::Executable;
-use crate::{api::Credentials, error::NeocitiesErr};
+use crate::{api::credentials::Credentials, error::NeocitiesErr};
 
 pub const KEY: &'static str = "delete";
 

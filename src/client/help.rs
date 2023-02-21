@@ -2,7 +2,7 @@ use super::{
     command::{Command, CommandKind, Executable},
     delete, help, info, list, upload, version, key
 };
-use crate::{api::Credentials, error::NeocitiesErr};
+use crate::{api::credentials::Credentials, error::NeocitiesErr};
 
 pub const HELP: &'static str = "help";
 
