@@ -6,10 +6,11 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-reqwest = { version = "0.11", features = ["json"] }
+thiserror = "1.0.38"
+url = "2.3.1"
+reqwest = { version = "0.11", features = ["stream", "multipart", "json"] }
+tokio = { version = "1", features = ["full"] }
+tokio-util = { version="0.7.7", features = ["codec"]}
 serde = "1.0.152"
 serde_derive = "1.0.152"
 serde_json = "1.0.93"
-thiserror = "1.0.38"
-tokio = { version = "1", features = ["full"] }
-url = "2.3.1"

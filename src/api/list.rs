@@ -71,7 +71,7 @@ pub async fn api_call(cred: Credentials, path: Option<String>) -> Result<FileLis
         }
         _ => {
             let e: Box<dyn std::error::Error> =
-                format!("Bad request to the Neocities API.",).into();
+                String::from("Bad request to the Neocities API.").into();
             Err(e)
         }
     }

@@ -1,5 +1,8 @@
-use crate::{api::credentials::Credentials, error::NeocitiesErr};
 use super::command::Executable;
+use crate::{
+    api::{credentials::Credentials, upload},
+    error::NeocitiesErr,
+};
 
 pub const KEY: &'static str = "upload";
 
@@ -20,8 +23,11 @@ impl Upload {
 }
 
 impl Executable for Upload {
-    fn run(&self, _cred: Credentials, _args: Vec<String>) -> Result<(), NeocitiesErr> {
-        todo!();
+    fn run(&self, cred: Credentials, args: Vec<String>) -> Result<(), NeocitiesErr> {
+        if let Ok(data) = upload::api_call(cred, args) {
+            println!("{:?}", data);
+        };
+        Ok(())
     }
 
     fn get_usage(&self) -> &str {
