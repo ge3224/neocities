@@ -18,7 +18,7 @@ pub struct List {
 impl List {
     pub fn new() -> List {
         List {
-            usage: String::from(KEY),
+            usage: String::from(format!("{KEY} /path")),
             short: String::from("List files on Neocities"),
             long: String::from("List files in your Neocities website"),
             dir_color: "\x1b[1;36m",
@@ -64,7 +64,7 @@ impl List {
         let output: String;
         if is_dir {
             output = format!(
-                "{}{}\x1b[0m",
+                "{}{}/\x1b[0m",
                 self.dir_color, path
             );
         } else {

@@ -1,6 +1,6 @@
 use super::{
     command::{Command, CommandKind, Executable},
-    delete, help, info, list, upload, version,
+    delete, help, info, list, upload, version, key
 };
 use crate::{api::Credentials, error::NeocitiesErr};
 
@@ -45,6 +45,7 @@ impl Executable for Help {
             version::KEY => self.print_usage_other_command(Command::new(CommandKind::Version)),
             upload::KEY => self.print_usage_other_command(Command::new(CommandKind::Upload)),
             delete::KEY => self.print_usage_other_command(Command::new(CommandKind::Delete)),
+            key::KEY => self.print_usage_other_command(Command::new(CommandKind::Key)),
             help::HELP => self.print_usage(),
             _ => return Err(NeocitiesErr::InvalidCommand),
         };

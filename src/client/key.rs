@@ -20,7 +20,7 @@ impl Key {
         Key {
             usage: String::from(KEY),
             short: String::from("Neocities API Key"),
-            long: String::from("Retrieve an API Key for your Neocities user"),
+            long: String::from("Retrieve an API Key for your Neocities user account"),
         }
     }
 
