@@ -1,5 +1,5 @@
 use reqwest::{header::AUTHORIZATION, multipart, Body, Client, Response};
-use std::error::Error;
+use std::{error::Error, path::PathBuf};
 use tokio::fs::File;
 use tokio_util::codec::{BytesCodec, FramedRead};
 
@@ -7,11 +7,12 @@ use super::credentials::{Auth, Credentials};
 
 #[tokio::main]
 pub async fn api_call(cred: Credentials, args: Vec<String>) -> Result<(), Box<dyn Error>> {
-    if args.len() < 1 {
-        let err: Box<dyn Error> = String::from("no arguments given").into();
-        return Err(err);
-    }
+    // if args.len() < 1 {
+    //     let err: Box<dyn Error> = String::from("no arguments given").into();
+    //     return Err(err);
+    // }
 
+    // collect paths
     let url: String;
     let api_key: Option<String>;
 
@@ -31,19 +32,23 @@ pub async fn api_call(cred: Credentials, args: Vec<String>) -> Result<(), Box<dy
     let client = Client::new();
     let mut form = multipart::Form::new();
 
-    let mut count = 0;
-    for path in args.iter() {
-        println!("{} - {}", path, count);
+    for (i, arg) in args.iter().enumerate() {
+        let path = PathBuf::from(&arg);
+        let mut name = String::from(format!("file_{}", i));
+        if let Some(n) = path.file_name() {
+            if let Some(inner) = n.to_str() {
+                name = String::from(inner);
+            }
+        }
         let file = File::open(path).await?;
         let stream = FramedRead::new(file, BytesCodec::new());
         let file_body = Body::wrap_stream(stream);
-        let some_file = multipart::Part::stream(file_body)
-            .file_name(format!("file_{}", count))
-            .mime_str("text/plain")?;
-        form = form.part(format!("file_{}", count), some_file);
-        count += 1;
-    }
 
+        let some_file = multipart::Part::stream(file_body)
+            .file_name(name.clone())
+            .mime_str("text/plain")?;
+        form = form.part(name, some_file);
+    }
 
     let res: Response;
     if let Some(k) = api_key {
