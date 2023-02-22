@@ -1,5 +1,11 @@
+use std::io;
+
 use super::command::Executable;
-use crate::{api::{credentials::Credentials, delete}, client::help, error::NeocitiesErr};
+use crate::{
+    api::{credentials::Credentials, delete},
+    client::help,
+    error::NeocitiesErr,
+};
 
 pub const KEY: &'static str = "delete";
 
@@ -36,9 +42,42 @@ impl Executable for Delete {
             return Ok(());
         }
 
-        let _ = delete::api_call(cred, args);
+        println!("\x1b[93mWarning.\x1b[0m Are you sure you want to delete the following files?");
 
-        todo!();
+        for (i, arg) in args.iter().enumerate() {
+            println!("{}: \x1b[92m{}\x1b[0m", i + 1, arg);
+        }
+
+        println!("Please input either Y or N.");
+
+        loop {
+            let mut input = String::new();
+
+            io::stdin().read_line(&mut input).unwrap();
+
+            let input = input.trim();
+
+            match input {
+                "Y" | "y" => {
+                    println!("Ok. Continuing with delete of files.");
+                    break;
+                }
+                "N" | "n" => {
+                    println!("Canceling delete operation.");
+                    return Ok(());
+                }
+                _ => {
+                    println!("Invalid input: '{}'. Please try again.", input);
+                }
+            }
+        }
+
+        match delete::api_call(cred, args) {
+            Ok(data) => println!("{} - {}", data.result, data.message),
+            Err(e) => return Err(NeocitiesErr::HttpRequestError(e)),
+        }
+
+        Ok(())
     }
 
     fn get_usage(&self) -> &str {
