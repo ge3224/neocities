@@ -1,16 +1,23 @@
-<div align="center">
-   <img src="https://user-images.githubusercontent.com/75739874/219054552-5a4de465-9498-4cb8-b3bb-42e9c4b4ac76.png" alt="Neocities.org">
-   &ensp;
-   <img src="https://user-images.githubusercontent.com/75739874/219058662-fa6f155b-18aa-465d-8b73-f2c064ba3777.png" alt="The Rust Programming Language" width="100" height="100">
-</div>
+<p align="center">
+  <a href="https://jacobbenison.com/">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://user-images.githubusercontent.com/75739874/220756778-26348fde-148f-4383-859c-8624d3de955d.png">
+      <source media="(prefers-color-scheme: light)" srcset="https://user-images.githubusercontent.com/75739874/220756757-7204f7eb-2d3d-4c8e-a449-b294ac851304.png">
+      <img alt="Tailwind CSS" src="https://user-images.githubusercontent.com/75739874/220756757-7204f7eb-2d3d-4c8e-a449-b294ac851304.png" width="275" height="121" style="max-width: 100%;">
+    </picture>
+  </a>
+</p>
 
 # A Neocities client written in Rust
 
-Upload files to your [Neocities](https://neocities.org/) website from your terminal.
+[Neocities](https://neocities.org/) is a free web hosting service that allows users to create and publish their own websites. 
 
-## Installation
+This client is a command-line interface application for managing and publishing websites hosted on Neocities. Users can easily upload, download, and
+synchronize files between their local computer and their Neocities website, all from their terminal.
 
- - [ ]  TODO
+<!--## Installation-->
+
+ <!--- [ ]  TODO-->
 
 ## Setup
 
