@@ -7,12 +7,6 @@ use super::credentials::{Auth, Credentials};
 
 #[tokio::main]
 pub async fn api_call(cred: Credentials, args: Vec<String>) -> Result<(), Box<dyn Error>> {
-    // if args.len() < 1 {
-    //     let err: Box<dyn Error> = String::from("no arguments given").into();
-    //     return Err(err);
-    // }
-
-    // collect paths
     let url: String;
     let api_key: Option<String>;
 
@@ -32,22 +26,22 @@ pub async fn api_call(cred: Credentials, args: Vec<String>) -> Result<(), Box<dy
     let client = Client::new();
     let mut form = multipart::Form::new();
 
-    for (i, arg) in args.iter().enumerate() {
+    for arg in args.iter() {
         let path = PathBuf::from(&arg);
-        let mut name = String::from(format!("file_{}", i));
-        if let Some(n) = path.file_name() {
-            if let Some(inner) = n.to_str() {
-                name = String::from(inner);
-            }
+    
+        let filepath:String;
+        if let Some(p) = path.to_str() {
+          filepath = p.to_string();
+        } else {
+          return Err(format!("problem with file/path: {arg}").into());
         }
+    
         let file = File::open(path).await?;
         let stream = FramedRead::new(file, BytesCodec::new());
         let file_body = Body::wrap_stream(stream);
-
-        let some_file = multipart::Part::stream(file_body)
-            .file_name(name.clone())
-            .mime_str("text/plain")?;
-        form = form.part(name, some_file);
+    
+        let some_file = multipart::Part::stream(file_body).file_name(filepath.clone());
+        form = form.part(filepath, some_file);
     }
 
     let res: Response;
@@ -67,10 +61,7 @@ pub async fn api_call(cred: Credentials, args: Vec<String>) -> Result<(), Box<dy
             let body = res.text().await?;
             println!("res body = {}", body);
             Ok(())
-        }
-        _ => {
-            let err: Box<dyn Error> = String::from("bad request").into();
-            Err(err)
-        }
+        },
+        _ => todo!(),
     }
 }
