@@ -1,7 +1,7 @@
 use super::command::Executable;
 use crate::{
     api::{credentials::Credentials, upload},
-    error::NeocitiesErr,
+    error::NeocitiesErr, client::help,
 };
 
 pub const KEY: &'static str = "upload";
@@ -24,6 +24,11 @@ impl Upload {
 
 impl Executable for Upload {
     fn run(&self, cred: Credentials, args: Vec<String>) -> Result<(), NeocitiesErr> {
+        if cred.get_username().is_none() || cred.get_password().is_none() {
+            println!("{}", help::ENV_VAR_MSG);
+            return Ok(());
+        }
+
         if let Ok(data) = upload::api_call(cred, args) {
             println!("{:?}", data);
         };
