@@ -42,9 +42,10 @@ impl Executable for Upload {
             return Ok(());
         }
 
-        if let Ok(data) = upload::api_call(cred, args) {
-            println!("{} - {}", data.result, data.message);
-        };
+        match upload::api_call(cred, args) {
+            Ok(data) => println!("{} - {}", data.result, data.message),
+            Err(e) => return Err(NeocitiesErr::HttpRequestError(e)),
+        }
 
         Ok(())
     }
