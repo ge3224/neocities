@@ -19,11 +19,13 @@ pub trait Executable {
     fn get_long_desc(&self) -> &str;
 }
 
+/// Command contains a pointer to an implementation of the Executable trait.
 pub struct Command {
     exec: Box<dyn Executable>,
 }
 
 impl Command {
+    /// A constructor that returns an instance of `Command`
     pub fn new(kind: CommandKind) -> Command {
         let exec: Box<dyn Executable> = match kind {
             CommandKind::Help => Box::new(help::Help::new()),
