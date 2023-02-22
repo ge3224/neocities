@@ -1,12 +1,20 @@
+use super::credentials::{Auth, Credentials};
 use reqwest::{header::AUTHORIZATION, multipart, Body, Client, Response};
+use serde_derive::Deserialize;
+use serde_derive::Serialize;
 use std::{error::Error, path::PathBuf};
 use tokio::fs::File;
 use tokio_util::codec::{BytesCodec, FramedRead};
 
-use super::credentials::{Auth, Credentials};
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UploadResponse {
+    pub result: String,
+    pub message: String,
+}
 
 #[tokio::main]
-pub async fn api_call(cred: Credentials, args: Vec<String>) -> Result<(), Box<dyn Error>> {
+pub async fn api_call(cred: Credentials, args: Vec<String>) -> Result<UploadResponse, Box<dyn Error>> {
     let url: String;
     let api_key: Option<String>;
 
@@ -28,18 +36,18 @@ pub async fn api_call(cred: Credentials, args: Vec<String>) -> Result<(), Box<dy
 
     for arg in args.iter() {
         let path = PathBuf::from(&arg);
-    
-        let filepath:String;
+
+        let filepath: String;
         if let Some(p) = path.to_str() {
-          filepath = p.to_string();
+            filepath = p.to_string();
         } else {
-          return Err(format!("problem with file/path: {arg}").into());
+            return Err(format!("problem with file/path: {arg}").into());
         }
-    
+
         let file = File::open(path).await?;
         let stream = FramedRead::new(file, BytesCodec::new());
         let file_body = Body::wrap_stream(stream);
-    
+
         let some_file = multipart::Part::stream(file_body).file_name(filepath.clone());
         form = form.part(filepath, some_file);
     }
@@ -58,10 +66,9 @@ pub async fn api_call(cred: Credentials, args: Vec<String>) -> Result<(), Box<dy
 
     match res.status() {
         reqwest::StatusCode::OK => {
-            let body = res.text().await?;
-            println!("res body = {}", body);
-            Ok(())
-        },
+            let body = res.json::<UploadResponse>().await?;
+            Ok(body)
+        }
         _ => todo!(),
     }
 }
