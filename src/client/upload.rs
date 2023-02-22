@@ -45,6 +45,7 @@ impl Executable for Upload {
         if let Ok(data) = upload::api_call(cred, args) {
             println!("{:?}", data);
         };
+
         Ok(())
     }
 
