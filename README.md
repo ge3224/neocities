@@ -23,7 +23,7 @@ synchronize files between their local computer and their Neocities website, all 
 
 Set two environment variables:
 
-```
+```bash
 export NEOCITIES_USER=<user>
 export NEOCITIES_PASS=<pass>
 ```
@@ -34,37 +34,41 @@ Alternatively, you can use the `NEOCITIES_KEY` variable.
 
 - Upload files to your website:
 
-```
+```bash
 neocities upload foo.html bar.js folder/baz.jpg
 ```
 
 - Delete files from your website:
 
-```
+```bash
 neocities delete foo.html folder/baz.jpg
 ```
 
 - Get a list of available commands:
 
-```
-$ neocities
-usage: neocities <command> [<args>]
+```bash
+neocities
 
-Commands:
-   upload    Upload files to Neocities
-   delete    Delete files from Neocities
-   info      Info about Neocities websites
-   key       Neocities API key
-   list      List files on Neocities
-   version   Show neocities client version
-
-Help for a specific command:
-   help [command]
+# Output...
+#
+# usage: neocities <command> [<args>]
+# 
+# 
+# Commands:
+#    upload    Upload files to Neocities
+#    delete    Delete files from Neocities
+#    info      Info about Neocities websites
+#    key       Neocities API key
+#    list      List files on Neocities
+#    version   Show neocities client version
+# 
+# Help for a specific command:
+#    help [command]
 ```
 
 ## Donate
 
-NeoCities is funded by donations. If you’d like to contribute, you can help to pay for server costs using Bitcoin or PayPal.
+Neocities is funded by [donations](https://neocities.org/donate). If you’d like to contribute, you can help to pay for server costs using Bitcoin or PayPal.
 
 ## License (MIT)
 

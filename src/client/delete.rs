@@ -7,8 +7,11 @@ use crate::{
     error::NeocitiesErr,
 };
 
+/// The string literal a user must type to run this module 
 pub const KEY: &'static str = "delete";
 
+/// Deletes files from a Neocities user's site. The NC API allows a user to delete any files 
+/// except index.html.
 pub struct Delete {
     usage: String,
     short: String,
@@ -16,9 +19,10 @@ pub struct Delete {
 }
 
 impl Delete {
+    /// A constructor that returns an instance of `Delete`.
     pub fn new() -> Delete {
         Delete {
-            usage: String::from(format!("{KEY} <filename> [<another filename>]")),
+            usage: String::from(format!("\x1b[1;32m{KEY}\x1b[0m <filename> [<another filename>]")),
             short: String::from("Delete files from Neocities"),
             long: String::from("Delete files from your Neocities website"),
         }

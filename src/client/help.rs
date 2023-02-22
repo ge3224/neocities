@@ -4,8 +4,10 @@ use super::{
 };
 use crate::{api::credentials::Credentials, error::NeocitiesErr};
 
+/// The string literal a user must type to run this module 
 pub const HELP: &'static str = "help";
 
+/// Displays help for a specific command included in this Neocities client.
 pub struct Help {
     usage: String,
     short: String,
@@ -13,9 +15,10 @@ pub struct Help {
 }
 
 impl Help {
+    /// A constructor that returns an instance of `Help`.
     pub fn new() -> Help {
         Help {
-            usage: String::from(format!("{} [command]", HELP)),
+            usage: String::from(format!("\x1b[1;32m{}\x1b[0m [command]", HELP)),
             short: String::from("Show help"),
             long: String::from("Show usage instructions for a command"),
         }
@@ -35,6 +38,7 @@ impl Help {
 impl Executable for Help {
     fn run(&self, _cred: Credentials, args: Vec<String>) -> Result<(), NeocitiesErr> {
         if args.len() < 1 {
+            println!("{}", CAT);
             println!("{HELP_MSG}");
             return Ok(());
         }
@@ -66,29 +70,27 @@ impl Executable for Help {
     }
 }
 
-pub const HELP_MSG: &'static str = "
-usage: neocities <command> [<args>]
+const HELP_MSG: &'static str = "\
+Usage:
+
+\x1b[1;32mneocities\x1b[0m <command> [<args>]
 
 Commands:
-   upload    Upload files to Neocities
-   delete    Delete files from Neocities
-   info      Info about Neocities websites
-   key       Neocities API key
-   list      List files on Neocities
-   version   Show neocities client version
+
+\x1b[1;32mupload\x1b[0m    Upload files to Neocities
+\x1b[1;32mdelete\x1b[0m    Delete files from Neocities
+\x1b[1;32minfo\x1b[0m      Info about Neocities websites
+\x1b[1;32mkey\x1b[0m       Neocities API key
+\x1b[1;32mlist\x1b[0m      List files on Neocities
+\x1b[1;32mversion\x1b[0m   Show neocities client version
 
 Help for a specific command:
-   help [command]
 
-Environment setup:
-   export NEOCITIES_USER=<username>
-   export NEOCITIES_PASS=<password>
-  
-  (OR)
-   export NEOCITIES_KEY=<key>
+\x1b[1;32mhelp\x1b[0m [command]
 ";
 
-
+/// Messaging about setting up environment variables so this client can interact with the Neocities
+/// public API.
 pub const ENV_VAR_MSG: &'static str = "
 Before you can interact with Neocities, you must first set the following 
 environment variables:
@@ -102,3 +104,10 @@ You can also use your Neocities API key (Optional):
 
     export NEOCITIES_KEY=<your_key>
 ";
+
+const CAT: &'static str = "
+ /\\-/\\ 
+( o_o )  |\\ | _    _.|-. _  _  /`| |
+==_Y_==  | \\|(/_()(_||_|(/__\\  \\,|_|
+";
+

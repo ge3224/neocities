@@ -5,8 +5,10 @@ use crate::{
     error::NeocitiesErr,
 };
 
+/// The string literal a user must type to run this module 
 pub const KEY: &'static str = "list";
 
+/// Retrieves a list of files for a Neocities user's site.
 pub struct List {
     usage: String,
     short: String,
@@ -16,9 +18,10 @@ pub struct List {
 }
 
 impl List {
+    /// A constructor that returns an instance of `List`
     pub fn new() -> List {
         List {
-            usage: String::from(format!("{KEY} /path")),
+            usage: String::from(format!("\x1b[1;32m{KEY}\x1b[0m /path")),
             short: String::from("List files on Neocities"),
             long: String::from("List files in your Neocities website"),
             dir_color: "\x1b[1;36m",

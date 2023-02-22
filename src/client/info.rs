@@ -4,8 +4,12 @@ use crate::{
     error::NeocitiesErr,
 };
 
+/// The string literal a user must type to run this module 
 pub const KEY: &'static str = "info";
 
+/// Retreives public information about a Neocities user's web site. Site authorization is not
+/// needed if the user provides a sitename argument. Note that the sitename is the same as a
+/// username.
 pub struct Info {
     usage: String,
     short: String,
@@ -13,17 +17,13 @@ pub struct Info {
 }
 
 impl Info {
+    /// A constructor that returns an instance of `Info`
     pub fn new() -> Info {
         Info {
-            usage: String::from(format!("{KEY} [sitename]")),
+            usage: String::from(format!("\x1b[1;32m{KEY}\x1b[0m [sitename]")),
             short: String::from("Info about Neocities websites"),
             long: String::from("Info about your Neocities website, or somebody else's"),
         }
-    }
-
-    pub fn print_usage(&self) {
-        println!("\n{}\n", self.get_long_desc());
-        println!("usage: {}\n", self.usage);
     }
 
     fn print_info(&self, key: &str, value: String) {

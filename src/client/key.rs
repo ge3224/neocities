@@ -7,8 +7,12 @@ use crate::{
     error::NeocitiesErr,
 };
 
+/// The string literal a user must type to run this module 
 pub const KEY: &'static str = "key";
 
+/// Returns an API key that a Neocities user can use for interacting with the API instead of login
+/// credentials. It will automatically generate a new API key if one doesn't exist yet for your
+/// site.
 pub struct Key {
     usage: String,
     short: String,
@@ -16,9 +20,10 @@ pub struct Key {
 }
 
 impl Key {
+    /// A constructor that returns an instance of `Key`.
     pub fn new() -> Key {
         Key {
-            usage: String::from(KEY),
+            usage: String::from(format!("\x1b[1;32m{}\x1b[0m", KEY)),
             short: String::from("Neocities API Key"),
             long: String::from("Retrieve an API Key for your Neocities user account"),
         }
@@ -28,18 +33,6 @@ impl Key {
         println!("\n\x1b[1;92m{}: \x1b[0m {}", key, value);
     }
 }
-
-const KEY_SET_MSG: &'static str = "
-Your Neocities API key has already been set for the NEOCITIES_KEY environment variable 
-";
-
-const USE_KEY_MSG: &'static str = "
-Use your API key by setting the following environment variable: 
-
-Example (Linux):
-
-    export NEOCITIES_KEY=<your_api_key>
-";
 
 impl Executable for Key {
     fn run(&self, cred: Credentials, _args: Vec<String>) -> Result<(), NeocitiesErr> {
@@ -84,3 +77,16 @@ impl Executable for Key {
         self.long.as_str()
     }
 }
+
+const KEY_SET_MSG: &'static str = "
+Your Neocities API key has already been set for the NEOCITIES_KEY environment variable 
+";
+
+const USE_KEY_MSG: &'static str = "
+Use your API key by setting the following environment variable: 
+
+Example (Linux):
+
+    export NEOCITIES_KEY=<your_api_key>
+";
+

@@ -5,8 +5,11 @@ use crate::{
     error::NeocitiesErr,
 };
 
+/// The string literal a user must type to run this module 
 pub const KEY: &'static str = "upload";
 
+/// Upload files to a Neocities user's site. The NC API allows a user to upload as many files as
+/// you want as long as the entire request stays within the disk space limit. 
 pub struct Upload {
     usage: String,
     short: String,
@@ -14,9 +17,10 @@ pub struct Upload {
 }
 
 impl Upload {
+    /// A constructor that returns an instance of `Upload`.
     pub fn new() -> Upload {
         Upload {
-            usage: String::from(format!("{} <filename> [<another filename>]", KEY)),
+            usage: String::from(format!("\x1b[1;32m{}\x1b[0m <filename> [<another filename>]", KEY)),
             short: String::from("Upload files to Neocities"),
             long: String::from("Upload files to your Neocities website"),
         }
