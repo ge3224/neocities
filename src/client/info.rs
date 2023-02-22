@@ -42,6 +42,7 @@ impl Executable for Info {
 
         match info::api_call(cred, &args) {
             Ok(data) => {
+                println!("\n");
                 self.print_info("sitename", data.info.sitename);
 
                 self.print_info("views", data.info.views.to_string());
@@ -73,6 +74,7 @@ impl Executable for Info {
                 }
 
                 self.print_info("latest_ipfs_hash", hash_value);
+                println!("\n");
 
                 Ok(())
             }
