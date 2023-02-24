@@ -44,7 +44,6 @@ pub async fn api_call(
         files.push_str("filenames[]=");
         files.push_str(arg);
     }
-    println!("files = {}", files);
 
     let req = Client::new();
     let res: Response;
