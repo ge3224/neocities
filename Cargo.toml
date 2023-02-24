@@ -1,8 +1,8 @@
 [package]
-name = "neocities"
+name = "neocities-cli"
 version = "0.1.0"
 author = ["Jacob Benison <ge3224@gmail.com>"]
-description = "A command-line application for managing websites hosted on Neocities."
+description = "A CLI tool for managing websites hosted on Neocities."
 keywords = ["neocities", "webmaster", "open-source"]
 repository = "https://github.com/ge3224/neocities"
 license = "MIT"
