@@ -12,6 +12,7 @@
 
 [![Neocities CLI Crate](https://img.shields.io/crates/v/neocities_cli)](https://crates.io/crates/neocities_cli)
 [![Neocities CLI License](https://img.shields.io/github/license/ge3224/neocities)](https://github.com/ge3224/neocities/blob/main/LICENSE.md)
+![Neocities CLI Crate Downloads](https://img.shields.io/crates/d/neocities_cli)
 
 [Neocities](https://neocities.org/about) is a free web hosting service that allows users to create and publish their own websites. 
 
