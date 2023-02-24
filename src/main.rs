@@ -1,6 +1,6 @@
 use std::{env, process};
 
-use neocities::client::{runner::run, config::Config};
+use neocities_cli::client::{runner::run, config::Config};
 
 fn main() {
     let input: Vec<String> = env::args().collect();
