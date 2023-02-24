@@ -2,6 +2,7 @@ use crate::{api::credentials::Credentials, error::NeocitiesErr};
 
 use super::*;
 
+/// Possible command variants
 pub enum CommandKind {
     Help,
     Upload,
@@ -12,6 +13,7 @@ pub enum CommandKind {
     Key,
 }
 
+/// Defines shared behavior among command kinds
 pub trait Executable {
     fn run(&self, cred: Credentials, args: Vec<String>) -> Result<(), NeocitiesErr>;
     fn get_usage(&self) -> &str;
@@ -19,7 +21,7 @@ pub trait Executable {
     fn get_long_desc(&self) -> &str;
 }
 
-/// Command contains a pointer to an implementation of the Executable trait.
+/// Command contains a pointer to an implementation of the Executable trait
 pub struct Command {
     exec: Box<dyn Executable>,
 }
@@ -40,18 +42,22 @@ impl Command {
         Command { exec }
     }
 
+    /// Returns usage information from an implementation of Executable
     pub fn get_usage(&self) -> &str {
         self.exec.get_usage()
     }
 
+    /// Returns a summary about an implementation of Executable
     pub fn get_short_desc(&self) -> &str {
         self.exec.get_short_desc()
     }
 
+    /// Returns a full description about an implementation of Executable
     pub fn get_long_desc(&self) -> &str {
         self.exec.get_long_desc()
     }
 
+    /// Executes the run method of an implementation of Executable
     pub fn execute(&self, cred: Credentials, args: Vec<String>) -> Result<(), NeocitiesErr> {
         self.exec.run(cred, args)?;
         Ok(())
