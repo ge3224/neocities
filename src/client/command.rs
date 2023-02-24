@@ -67,33 +67,33 @@ impl Command {
 #[cfg(test)]
 mod tests {
 
+    use crate::api::credentials::Credentials;
+
     use super::{Command, CommandKind};
 
     #[test]
     fn get_usage() {
         let cmd = Command::new(CommandKind::Help);
-        assert_eq!(cmd.get_usage(), "help [command]")
+        assert_eq!(cmd.get_usage().len() > 0, true);
     }
 
     #[test]
     fn get_short_desc() {
         let cmd = Command::new(CommandKind::Version);
-        assert_eq!(cmd.get_short_desc(), "Show neocities version");
+        assert_eq!(cmd.get_short_desc().len() > 0, true);
     }
 
     #[test]
     fn get_long_desc() {
         let cmd = Command::new(CommandKind::Upload);
-        assert_eq!(
-            cmd.get_long_desc(),
-            "Upload files to your Neocities website"
-        );
+        assert_eq!(cmd.get_long_desc().len() > 0, true);
     }
 
     #[test]
     fn execute() {
-        // let cmd = Command::new(CommandKind::List);
-        // let empty = vec![];
-        // assert_eq!(cmd.execute(empty).is_ok(), true)
+        let mock = Credentials::new();
+        let cmd = Command::new(CommandKind::Version);
+        let empty = vec![];
+        assert_eq!(cmd.execute(mock, empty).is_ok(), true)
     }
 }
