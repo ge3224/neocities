@@ -17,10 +17,6 @@
 This client is a command-line interface application for managing and publishing websites hosted on Neocities. Users can easily upload, download, and
 synchronize files between their local computer and their Neocities website, all from their terminals.
 
-**Demo:**
-
-https://user-images.githubusercontent.com/75739874/221222747-f386f9bc-d270-4f96-8110-58ecda5c2050.mp4
-
 <!--## Installation-->
 
  <!--- [ ]  TODO-->
