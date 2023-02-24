@@ -1,10 +1,6 @@
 /*!
  A Neocities API client written in Rust
 
- # Installation:
-
- // TODO
-
  # Usage:
 
  - Upload files to your website:
@@ -25,19 +21,19 @@
  $ neocities
 
  // output ...
-
- usage: neocities <command> [<args>]
-
- Commands:
-    upload    Upload files to Neocities
-    delete    Delete files from Neocities
-    info      Info about Neocities websites
-    key       Neocities API key
-    list      List files on Neocities
-    version   Show neocities client version
-
-  Help for a specific command:
-    help [command]
+ //
+ // usage: neocities <command> [<args>]
+ //
+ // Commands:
+ //    upload    Upload files to Neocities
+ //    delete    Delete files from Neocities
+ //    info      Info about Neocities websites
+ //    key       Neocities API key
+ //    list      List files on Neocities
+ //    version   Show neocities client version
+ //
+ //  Help for a specific command:
+ //    help [command]
  ```
 */
 

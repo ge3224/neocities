@@ -1,6 +1,11 @@
 /// Args contains a command and its params
 pub struct Args {
+    /// The first argument provided by a user when running neocities. If no argument is provided,
+    /// the help command will be executed.
     pub command: Option<String>,
+
+    /// A vector of strings, which a user types after providing a command 
+    /// (e.g. `neocities <command> [param1, param2]).
     pub params: Vec<String>,
 }
 
