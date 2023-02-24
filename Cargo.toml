@@ -1,9 +1,13 @@
 [package]
 name = "neocities"
 version = "0.1.0"
+author = ["Jacob Benison <ge3224@gmail.com>"]
+description = "A command-line application for managing websites hosted on Neocities."
+keywords = ["neocities", "webmaster", "open-source"]
+repository = "https://github.com/ge3224/neocities"
+license = "MIT"
+readme = "README.md"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 thiserror = "1.0.38"

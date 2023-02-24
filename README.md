@@ -14,8 +14,7 @@
 
 [Neocities](https://neocities.org/about) is a free web hosting service that allows users to create and publish their own websites. 
 
-This client is a command-line interface application for managing and publishing websites hosted on Neocities. Users can easily upload, download, and
-synchronize files between their local computer and their Neocities website, all from their terminals.
+This client is a command-line interface application for managing websites hosted on Neocities. Users can easily upload and delete files between their local computer and their Neocities website, all from their terminals.
 
 **Demo:**
 

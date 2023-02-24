@@ -1,5 +1,3 @@
-//! Handles user interface, processes input, sends and receives messages from the api module
-
 /// Contains configuration details for a running instance of the Neocities application
 pub mod config;
 

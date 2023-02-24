@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-/// Defines error variants found within this library
+/// Defines error variants found within this library.
 #[derive(Debug, Error)]
 pub enum NeocitiesErr {
     /// An unrecognized command was provided; the application could not proceed 
