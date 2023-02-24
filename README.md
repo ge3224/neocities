@@ -12,7 +12,7 @@
 
 [![Neocities CLI License](https://img.shields.io/github/license/ge3224/neocities)](https://github.com/ge3224/neocities/blob/main/LICENSE.md)
 
-[Neocities](https://neocities.org/) is a free web hosting service that allows users to create and publish their own websites. 
+[Neocities](https://neocities.org/about) is a free web hosting service that allows users to create and publish their own websites. 
 
 This client is a command-line interface application for managing and publishing websites hosted on Neocities. Users can easily upload, download, and
 synchronize files between their local computer and their Neocities website, all from their terminals.

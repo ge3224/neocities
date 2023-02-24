@@ -6,13 +6,18 @@ use std::{error::Error, path::PathBuf};
 use tokio::fs::File;
 use tokio_util::codec::{BytesCodec, FramedRead};
 
+/// Contains data from the response body of the Neocities' `/api/upload` endpoint.
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UploadResponse {
+    /// A status message
     pub result: String,
+    /// An explanation of the upload operation that has occurred
     pub message: String,
 }
 
+/// Prepares and sends an upload request to the Neocities API. It awaits a response and returns a
+/// Result of a UploadResponse or an error.
 #[tokio::main]
 pub async fn api_call(cred: Credentials, args: Vec<String>) -> Result<UploadResponse, Box<dyn Error>> {
     let url: String;

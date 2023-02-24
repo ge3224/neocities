@@ -4,20 +4,32 @@ use super::*;
 
 /// Possible command variants
 pub enum CommandKind {
+    /// Corresponds to help module
     Help,
+    /// Corresponds to the upload module
     Upload,
+    /// Corresponds to the delete module
     Delete,
+    /// Corresponds to the info module
     Info,
+    /// Corresponds to the list module
     List,
+    /// Corresponds to the version module
     Version,
+    /// Corresponds to the key module
     Key,
 }
 
 /// Defines shared behavior among command kinds
 pub trait Executable {
+    /// Execute the implementation using valid credentials and arguments. Returns an empty tuple or
+    /// NeocitiesErr
     fn run(&self, cred: Credentials, args: Vec<String>) -> Result<(), NeocitiesErr>;
+    /// Retrieve usage information from the implementation
     fn get_usage(&self) -> &str;
+    /// Retrieve a summary about the implementation
     fn get_short_desc(&self) -> &str;
+    /// Retrieve a description of the implementation
     fn get_long_desc(&self) -> &str;
 }
 

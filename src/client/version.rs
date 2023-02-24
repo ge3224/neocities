@@ -4,7 +4,7 @@ use super::command::Executable;
 /// The string literal a user must type to run this module 
 pub const KEY: &'static str = "version";
 
-/// Outputs the version of this neocities client.
+/// An implementation of Executable that outputs the version of this neocities client
 pub struct Version {
     usage: String,
     short: String,

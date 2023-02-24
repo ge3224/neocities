@@ -7,29 +7,43 @@ use serde_json::Value;
 use crate::api::API_URL;
 use super::credentials::{Auth, Credentials};
 
+/// Contains data from the response body of the Neocities' `/api/info` endpoint.
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SiteInfo {
+    /// A status message
     pub result: String,
+    /// Information about a Neocities website
     pub info: Info,
 }
 
+/// Information about a Neocities Website
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Info {
+    /// A Neocities user's sitename, aka username
     pub sitename: String,
+    /// Total views
     pub views: i64,
+    /// Total hits
     pub hits: i64,
+    /// A timestamp for the site's creation
     #[serde(rename = "created_at")]
     pub created_at: String,
+    /// A timestamp for the sites most recent update
     #[serde(rename = "last_updated")]
     pub last_updated: String,
+    /// A domain for the website, if configured
     pub domain: Value,
+    /// Tags a Neocities user sets about the site
     pub tags: Vec<String>,
+    /// A hash associated with the InterPlanetary File System protocal
     #[serde(rename = "latest_ipfs_hash")]
     pub latest_ipfs_hash: Value,
 }
 
+/// Prepares and sends a info request to the Neocities API. It awaits a response and returns a
+/// Result of a SiteInfo or an error.
 #[tokio::main]
 pub async fn api_call(
     cred: Credentials,

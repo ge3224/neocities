@@ -8,7 +8,7 @@ use crate::{
 /// The string literal a user must type to run this module 
 pub const KEY: &'static str = "list";
 
-/// Retrieves a list of files for a Neocities user's site.
+/// Lists files that have been uploaded to a Neocities user's website
 pub struct List {
     usage: String,
     short: String,

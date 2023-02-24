@@ -5,7 +5,9 @@ use super::{
 };
 use crate::{api::credentials::Credentials, error::NeocitiesErr};
 
+/// Contains configuration details for a running instance of the Neocities application
 pub struct Config {
+    /// Parsed arguments provided by a user
     pub args: Args,
     credentials: Credentials,
 }
@@ -20,6 +22,7 @@ impl Config {
         Config { args, credentials }
     }
 
+    /// g
     pub fn use_command(self) -> Result<(), NeocitiesErr> {
         let cmd = match self.args.command {
             Some(c) => match c.as_str() {

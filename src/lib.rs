@@ -37,8 +37,13 @@
  ```
 */
 
+#![warn(missing_docs)]
+
+/// Defines error variants found within this library
 pub mod error;
 
+/// Handles user interface, processes input, sends and receives messages from the api module
 pub mod client;
 
+/// Sends requests to the Neocities API, passes response messages back to the client.
 pub mod api;

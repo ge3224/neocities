@@ -12,6 +12,7 @@ pub struct Credentials {
 }
 
 impl Credentials {
+    /// A constructor that returns a new instance of `Credentials`
     pub fn new() -> Credentials {
         let key = option_env!("NEOCITIES_KEY");
 
@@ -22,25 +23,36 @@ impl Credentials {
         Credentials { user, pass, key }
     }
 
+    /// Returns the Neocities user's API key if the NEOCITIES_KEY environment variable has already
+    /// been set.
     pub fn get_api_key(&self) -> Option<&str> {
         self.key
     }
 
+    /// Returns the Neocities user's username if the NEOCITIES_USER environment variable has
+    /// already been set.
     pub fn get_username(&self) -> Option<&str> {
         self.user
     }
 
+    /// Returns the Neocities user's password if the NEOCITIES_PASS environment variable has
+    /// already been set.
     pub fn get_password(&self) -> Option<&str> {
         self.pass
     }
 }
 
+/// Contains an appropriately formed url and optional api key.
 pub struct Auth {
+    /// The url that will be used to send a request based on authentication
     pub url: String,
+    /// A Neocities user's API if stored in the environment variables
     pub api_key: Option<String>,
 }
 
 impl Auth {
+    /// Verifies what environment variables are available to use when interacting with the
+    /// Neocities API
     pub fn authenticate(
         cred: Credentials,
         path: String,
@@ -101,12 +113,16 @@ impl Auth {
     }
 }
 
+/// Contains a required key and value that will be used to append a query string to a url
 pub struct QueryString {
+    /// Any valid key in the Neocities API
     pub key: String,
+    /// An appropriate value to be assigned to a corresponding query string key
     pub value: String,
 }
 
 impl QueryString {
+    /// A constructor that returns an instance of `QueryString`
     pub fn new(key: String, value: String) -> QueryString {
         QueryString { key, value }
     }
