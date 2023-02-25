@@ -1,10 +1,10 @@
 use crate::{api::credentials::Credentials, error::NeocitiesErr};
 use super::command::Executable;
 
-/// The string literal a user must type to run this module 
+/// The string literal a user must type to run functionality in this module 
 pub const KEY: &'static str = "version";
 
-/// An implementation of Executable that outputs the version of this neocities client
+/// An implementation of `Executable` that outputs the version of this `neocities_cli` application
 pub struct Version {
     usage: String,
     short: String,

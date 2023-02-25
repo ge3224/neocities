@@ -7,7 +7,7 @@ use crate::{
     error::NeocitiesErr,
 };
 
-/// The string literal a user must type to run this module 
+/// The string literal a user must type to run functionality in this module 
 pub const KEY: &'static str = "key";
 
 /// Returns an API key that a Neocities user can use for interacting with the API instead of login

@@ -4,10 +4,10 @@ use crate::{
     error::NeocitiesErr,
 };
 
-/// The string literal a user must type to run this module 
+/// The string literal a user must type to run functionality in this module 
 pub const KEY: &'static str = "info";
 
-/// Retreives public information about a Neocities user's web site. Site authorization is not
+/// Retreives public information about any Neocities user's web site. Site authorization is not
 /// needed if the user provides a sitename argument. Note that the sitename is the same as a
 /// username.
 pub struct Info {
@@ -42,7 +42,6 @@ impl Executable for Info {
 
         match info::api_call(cred, &args) {
             Ok(data) => {
-                println!("\n");
                 self.print_info("sitename", data.info.sitename);
 
                 self.print_info("views", data.info.views.to_string());
@@ -74,7 +73,6 @@ impl Executable for Info {
                 }
 
                 self.print_info("latest_ipfs_hash", hash_value);
-                println!("\n");
 
                 Ok(())
             }

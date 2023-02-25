@@ -4,36 +4,36 @@ use super::*;
 
 /// Possible command variants
 pub enum CommandKind {
-    /// Corresponds to help module
+    /// Corresponds to the `help` module
     Help,
-    /// Corresponds to the upload module
+    /// Corresponds to the `upload` module
     Upload,
-    /// Corresponds to the delete module
+    /// Corresponds to the `delete` module
     Delete,
-    /// Corresponds to the info module
+    /// Corresponds to the `info` module
     Info,
-    /// Corresponds to the list module
+    /// Corresponds to the `list` module
     List,
-    /// Corresponds to the version module
+    /// Corresponds to the `version` module
     Version,
-    /// Corresponds to the key module
+    /// Corresponds to the `key` module
     Key,
 }
 
 /// Defines shared behavior among command kinds
 pub trait Executable {
-    /// Execute the implementation using valid credentials and arguments. Returns an empty tuple or
-    /// NeocitiesErr
+    /// Executes the implementation using valid credentials and arguments. Returns an empty tuple or
+    /// `NeocitiesErr`
     fn run(&self, cred: Credentials, args: Vec<String>) -> Result<(), NeocitiesErr>;
-    /// Retrieve usage information from the implementation
+    /// Retrieves usage information from the implementation
     fn get_usage(&self) -> &str;
-    /// Retrieve a summary about the implementation
+    /// Retrieves a summary about the implementation
     fn get_short_desc(&self) -> &str;
-    /// Retrieve a description of the implementation
+    /// Retrieves a full description of the implementation
     fn get_long_desc(&self) -> &str;
 }
 
-/// Command contains a pointer to an implementation of the Executable trait
+/// Contains a pointer to an implementation of the `Executable` trait
 pub struct Command {
     exec: Box<dyn Executable>,
 }
@@ -54,22 +54,22 @@ impl Command {
         Command { exec }
     }
 
-    /// Returns usage information from an implementation of Executable
+    /// Returns usage information from an implementation of `Executable`
     pub fn get_usage(&self) -> &str {
         self.exec.get_usage()
     }
 
-    /// Returns a summary about an implementation of Executable
+    /// Returns a summary about an implementation of `Executable`
     pub fn get_short_desc(&self) -> &str {
         self.exec.get_short_desc()
     }
 
-    /// Returns a full description about an implementation of Executable
+    /// Returns a full description about an implementation of `Executable`
     pub fn get_long_desc(&self) -> &str {
         self.exec.get_long_desc()
     }
 
-    /// Executes the run method of an implementation of Executable
+    /// Executes the run method of an implementation of `Executable`
     pub fn execute(&self, cred: Credentials, args: Vec<String>) -> Result<(), NeocitiesErr> {
         self.exec.run(cred, args)?;
         Ok(())

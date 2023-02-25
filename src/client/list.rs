@@ -5,7 +5,7 @@ use crate::{
     error::NeocitiesErr,
 };
 
-/// The string literal a user must type to run this module 
+/// The string literal a user must type to run functionality in this module 
 pub const KEY: &'static str = "list";
 
 /// Lists files that have been uploaded to a Neocities user's website

@@ -1,13 +1,13 @@
 use super::{
     command::{Command, CommandKind, Executable},
-    delete, help, info, list, upload, version, key
+    delete, help, info, key, list, upload, version,
 };
 use crate::{api::credentials::Credentials, error::NeocitiesErr};
 
-/// The string literal a user must type to run this module 
+/// The string literal a user must type to run functionality in this module
 pub const HELP: &'static str = "help";
 
-/// Displays help for a specific command included in this Neocities client.
+/// Displays help for a specific command included in this Neocities client
 pub struct Help {
     usage: String,
     short: String,
@@ -89,8 +89,7 @@ Help for a specific command:
 \x1b[1;32mhelp\x1b[0m [command]
 ";
 
-/// Messaging about setting up environment variables so this client can interact with the Neocities
-/// public API.
+/// Messaging about setting up environment variables so this client can interact with the Neocities API.
 pub const ENV_VAR_MSG: &'static str = "
 Before you can interact with Neocities, you must first set the following 
 environment variables:
@@ -110,4 +109,3 @@ const CAT: &'static str = "
 ( o_o )  |\\ | _    _.|-. _  _  /`| |
 ==_Y_==  | \\|(/_()(_||_|(/__\\  \\,|_|
 ";
-

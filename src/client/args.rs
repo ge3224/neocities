@@ -4,14 +4,14 @@ pub struct Args {
     /// the help command will be executed.
     pub command: Option<String>,
 
-    /// A vector of strings, which a user types after providing a command 
-    /// (e.g. `neocities <command> [param1, param2]).
+    /// A vector of strings, which are collected from arguments a user inputs after the initial
+    /// command (e.g. `neocities <command> param1 param2).
     pub params: Vec<String>,
 }
 
 impl Args {
-    /// build an instance of Args by parsing command line arguments passed in as an
-    /// array of Strings
+    /// Builds an instance of Args by parsing command line arguments passed in as a reference to an
+    /// array of strings
     pub fn build(inputs: &[String]) -> Args {
         let mut inputs_iter = inputs.iter();
 

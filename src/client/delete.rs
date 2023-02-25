@@ -7,11 +7,11 @@ use crate::{
     error::NeocitiesErr,
 };
 
-/// The string literal a user must type to run this module 
+/// The string literal a user must type to run functionality in this module 
 pub const KEY: &'static str = "delete";
 
-/// Deletes files from a Neocities user's site. The NC API allows a user to delete any files 
-/// except index.html.
+/// Deletes files from a Neocities user's site. The Neocities API allows a user to delete any files
+/// except for `index.html`
 pub struct Delete {
     usage: String,
     short: String,
