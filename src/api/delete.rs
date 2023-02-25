@@ -9,7 +9,7 @@ use serde_derive::Serialize;
 use super::credentials::Credentials;
 use crate::api::credentials::Auth;
 
-/// Contains data from the response body of the Neocities' `/api/delete` endpoint.
+/// Contains data received from Neocities in response to a request to `/api/delete`
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeleteResponse {
@@ -22,8 +22,8 @@ pub struct DeleteResponse {
     pub message: String,
 }
 
-/// Prepares and sends a delete request to the Neocities API. It awaits a response and returns a
-/// Result of a DeleteResponse or an error.
+/// Prepares and sends a request for specified files to be deleted from a Neocities user's website.
+/// It awaits a response and returns either a DeleteResponse or an error.
 #[tokio::main]
 pub async fn api_call(
     cred: Credentials,

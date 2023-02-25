@@ -46,7 +46,7 @@ impl Credentials {
 pub struct Auth {
     /// The url that will be used to send a request based on authentication
     pub url: String,
-    /// A Neocities user's API if stored in the environment variables
+    /// A Neocities user's API key if stored in the environment variables
     pub api_key: Option<String>,
 }
 

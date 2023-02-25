@@ -4,7 +4,7 @@ use serde_derive::Deserialize;
 use serde_derive::Serialize;
 use std::error::Error;
 
-/// Contains data from the response body of the Neocities' `/api/list` endpoint.
+/// Contains data received from Neocities in response to a request to `/api/list`.
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FileList {
@@ -14,7 +14,7 @@ pub struct FileList {
     pub files: Vec<File>,
 }
 
-/// Contains file data found for a specific path in a Neocities user's website
+/// Contains file data found for a specific path on a Neocities user's website
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct File {
@@ -25,7 +25,7 @@ pub struct File {
     pub is_directory: bool,
     /// The byte size of the file
     pub size: Option<i64>,
-    /// A datestamp of the file's most recent modification
+    /// A timestamp for the file's most recent modification
     #[serde(rename = "updated_at")]
     pub updated_at: String,
     /// A checksum for the file
@@ -33,8 +33,8 @@ pub struct File {
     pub sha1_hash: Option<String>,
 }
 
-/// Prepares and sends a list request to the Neocities API. It awaits a response and returns
-/// a Result of a FileList or an error.
+/// Prepares and sends a request to the `api/list` endpoint of the Neocities API. It awaits a
+/// response and returns either a FileList or an error.
 #[tokio::main]
 pub async fn api_call(cred: Credentials, path: Option<String>) -> Result<FileList, Box<dyn Error>> {
     let mut query_string: Option<QueryString> = None;

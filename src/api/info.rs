@@ -7,7 +7,7 @@ use serde_json::Value;
 use crate::api::API_URL;
 use super::credentials::{Auth, Credentials};
 
-/// Contains data from the response body of the Neocities' `/api/info` endpoint.
+/// Contains data received from Neocities in response to a request to `/api/info`
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SiteInfo {
@@ -17,7 +17,7 @@ pub struct SiteInfo {
     pub info: Info,
 }
 
-/// Information about a Neocities Website
+/// Information about a Neocities website
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Info {
@@ -37,13 +37,13 @@ pub struct Info {
     pub domain: Value,
     /// Tags a Neocities user sets about the site
     pub tags: Vec<String>,
-    /// A hash associated with the InterPlanetary File System protocal
+    /// A hash associated with the InterPlanetary File System protocol
     #[serde(rename = "latest_ipfs_hash")]
     pub latest_ipfs_hash: Value,
 }
 
-/// Prepares and sends a info request to the Neocities API. It awaits a response and returns a
-/// Result of a SiteInfo or an error.
+/// Prepares and sends a request for information about a specified Neocities website. It awaits a
+/// response and returns either SiteInfo or an error.
 #[tokio::main]
 pub async fn api_call(
     cred: Credentials,
@@ -53,7 +53,7 @@ pub async fn api_call(
     let mut api_key: Option<String> = None;
 
     // give precedence to args so a user can run `neocities info [sitename]` to lookup other
-    // websites, although her or she has set environment variables.
+    // websites, although environment variables have been set
     if args.len() > 0 {
         url = format!("https://{}/info?sitename={}", API_URL, args[0]);
     } else {
