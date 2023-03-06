@@ -11,7 +11,7 @@
 # A Neocities client written in Rust
 
 [![Neocities CLI Crate](https://img.shields.io/crates/v/neocities_cli)](https://crates.io/crates/neocities_cli)
-[![Neocities CLI docs.rs](https://img.shields.io/docsrs/neocities_cli/0.1.0)](https://docs.rs/neocities_cli/0.1.0/neocities_cli/index.html)
+[![Neocities CLI docs.rs](https://img.shields.io/docsrs/neocities_cli)](https://docs.rs/neocities_cli/0.1.0/neocities_cli/index.html)
 [![Neocities CLI License](https://img.shields.io/github/license/ge3224/neocities)](https://github.com/ge3224/neocities/blob/main/LICENSE)
 [![Neocities CLI Crate Downloads](https://img.shields.io/crates/d/neocities_cli)](https://crates.io/crates/neocities_cli)
 

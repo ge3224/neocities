@@ -8,7 +8,7 @@ const ENV_KEY: &'static str = "NEOCITIES_KEY";
 const ENV_USER: &'static str = "NEOCITIES_USER";
 const ENV_PASS: &'static str = "NEOCITIES_PASS";
 
-/// Credentials provides access to environment variables set on the users local machine, including
+/// Credentials provides access to environment variables set on the user's local machine, including
 /// an optional api key, a username, and password
 pub struct Credentials {}
 
