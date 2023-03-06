@@ -2,7 +2,7 @@ use url::form_urlencoded::byte_serialize;
 
 use super::command::Executable;
 use crate::{
-    api::{credentials::Credentials, key},
+    api::{credentials::Credentials, key::ApiKeyRequest},
     client::help,
     error::NeocitiesErr,
 };
@@ -51,7 +51,7 @@ impl Executable for Key {
 
             let pass_urlencoded: String = byte_serialize(pass.unwrap().as_bytes()).collect();
 
-            match key::api_call(user_urlencoded, pass_urlencoded) {
+            match ApiKeyRequest::fetch(user_urlencoded, pass_urlencoded) {
                 Ok(data) => {
                     self.print_new_key("API Key", data.api_key);
 

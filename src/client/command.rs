@@ -1,4 +1,4 @@
-use crate::{api::credentials::Credentials, error::NeocitiesErr};
+use crate::error::NeocitiesErr;
 
 use super::*;
 

@@ -2,7 +2,7 @@ use std::io;
 
 use super::command::Executable;
 use crate::{
-    api::{credentials::Credentials, delete},
+    api::{credentials::Credentials, delete::DeleteRequest},
     client::help,
     error::NeocitiesErr,
 };
@@ -80,7 +80,7 @@ impl Executable for Delete {
             }
         }
 
-        match delete::api_call(cred, args) {
+        match DeleteRequest::fetch(cred, args) {
             Ok(data) => println!("{} - {}", data.result, data.message),
             Err(e) => return Err(NeocitiesErr::HttpRequestError(e)),
         }

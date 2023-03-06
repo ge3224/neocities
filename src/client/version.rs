@@ -1,5 +1,5 @@
 use super::command::Executable;
-use crate::{api::credentials::Credentials, error::NeocitiesErr};
+use crate::error::NeocitiesErr;
 
 /// The string literal a user must type to run functionality in this module
 pub const KEY: &'static str = "version";

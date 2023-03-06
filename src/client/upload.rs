@@ -1,6 +1,6 @@
 use super::command::Executable;
 use crate::{
-    api::{credentials::Credentials, upload},
+    api::{credentials::Credentials, upload::UploadRequest},
     client::help,
     error::NeocitiesErr,
 };
@@ -51,7 +51,7 @@ impl Executable for Upload {
             return Ok(());
         }
 
-        match upload::api_call(cred, args) {
+        match UploadRequest::fetch(cred, args) {
             Ok(data) => println!("{} - {}", data.result, data.message),
             Err(e) => return Err(NeocitiesErr::HttpRequestError(e)),
         }

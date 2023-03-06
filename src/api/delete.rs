@@ -12,7 +12,7 @@ use crate::api::credentials::Auth;
 /// Contains data received from Neocities in response to a request to `/api/delete`
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DeleteResponse {
+pub struct DeleteRequest {
     /// A status message
     pub result: String,
     #[serde(rename = "error_type")]
@@ -22,54 +22,56 @@ pub struct DeleteResponse {
     pub message: String,
 }
 
-/// Prepares and sends a request for specified files to be deleted from a Neocities user's website.
-/// It awaits a response and returns either a DeleteResponse or an error.
-#[tokio::main]
-pub async fn api_call(
-    cred: Credentials,
-    args: Vec<String>,
-) -> Result<DeleteResponse, Box<dyn Error>> {
-    let url: String;
-    let api_key: Option<String>;
+impl DeleteRequest {
+    /// Prepares and sends a request for specified files to be deleted from a Neocities user's website.
+    /// It awaits a response and returns either a DeleteResponse or an error.
+    #[tokio::main]
+    pub async fn fetch(
+        cred: Credentials,
+        args: Vec<String>,
+    ) -> Result<DeleteRequest, Box<dyn Error>> {
+        let url: String;
+        let api_key: Option<String>;
 
-    let auth = Auth::authenticate(cred, String::from("delete"), None);
+        let auth = Auth::authenticate(cred, String::from("delete"), None);
 
-    match auth {
-        Ok(a) => {
-            url = a.url;
-            api_key = a.api_key;
+        match auth {
+            Ok(a) => {
+                url = a.url;
+                api_key = a.api_key;
+            }
+            Err(e) => return Err(format!("problem authenticating credentials: {e}").into()),
         }
-        Err(e) => return Err(format!("problem authenticating credentials: {e}").into()),
-    }
 
-    let mut files = String::from("");
-    for arg in args.iter() {
-        if files.len() > 0 {
-            files.push_str("&");
+        let mut files = String::from("");
+        for arg in args.iter() {
+            if files.len() > 0 {
+                files.push_str("&");
+            }
+            files.push_str("filenames[]=");
+            files.push_str(arg);
         }
-        files.push_str("filenames[]=");
-        files.push_str(arg);
-    }
 
-    let req = Client::new();
-    let res: Response;
+        let req = Client::new();
+        let res: Response;
 
-    if let Some(k) = api_key {
-        res = req
-            .post(&url)
-            .header(AUTHORIZATION, format!("Bearer {}", k))
-            .body(files)
-            .send()
-            .await?;
-    } else {
-        res = req.post(&url).body(files).send().await?;
-    }
-
-    match res.status() {
-        reqwest::StatusCode::OK => {
-            let body = res.json::<DeleteResponse>().await?;
-            Ok(body)
+        if let Some(k) = api_key {
+            res = req
+                .post(&url)
+                .header(AUTHORIZATION, format!("Bearer {}", k))
+                .body(files)
+                .send()
+                .await?;
+        } else {
+            res = req.post(&url).body(files).send().await?;
         }
-        _ => return Err(String::from("error deleting file").into()),
+
+        match res.status() {
+            reqwest::StatusCode::OK => {
+                let body = res.json::<DeleteRequest>().await?;
+                Ok(body)
+            }
+            _ => return Err(String::from("error deleting file").into()),
+        }
     }
 }
