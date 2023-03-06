@@ -1,10 +1,10 @@
 use super::{command::Executable, help};
 use crate::{
-    api::{info, credentials::Credentials},
+    api::{credentials::Credentials, info},
     error::NeocitiesErr,
 };
 
-/// The string literal a user must type to run functionality in this module 
+/// The string literal a user must type to run functionality in this module
 pub const KEY: &'static str = "info";
 
 /// Retreives public information about any Neocities user's web site. Site authorization is not
@@ -32,7 +32,9 @@ impl Info {
 }
 
 impl Executable for Info {
-    fn run(&self, cred: Credentials, args: Vec<String>) -> Result<(), NeocitiesErr> {
+    fn run(&self, args: Vec<String>) -> Result<(), NeocitiesErr> {
+        let cred = Credentials::new();
+
         if args.len() < 1 {
             if cred.get_username().is_none() || cred.get_password().is_none() {
                 println!("{}", help::ENV_VAR_MSG);

@@ -5,11 +5,11 @@ use crate::{
     error::NeocitiesErr,
 };
 
-/// The string literal a user must type to run functionality in this module 
+/// The string literal a user must type to run functionality in this module
 pub const KEY: &'static str = "upload";
 
 /// Uploads files to a Neocities user's site. The Neocities API allows a user to upload as many
-/// files as desired, as long as the entire request stays within the disk space limit. 
+/// files as desired, as long as the entire request stays within the disk space limit.
 pub struct Upload {
     usage: String,
     short: String,
@@ -20,7 +20,10 @@ impl Upload {
     /// A constructor that returns an instance of `Upload`.
     pub fn new() -> Upload {
         Upload {
-            usage: String::from(format!("\x1b[1;32m{}\x1b[0m <filename> [<another filename>]", KEY)),
+            usage: String::from(format!(
+                "\x1b[1;32m{}\x1b[0m <filename> [<another filename>]",
+                KEY
+            )),
             short: String::from("Upload files to Neocities"),
             long: String::from("Upload files to your Neocities website"),
         }
@@ -35,11 +38,13 @@ impl Upload {
 }
 
 impl Executable for Upload {
-    fn run(&self, cred: Credentials, args: Vec<String>) -> Result<(), NeocitiesErr> {
+    fn run(&self, args: Vec<String>) -> Result<(), NeocitiesErr> {
         if args.len() < 1 {
             self.print_usage();
             return Ok(());
         }
+
+        let cred = Credentials::new();
 
         if cred.get_username().is_none() || cred.get_password().is_none() {
             println!("{}", help::ENV_VAR_MSG);

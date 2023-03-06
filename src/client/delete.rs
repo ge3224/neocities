@@ -7,7 +7,7 @@ use crate::{
     error::NeocitiesErr,
 };
 
-/// The string literal a user must type to run functionality in this module 
+/// The string literal a user must type to run functionality in this module
 pub const KEY: &'static str = "delete";
 
 /// Deletes files from a Neocities user's site. The Neocities API allows a user to delete any files
@@ -22,7 +22,9 @@ impl Delete {
     /// A constructor that returns an instance of `Delete`.
     pub fn new() -> Delete {
         Delete {
-            usage: String::from(format!("\x1b[1;32m{KEY}\x1b[0m <filename> [<another filename>]")),
+            usage: String::from(format!(
+                "\x1b[1;32m{KEY}\x1b[0m <filename> [<another filename>]"
+            )),
             short: String::from("Delete files from Neocities"),
             long: String::from("Delete files from your Neocities website"),
         }
@@ -35,11 +37,13 @@ impl Delete {
 }
 
 impl Executable for Delete {
-    fn run(&self, cred: Credentials, args: Vec<String>) -> Result<(), NeocitiesErr> {
+    fn run(&self, args: Vec<String>) -> Result<(), NeocitiesErr> {
         if args.len() < 1 {
             self.print_usage();
             return Ok(());
         }
+
+        let cred = Credentials::new();
 
         if cred.get_username().is_none() || cred.get_password().is_none() {
             println!("{}", help::ENV_VAR_MSG);

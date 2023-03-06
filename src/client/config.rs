@@ -1,15 +1,14 @@
 use super::{
     args::Args,
     command::{Command, CommandKind},
-    delete, info, list, upload, version, key
+    delete, info, key, list, upload, version,
 };
-use crate::{api::credentials::Credentials, error::NeocitiesErr};
+use crate::error::NeocitiesErr;
 
 /// Contains configuration details for a running instance of the Neocities CLI application
 pub struct Config {
     /// Parsed arguments provided by a user
     pub args: Args,
-    credentials: Credentials,
 }
 
 impl Config {
@@ -17,9 +16,7 @@ impl Config {
     pub fn build(input: &[String]) -> Config {
         let args = Args::build(&input);
 
-        let credentials = Credentials::new();
-
-        Config { args, credentials }
+        Config { args }
     }
 
     /// Determines the correct command and executes it
@@ -37,7 +34,7 @@ impl Config {
             _ => Command::new(CommandKind::Help),
         };
 
-        cmd.execute(self.credentials, self.args.params)?;
+        cmd.execute(self.args.params)?;
 
         Ok(())
     }

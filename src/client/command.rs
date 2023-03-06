@@ -24,7 +24,7 @@ pub enum CommandKind {
 pub trait Executable {
     /// Executes the implementation using valid credentials and arguments. Returns an empty tuple or
     /// `NeocitiesErr`
-    fn run(&self, cred: Credentials, args: Vec<String>) -> Result<(), NeocitiesErr>;
+    fn run(&self, args: Vec<String>) -> Result<(), NeocitiesErr>;
     /// Retrieves usage information from the implementation
     fn get_usage(&self) -> &str;
     /// Retrieves a summary about the implementation
@@ -70,17 +70,14 @@ impl Command {
     }
 
     /// Executes the run method of an implementation of `Executable`
-    pub fn execute(&self, cred: Credentials, args: Vec<String>) -> Result<(), NeocitiesErr> {
-        self.exec.run(cred, args)?;
+    pub fn execute(&self, args: Vec<String>) -> Result<(), NeocitiesErr> {
+        self.exec.run(args)?;
         Ok(())
     }
 }
 
 #[cfg(test)]
 mod tests {
-
-    use crate::api::credentials::Credentials;
-
     use super::{Command, CommandKind};
 
     #[test]
@@ -103,9 +100,8 @@ mod tests {
 
     #[test]
     fn execute() {
-        let mock = Credentials::new();
         let cmd = Command::new(CommandKind::Version);
         let empty = vec![];
-        assert_eq!(cmd.execute(mock, empty).is_ok(), true)
+        assert_eq!(cmd.execute(empty).is_ok(), true)
     }
 }

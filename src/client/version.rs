@@ -1,7 +1,7 @@
-use crate::{api::credentials::Credentials, error::NeocitiesErr};
 use super::command::Executable;
+use crate::{api::credentials::Credentials, error::NeocitiesErr};
 
-/// The string literal a user must type to run functionality in this module 
+/// The string literal a user must type to run functionality in this module
 pub const KEY: &'static str = "version";
 
 /// An implementation of `Executable` that outputs the version of this `neocities_cli` application
@@ -23,8 +23,11 @@ impl Version {
 }
 
 impl Executable for Version {
-    fn run(&self, _cred: Credentials, _args: Vec<String>) -> Result<(), NeocitiesErr> {
-        println!("\nNeocities client, \x1b[1;32mversion\x1b[0m: {}\n", env!("CARGO_PKG_VERSION"));
+    fn run(&self, _args: Vec<String>) -> Result<(), NeocitiesErr> {
+        println!(
+            "\nNeocities client, \x1b[1;32mversion\x1b[0m: {}\n",
+            env!("CARGO_PKG_VERSION")
+        );
         Ok(())
     }
 

@@ -36,7 +36,7 @@ impl Help {
 }
 
 impl Executable for Help {
-    fn run(&self, _cred: Credentials, args: Vec<String>) -> Result<(), NeocitiesErr> {
+    fn run(&self, args: Vec<String>) -> Result<(), NeocitiesErr> {
         if args.len() < 1 {
             println!("{}", CAT);
             println!("{HELP_MSG}");

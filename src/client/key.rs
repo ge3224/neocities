@@ -2,12 +2,12 @@ use url::form_urlencoded::byte_serialize;
 
 use super::command::Executable;
 use crate::{
-    api::{key, credentials::Credentials},
+    api::{credentials::Credentials, key},
     client::help,
     error::NeocitiesErr,
 };
 
-/// The string literal a user must type to run functionality in this module 
+/// The string literal a user must type to run functionality in this module
 pub const KEY: &'static str = "key";
 
 /// Returns an API key that a Neocities user can use for interacting with the API instead of login
@@ -35,7 +35,8 @@ impl Key {
 }
 
 impl Executable for Key {
-    fn run(&self, cred: Credentials, _args: Vec<String>) -> Result<(), NeocitiesErr> {
+    fn run(&self, _args: Vec<String>) -> Result<(), NeocitiesErr> {
+        let cred = Credentials::new();
         if let Some(key) = cred.get_api_key() {
             println!("{KEY_SET_MSG}: {}", key);
             return Ok(());
@@ -89,4 +90,3 @@ Example (Linux):
 
     export NEOCITIES_KEY=<your_api_key>
 ";
-
