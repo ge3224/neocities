@@ -1,9 +1,9 @@
 [package]
 name = "neocities_cli"
-version = "0.1.0"
+version = "0.1.1"
 author = ["Jacob Benison <ge3224@gmail.com>"]
 description = "A CLI tool for managing websites hosted on Neocities."
-keywords = ["neocities", "webmaster", "open-source"]
+keywords = ["neocities", "webmaster", "open-source", "static-site"]
 repository = "https://github.com/ge3224/neocities"
 license = "MIT"
 readme = "README.md"
