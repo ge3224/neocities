@@ -1,44 +1,48 @@
-use std::error::Error;
+use std::{env, error::Error};
 
 use url::form_urlencoded::byte_serialize;
 
 use super::API_URL;
 
-/// Credentials contains an optional api key, a username, and password
-pub struct Credentials {
-    user: Option<&'static str>,
-    pass: Option<&'static str>,
-    key: Option<&'static str>,
-}
+const ENV_KEY: &'static str = "NEOCITIES_KEY";
+const ENV_USER: &'static str = "NEOCITIES_USER";
+const ENV_PASS: &'static str = "NEOCITIES_PASS";
+
+/// Credentials provides access to environment variables set on the users local machine, including
+/// an optional api key, a username, and password
+pub struct Credentials {}
 
 impl Credentials {
     /// A constructor that returns a new instance of `Credentials`
     pub fn new() -> Credentials {
-        let key = option_env!("NEOCITIES_KEY");
-
-        let user = option_env!("NEOCITIES_USER");
-
-        let pass = option_env!("NEOCITIES_PASS");
-
-        Credentials { user, pass, key }
+        Credentials {}
     }
 
     /// Returns the Neocities user's API key if the NEOCITIES_KEY environment variable has already
     /// been set.
-    pub fn get_api_key(&self) -> Option<&str> {
-        self.key
+    pub fn get_api_key(&self) -> Option<String> {
+        match env::var(ENV_KEY) {
+            Ok(s) => Some(s),
+            _ => None,
+        }
     }
 
     /// Returns the Neocities user's username if the NEOCITIES_USER environment variable has
     /// already been set.
-    pub fn get_username(&self) -> Option<&str> {
-        self.user
+    pub fn get_username(&self) -> Option<String> {
+        match env::var(ENV_USER) {
+            Ok(u) => Some(u),
+            _ => None,
+        }
     }
 
     /// Returns the Neocities user's password if the NEOCITIES_PASS environment variable has
     /// already been set.
-    pub fn get_password(&self) -> Option<&str> {
-        self.pass
+    pub fn get_password(&self) -> Option<String> {
+        match env::var(ENV_PASS) {
+            Ok(p) => Some(p),
+            _ => None,
+        }
     }
 }
 
@@ -65,7 +69,7 @@ impl Auth {
         // and password
         if let Some(k) = cred.get_api_key() {
             // this key is added to the request header below
-            api_key = Some(k.to_string());
+            api_key = Some(k);
 
             // api key url format
             url = format!("https://{}{}", API_URL, path);
@@ -78,9 +82,11 @@ impl Auth {
                 None => {
                     // the client module should already validate that `get_username` returns a
                     // Some(u), but we create an error to return as a fallback
-                    let err: Box<dyn Error> =
-                        String::from("problem accessing environment variable NEOCITIES_USER")
-                            .into();
+                    let err: Box<dyn Error> = String::from(format!(
+                        "problem accessing environment variable {}",
+                        ENV_USER
+                    ))
+                    .into();
                     return Err(err);
                 }
             };
@@ -93,9 +99,11 @@ impl Auth {
                 None => {
                     // the client module should already validate that `get_password` returns a
                     // Some(p), but we create an error to return as a fallback
-                    let err: Box<dyn Error> =
-                        String::from("problem accessing environment variable NEOCITIES_PASS")
-                            .into();
+                    let err: Box<dyn Error> = String::from(format!(
+                        "problem accessing environment variable {}",
+                        ENV_PASS
+                    ))
+                    .into();
                     return Err(err);
                 }
             };
@@ -125,5 +133,54 @@ impl QueryString {
     /// A constructor that returns an instance of `QueryString`
     pub fn new(key: String, value: String) -> QueryString {
         QueryString { key, value }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{ENV_PASS, ENV_USER};
+    use crate::api::credentials::{Credentials, ENV_KEY};
+    use std::env;
+
+    #[test]
+    fn env_key() {
+        let preserve = env::var(ENV_KEY);
+
+        env::set_var(ENV_KEY, "potatoes");
+        let creds = Credentials::new();
+        assert_eq!(creds.get_api_key().unwrap(), "potatoes");
+
+        match preserve {
+            Ok(v) => env::set_var(ENV_KEY, v),
+            _ => env::remove_var(ENV_KEY),
+        }
+    }
+
+    #[test]
+    fn env_user() {
+        let preserve = env::var(ENV_USER);
+
+        env::set_var(ENV_USER, "fries");
+        let creds = Credentials::new();
+        assert_eq!(creds.get_username().unwrap(), "fries");
+
+        match preserve {
+            Ok(v) => env::set_var(ENV_USER, v),
+            _ => env::remove_var(ENV_USER),
+        }
+    }
+
+    #[test]
+    fn env_pass() {
+        let preserve = env::var(ENV_PASS);
+
+        env::set_var(ENV_PASS, "chips");
+        let creds = Credentials::new();
+        assert_eq!(creds.get_password().unwrap(), "chips");
+
+        match preserve {
+            Ok(v) => env::set_var(ENV_USER, v),
+            _ => env::remove_var(ENV_USER),
+        }
     }
 }
