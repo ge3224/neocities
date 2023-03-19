@@ -4,9 +4,17 @@ use url::form_urlencoded::byte_serialize;
 
 use super::API_URL;
 
-const ENV_KEY: &'static str = "NEOCITIES_KEY";
-const ENV_USER: &'static str = "NEOCITIES_USER";
-const ENV_PASS: &'static str = "NEOCITIES_PASS";
+/// The string literal that must be used when setting an environment variable for the
+/// Neocities API key.
+pub const ENV_KEY: &'static str = "NEOCITIES_KEY";
+
+/// The string literal that must be used when setting an environment variable for the
+/// Neocties account username
+pub const ENV_USER: &'static str = "NEOCITIES_USER";
+
+/// The string literal that must be used when setting an environment variable for the
+/// Neocities account password
+pub const ENV_PASS: &'static str = "NEOCITIES_PASS";
 
 /// Credentials provides access to environment variables set on the user's local machine, including
 /// an optional api key, a username, and password

@@ -1,16 +1,19 @@
 use super::credentials::{Auth, Credentials};
+use super::http::get_request;
+use super::PathAndKey;
 use crate::api::API_URL;
-use reqwest::header::AUTHORIZATION;
-use reqwest::Response;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 use serde_json::Value;
 use std::error::Error;
 
+/// Handles the requesting of site information from the Neocities API at `/api/info`
+pub struct NcInfo {}
+
 /// Contains data received from Neocities in response to a request to `/api/info`
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct InfoRequest {
+pub struct InfoResponse {
     /// A status message
     pub result: String,
     /// Information about a Neocities website
@@ -42,11 +45,8 @@ pub struct Info {
     pub latest_ipfs_hash: Value,
 }
 
-impl InfoRequest {
-    #[tokio::main]
-    /// Prepares and sends a request for information about a specified Neocities website. It awaits a
-    /// response and returns either SiteInfo or an error.
-    pub async fn fetch(args: &Vec<String>) -> Result<InfoRequest, Box<dyn std::error::Error>> {
+impl NcInfo {
+    fn path_and_key(args: &Vec<String>) -> Result<PathAndKey, Box<dyn std::error::Error>> {
         let cred = Credentials::new();
 
         let url: String;
@@ -72,28 +72,76 @@ impl InfoRequest {
             }
         }
 
-        let req = reqwest::Client::new();
-        let res: Response;
-        if let Some(k) = api_key {
-            res = req
-                .get(url.as_str())
-                .header(AUTHORIZATION, format!("Bearer {}", k))
-                .send()
-                .await?;
-        } else {
-            res = req.get(url.as_str()).send().await?;
-        }
+        let pk = PathAndKey { url, api_key };
+        Ok(pk)
+    }
 
-        match res.status() {
-            reqwest::StatusCode::OK => {
-                let body = res.json::<InfoRequest>().await?;
-                Ok(body)
-            }
+    fn to_info_response(
+        value: serde_json::Value,
+    ) -> Result<InfoResponse, Box<dyn std::error::Error>> {
+        let attempt = serde_json::from_value(value);
+        match attempt {
+            Ok(res) => Ok(res),
             _ => {
-                let e: Box<dyn std::error::Error> =
-                    format!("The Neocities API could not find site '{}'.", args[0]).into();
-                Err(e)
+                let e: Box<dyn std::error::Error> = String::from("a problem occurred while converting the deserialized json to the InfoResponse type").into();
+                return Err(e);
             }
         }
+    }
+
+    /// Prepares and sends a request for information about a specified Neocities website. It awaits a
+    /// response and returns either SiteInfo or an error.
+    pub fn fetch(args: &Vec<String>) -> Result<InfoResponse, Box<dyn std::error::Error>> {
+        // get http path and api_key for headers
+        let pk = match NcInfo::path_and_key(args) {
+            Ok(v) => v,
+            Err(e) => return Err(e),
+        };
+
+        match get_request(pk.url, pk.api_key) {
+            Ok(res) => match NcInfo::to_info_response(res) {
+                Ok(ir) => Ok(ir),
+                Err(e) => Err(e),
+            },
+            Err(e) => Err(e),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{InfoResponse, NcInfo};
+    use serde_json::Value;
+    #[test]
+    fn info_request_path() {
+        let mock_args = vec![String::from("foo")];
+        let ph = NcInfo::path_and_key(&mock_args).unwrap();
+        assert_eq!(ph.url, "https://neocities.org/api//info?sitename=foo");
+    }
+
+    #[test]
+    fn value_to_info_response() {
+        let mock_str = r#"
+        {
+            "result": "success",
+            "info": {
+                "sitename": "foo",
+                "views": 100,
+                "hits": 1000,
+                "created_at": "Tue, 12 May 2013 18:49:21 +0000",
+                "last_updated":  "Tue, 12 May 2013 18:49:21 +0000", 
+                "domain": null,
+                "tags": [],
+                "latest_ipfs_hash": null
+            }
+        }"#;
+
+        let v: serde_json::Value = serde_json::from_str(mock_str).unwrap();
+        let ir: InfoResponse = NcInfo::to_info_response(v).unwrap();
+
+        assert_eq!(ir.result, "success");
+        assert_eq!(ir.info.sitename, "foo");
+        assert_eq!(ir.info.views, 100);
+        assert_eq!(ir.info.domain, Value::Null);
     }
 }

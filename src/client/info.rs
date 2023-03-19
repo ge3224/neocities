@@ -1,6 +1,6 @@
 use super::{command::Executable, help};
 use crate::{
-    api::{credentials::Credentials, info::InfoRequest},
+    api::{credentials::Credentials, info::NcInfo},
     error::NeocitiesErr,
 };
 
@@ -42,7 +42,7 @@ impl Executable for Info {
             }
         }
 
-        match InfoRequest::fetch(&args) {
+        match NcInfo::fetch(&args) {
             Ok(data) => {
                 self.print_info("sitename", data.info.sitename);
 

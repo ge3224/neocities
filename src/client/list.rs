@@ -1,6 +1,6 @@
 use super::command::Executable;
 use crate::{
-    api::{credentials::Credentials, list::FileListRequest},
+    api::{credentials::Credentials, list::NcList},
     client::help,
     error::NeocitiesErr,
 };
@@ -100,7 +100,7 @@ impl Executable for List {
             },
         };
 
-        match FileListRequest::fetch(cred, path) {
+        match NcList::fetch(path) {
             Ok(data) => {
                 if data.files.len() > 0 {
                     for file in data.files.iter() {

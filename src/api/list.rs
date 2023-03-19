@@ -1,13 +1,19 @@
 use super::credentials::{Auth, Credentials, QueryString};
+use super::http::get_request;
+use super::PathAndKey;
 use reqwest::{header::AUTHORIZATION, Response};
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 use std::error::Error;
 
+/// Handles the requesting of a list of a Neocities website's directory contents using the
+/// following Neocities API endpoint `/api/list`
+pub struct NcList {}
+
 /// Contains data received from Neocities in response to a request to `/api/list`.
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct FileListRequest {
+pub struct ListResponse {
     /// A status message
     pub result: String,
     /// An array of file data
@@ -33,17 +39,15 @@ pub struct File {
     pub sha1_hash: Option<String>,
 }
 
-impl FileListRequest {
-    /// Prepares and sends a request to the `api/list` endpoint of the Neocities API. It awaits a
-    /// response and returns either a FileList or an error.
-    #[tokio::main]
-    pub async fn fetch(
-        cred: Credentials,
-        path: Option<String>,
-    ) -> Result<FileListRequest, Box<dyn Error>> {
-        let mut query_string: Option<QueryString> = None;
+impl NcList {
+    fn path_and_key(file_path: Option<String>) -> Result<PathAndKey, Box<dyn std::error::Error>> {
+        let cred = Credentials::new();
 
-        if let Some(p) = path {
+        let mut query_string: Option<QueryString> = None;
+        let url: String;
+        let api_key: Option<String>;
+
+        if let Some(p) = file_path {
             query_string = Some(QueryString {
                 key: String::from("path"),
                 value: format!("{}", p),
@@ -51,9 +55,6 @@ impl FileListRequest {
         }
 
         let auth = Auth::authenticate(cred, String::from("list"), query_string);
-
-        let url: String;
-        let api_key: Option<String>;
 
         match auth {
             Err(e) => {
@@ -66,29 +67,110 @@ impl FileListRequest {
             }
         }
 
-        let req = reqwest::Client::new();
-        let res: Response;
+        let pk = PathAndKey { url, api_key };
+        Ok(pk)
+    }
 
-        if let Some(k) = api_key {
-            res = req
-                .get(url.as_str())
-                .header(AUTHORIZATION, format!("Bearer {}", k))
-                .send()
-                .await?;
-        } else {
-            res = req.get(url.as_str()).send().await?;
-        }
-
-        match res.status() {
-            reqwest::StatusCode::OK => {
-                let body = res.json::<FileListRequest>().await?;
-                Ok(body)
-            }
+    fn to_list_response(
+        value: serde_json::Value,
+    ) -> Result<ListResponse, Box<dyn std::error::Error>> {
+        let attempt = serde_json::from_value(value);
+        match attempt {
+            Ok(res) => Ok(res),
             _ => {
-                let e: Box<dyn std::error::Error> =
-                    String::from("Bad request to the Neocities API.").into();
-                Err(e)
+                let e: Box<dyn std::error::Error> = String::from("a problem occurred while converting the deserialized json to the ListResponse type").into();
+                return Err(e);
             }
         }
+    }
+
+    /// Prepares and sends a request to the `api/list` endpoint of the Neocities API. It awaits a
+    /// response and returns either a FileList or an error.
+    pub fn fetch(path: Option<String>) -> Result<ListResponse, Box<dyn Error>> {
+        // get http path and api_key for headers
+        let pk = match NcList::path_and_key(path) {
+            Ok(v) => v,
+            Err(e) => return Err(e),
+        };
+
+        match get_request(pk.url, pk.api_key) {
+            Ok(res) => match NcList::to_list_response(res) {
+                Ok(ir) => Ok(ir),
+                Err(e) => Err(e),
+            },
+            Err(e) => Err(e),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{ListResponse, NcList};
+    use crate::api::credentials::ENV_KEY;
+    use std::env;
+
+    #[test]
+    fn list_request_path() {
+        let preserve_key = env::var(ENV_KEY);
+
+        env::set_var(ENV_KEY, "foo");
+
+        let mock_args = String::from("bar");
+        let pk = NcList::path_and_key(Some(mock_args)).unwrap();
+        assert_eq!(pk.api_key.unwrap(), "foo");
+        assert_eq!(pk.url, "https://neocities.org/api/list?path=bar");
+
+        // reset environment var
+        match preserve_key {
+            Ok(v) => env::set_var(ENV_KEY, v),
+            _ => env::remove_var(ENV_KEY),
+        }
+    }
+
+    #[test]
+    fn value_to_list_response() {
+        let mock_str = r#"
+        {
+          "result": "success",
+          "files": [
+            {
+              "path": "index.html",
+              "is_directory": false,
+              "size": 1023,
+              "updated_at": "Sat, 13 Feb 2016 03:04:00 -0000",
+              "sha1_hash": "c8aac06f343c962a24a7eb111aad739ff48b7fb1"
+            },
+            {
+              "path": "not_found.html",
+              "is_directory": false,
+              "size": 271,
+              "updated_at": "Sat, 13 Feb 2016 03:04:00 -0000",
+              "sha1_hash": "cfdf0bda2557c322be78302da23c32fec72ffc0b"
+            },
+            {
+              "path": "images",
+              "is_directory": true,
+              "updated_at": "Sat, 13 Feb 2016 03:04:00 -0000"
+            },
+            {
+              "path": "images/cat.png",
+              "is_directory": false,
+              "size": 16793,
+              "updated_at": "Sat, 13 Feb 2016 03:04:00 -0000",
+              "sha1_hash": "41fe08fc0dd44e79f799d03ece903e62be25dc7d"
+            }
+          ]
+        }"#;
+
+        let v: serde_json::Value = serde_json::from_str(mock_str).unwrap();
+        let ls_res: ListResponse = NcList::to_list_response(v).unwrap();
+
+        assert_eq!(ls_res.result, "success");
+        assert_eq!(ls_res.files.len(), 4);
+        assert_eq!(ls_res.files[0].path, "index.html");
+        assert_eq!(
+            ls_res.files[1].sha1_hash.as_ref().unwrap(),
+            "cfdf0bda2557c322be78302da23c32fec72ffc0b"
+        );
     }
 }
