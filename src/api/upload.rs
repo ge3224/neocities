@@ -56,7 +56,7 @@ impl NcUpload {
         match attempt {
             Ok(res) => Ok(res),
             _ => {
-                let e: Box<dyn std::error::Error> = String::from("a problem occurred while converting the deserialized json to the DeleteResponse type").into();
+                let e: Box<dyn std::error::Error> = String::from("a problem occurred while converting the deserialized json to the UploadResponse type").into();
                 return Err(e);
             }
         }
@@ -83,7 +83,10 @@ impl NcUpload {
 
 #[cfg(test)]
 mod tests {
-    use crate::api::{credentials::ENV_KEY, upload::NcUpload};
+    use crate::api::{
+        credentials::ENV_KEY,
+        upload::{NcUpload, UploadResponse},
+    };
     use std::env;
 
     #[test]
@@ -104,5 +107,20 @@ mod tests {
             Ok(v) => env::set_var(ENV_KEY, v),
             _ => env::remove_var(ENV_KEY),
         }
+    }
+
+    #[test]
+    fn convert_value_to_delete_response() {
+        let mock_str_1 = r#"
+        {
+          "result": "success",
+          "message": "file(s) have been uploaded"
+        }"#;
+
+        let v: serde_json::Value = serde_json::from_str(mock_str_1).unwrap();
+        let dr: UploadResponse = NcUpload::to_upload_response(v).unwrap();
+
+        assert_eq!(dr.result, "success");
+        assert_eq!(dr.message, "file(s) have been uploaded");
     }
 }

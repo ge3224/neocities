@@ -16,7 +16,7 @@ pub struct HttpRequestInfo {
     pub multipart: Option<Vec<String>>,
 }
 
-/// Prepares and sends a GET request to the Neocities API. It awaits a respons and returns either a
+/// Prepares and sends a GET request to the Neocities API. It awaits a response and returns either a
 /// response body or an error.
 #[tokio::main]
 pub async fn get_request(
@@ -99,16 +99,13 @@ pub async fn post_request_multipart(
     }
 }
 
-/// Prepares and sends a POST request to the Neocities API. It awaits a respons and returns either a
-/// response body or an error.
+/// Prepares and sends a POST request with a body to the Neocities API.
 #[tokio::main]
 pub async fn post_request_body(
     uri: String,
     api_key: Option<String>,
     body: Option<String>,
 ) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
-    // files should be listed for the two Neocities endpoints that use the POST method:
-    // `/api/upload/` and `/api/delete/`
     let files = match body {
         Some(f) => f,
         None => {
