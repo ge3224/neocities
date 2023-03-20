@@ -1,7 +1,5 @@
 use super::credentials::{Auth, Credentials, QueryString};
-use super::http::get_request;
-use super::PathAndKey;
-use reqwest::{header::AUTHORIZATION, Response};
+use super::http::{get_request, HttpRequestInfo};
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 use std::error::Error;
@@ -40,7 +38,9 @@ pub struct File {
 }
 
 impl NcList {
-    fn path_and_key(file_path: Option<String>) -> Result<PathAndKey, Box<dyn std::error::Error>> {
+    fn request_info(
+        file_path: Option<String>,
+    ) -> Result<HttpRequestInfo, Box<dyn std::error::Error>> {
         let cred = Credentials::new();
 
         let mut query_string: Option<QueryString> = None;
@@ -67,7 +67,12 @@ impl NcList {
             }
         }
 
-        let pk = PathAndKey { url, api_key };
+        let pk = HttpRequestInfo {
+            uri: url,
+            api_key,
+            body: None,
+            multipart: None,
+        };
         Ok(pk)
     }
 
@@ -88,12 +93,12 @@ impl NcList {
     /// response and returns either a FileList or an error.
     pub fn fetch(path: Option<String>) -> Result<ListResponse, Box<dyn Error>> {
         // get http path and api_key for headers
-        let pk = match NcList::path_and_key(path) {
+        let pk = match NcList::request_info(path) {
             Ok(v) => v,
             Err(e) => return Err(e),
         };
 
-        match get_request(pk.url, pk.api_key) {
+        match get_request(pk.uri, pk.api_key) {
             Ok(res) => match NcList::to_list_response(res) {
                 Ok(ir) => Ok(ir),
                 Err(e) => Err(e),
@@ -116,9 +121,9 @@ mod tests {
         env::set_var(ENV_KEY, "foo");
 
         let mock_args = String::from("bar");
-        let pk = NcList::path_and_key(Some(mock_args)).unwrap();
+        let pk = NcList::request_info(Some(mock_args)).unwrap();
         assert_eq!(pk.api_key.unwrap(), "foo");
-        assert_eq!(pk.url, "https://neocities.org/api/list?path=bar");
+        assert_eq!(pk.uri, "https://neocities.org/api/list?path=bar");
 
         // reset environment var
         match preserve_key {

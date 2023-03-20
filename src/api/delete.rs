@@ -1,18 +1,19 @@
-use std::error::Error;
-
-use reqwest::header::AUTHORIZATION;
-use reqwest::Client;
-use reqwest::Response;
+use super::credentials::Credentials;
+use super::http::post_request_body;
+use super::http::HttpRequestInfo;
+use crate::api::credentials::Auth;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
+use std::error::Error;
 
-use super::credentials::Credentials;
-use crate::api::credentials::Auth;
+/// Handles the request to delete file(s) from a Neocities website using the
+/// following endpoint: `/api/delete`
+pub struct NcDelete {}
 
 /// Contains data received from Neocities in response to a request to `/api/delete`
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DeleteRequest {
+pub struct DeleteResponse {
     /// A status message
     pub result: String,
     #[serde(rename = "error_type")]
@@ -22,17 +23,11 @@ pub struct DeleteRequest {
     pub message: String,
 }
 
-impl DeleteRequest {
-    /// Prepares and sends a request for specified files to be deleted from a Neocities user's website.
-    /// It awaits a response and returns either a DeleteResponse or an error.
-    #[tokio::main]
-    pub async fn fetch(
-        cred: Credentials,
-        args: Vec<String>,
-    ) -> Result<DeleteRequest, Box<dyn Error>> {
+impl NcDelete {
+    fn request_info(args: Vec<String>) -> Result<HttpRequestInfo, Box<dyn std::error::Error>> {
         let url: String;
         let api_key: Option<String>;
-
+        let cred = Credentials::new();
         let auth = Auth::authenticate(cred, String::from("delete"), None);
 
         match auth {
@@ -51,27 +46,101 @@ impl DeleteRequest {
             files.push_str("filenames[]=");
             files.push_str(arg);
         }
+        let pk = HttpRequestInfo {
+            uri: url,
+            api_key,
+            body: Some(files),
+            multipart: None,
+        };
+        Ok(pk)
+    }
 
-        let req = Client::new();
-        let res: Response;
-
-        if let Some(k) = api_key {
-            res = req
-                .post(&url)
-                .header(AUTHORIZATION, format!("Bearer {}", k))
-                .body(files)
-                .send()
-                .await?;
-        } else {
-            res = req.post(&url).body(files).send().await?;
-        }
-
-        match res.status() {
-            reqwest::StatusCode::OK => {
-                let body = res.json::<DeleteRequest>().await?;
-                Ok(body)
+    fn to_delete_response(
+        value: serde_json::Value,
+    ) -> Result<DeleteResponse, Box<dyn std::error::Error>> {
+        let attempt = serde_json::from_value(value);
+        match attempt {
+            Ok(res) => Ok(res),
+            _ => {
+                let e: Box<dyn std::error::Error> = String::from("a problem occurred while converting the deserialized json to the DeleteResponse type").into();
+                return Err(e);
             }
-            _ => return Err(String::from("error deleting file").into()),
         }
+    }
+
+    /// Prepares and sends a request for specified files to be deleted from a Neocities user's website.
+    /// It awaits a response and returns either a DeleteResponse or an error.
+    pub fn fetch(args: Vec<String>) -> Result<DeleteResponse, Box<dyn Error>> {
+        // get http path and api_key for headers
+        let req_info = match NcDelete::request_info(args) {
+            Ok(v) => v,
+            Err(e) => return Err(e),
+        };
+
+        match post_request_body(req_info.uri, req_info.api_key, req_info.body) {
+            Ok(res) => match NcDelete::to_delete_response(res) {
+                Ok(ir) => Ok(ir),
+                Err(e) => Err(e),
+            },
+            Err(e) => Err(e),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::DeleteResponse;
+    use crate::api::{credentials::ENV_KEY, delete::NcDelete};
+    use std::env;
+
+    #[test]
+    fn delete_request_path() {
+        let preserve_key = env::var(ENV_KEY);
+        env::set_var(ENV_KEY, "foo");
+
+        let mock_args = vec![String::from("foo")];
+        let pk = NcDelete::request_info(mock_args).unwrap();
+
+        assert_eq!(pk.api_key.unwrap(), "foo");
+        assert_eq!(pk.uri, "https://neocities.org/api/delete");
+        assert_eq!(pk.body.unwrap(), "filenames[]=foo");
+
+        // reset environment var
+        match preserve_key {
+            Ok(v) => env::set_var(ENV_KEY, v),
+            _ => env::remove_var(ENV_KEY),
+        }
+    }
+
+    #[test]
+    fn convert_value_to_delete_response() {
+        let mock_str_1 = r#"
+        {
+          "result": "success",
+          "message": "file(s) have been deleted"
+        }"#;
+
+        let v: serde_json::Value = serde_json::from_str(mock_str_1).unwrap();
+        let dr: DeleteResponse = NcDelete::to_delete_response(v).unwrap();
+
+        assert_eq!(dr.result, "success");
+        assert_eq!(dr.message, "file(s) have been deleted");
+
+        let mock_str_2 = r#"
+         {
+           "result": "error",
+           "error_type": "missing_files",
+           "message": "foo.html was not found on your site, canceled deleting"
+         }"#;
+
+        let v: serde_json::Value = serde_json::from_str(mock_str_2).unwrap();
+        let dr: DeleteResponse = NcDelete::to_delete_response(v).unwrap();
+
+        assert_eq!(dr.result, "error");
+        assert_eq!(dr.error_type.unwrap(), "missing_files");
+        assert_eq!(
+            dr.message,
+            "foo.html was not found on your site, canceled deleting"
+        );
     }
 }

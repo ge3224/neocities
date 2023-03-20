@@ -1,6 +1,5 @@
 use super::credentials::{Auth, Credentials};
-use super::http::get_request;
-use super::PathAndKey;
+use super::http::{get_request, HttpRequestInfo};
 use crate::api::API_URL;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
@@ -46,7 +45,7 @@ pub struct Info {
 }
 
 impl NcInfo {
-    fn path_and_key(args: &Vec<String>) -> Result<PathAndKey, Box<dyn std::error::Error>> {
+    fn request_info(args: &Vec<String>) -> Result<HttpRequestInfo, Box<dyn std::error::Error>> {
         let cred = Credentials::new();
 
         let url: String;
@@ -72,7 +71,12 @@ impl NcInfo {
             }
         }
 
-        let pk = PathAndKey { url, api_key };
+        let pk = HttpRequestInfo {
+            uri: url,
+            api_key,
+            body: None,
+            multipart: None,
+        };
         Ok(pk)
     }
 
@@ -93,12 +97,12 @@ impl NcInfo {
     /// response and returns either SiteInfo or an error.
     pub fn fetch(args: &Vec<String>) -> Result<InfoResponse, Box<dyn std::error::Error>> {
         // get http path and api_key for headers
-        let pk = match NcInfo::path_and_key(args) {
+        let pk = match NcInfo::request_info(args) {
             Ok(v) => v,
             Err(e) => return Err(e),
         };
 
-        match get_request(pk.url, pk.api_key) {
+        match get_request(pk.uri, pk.api_key) {
             Ok(res) => match NcInfo::to_info_response(res) {
                 Ok(ir) => Ok(ir),
                 Err(e) => Err(e),
@@ -113,10 +117,10 @@ mod tests {
     use super::{InfoResponse, NcInfo};
     use serde_json::Value;
     #[test]
-    fn info_request_path() {
+    fn site_info_request() {
         let mock_args = vec![String::from("foo")];
-        let ph = NcInfo::path_and_key(&mock_args).unwrap();
-        assert_eq!(ph.url, "https://neocities.org/api//info?sitename=foo");
+        let ph = NcInfo::request_info(&mock_args).unwrap();
+        assert_eq!(ph.uri, "https://neocities.org/api//info?sitename=foo");
     }
 
     #[test]
