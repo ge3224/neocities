@@ -163,6 +163,8 @@ mod tests {
     use crate::api::credentials::{Credentials, ENV_KEY};
     use std::env;
 
+    // Run tests on single thread because parallel tests access same resource
+    // $ cargo test -- --test-threads=1
     #[test]
     fn env_key() {
         let preserve = env::var(ENV_KEY);
