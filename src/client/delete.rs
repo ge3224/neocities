@@ -43,9 +43,7 @@ impl Executable for Delete {
             return Ok(());
         }
 
-        let cred = Credentials::new();
-
-        if cred.get_username().is_none() || cred.get_password().is_none() {
+        if Credentials::credit_check() != true {
             println!("{}", help::ENV_VAR_MSG);
             return Ok(());
         }

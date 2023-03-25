@@ -2,6 +2,8 @@ use std::{env, error::Error};
 
 use url::form_urlencoded::byte_serialize;
 
+use crate::client::help;
+
 use super::API_URL;
 
 /// The string literal that must be used when setting an environment variable for the
@@ -51,6 +53,17 @@ impl Credentials {
             Ok(p) => Some(p),
             _ => None,
         }
+    }
+
+    /// Checks if environment variables have been set to interact with the Neocitiese API.
+    pub fn credit_check() -> bool {
+        let cred = Credentials::new();
+
+        if cred.get_username().is_none() || cred.get_password().is_none() {
+            println!("{}", help::ENV_VAR_MSG);
+            return false;
+        }
+        return true;
     }
 }
 
@@ -189,6 +202,46 @@ mod tests {
         match preserve {
             Ok(v) => env::set_var(ENV_USER, v),
             _ => env::remove_var(ENV_USER),
+        }
+    }
+
+    #[test]
+    fn cred_check_helper_fn() {
+        // preserve env vars
+        let username = env::var(ENV_USER);
+        let password = env::var(ENV_PASS);
+        let key = env::var(ENV_KEY);
+
+        // purge current state
+        env::remove_var(ENV_USER);
+        env::remove_var(ENV_PASS);
+        env::remove_var(ENV_KEY);
+
+        let test = Credentials::credit_check();
+        assert_eq!(test, false);
+
+        // set mock state
+        env::set_var(ENV_USER, "coffee");
+        env::set_var(ENV_PASS, "muffin");
+        env::set_var(ENV_KEY, "napkin");
+
+        let test = Credentials::credit_check();
+        assert_eq!(test, true);
+
+        // retore previous state
+        match username {
+            Ok(v) => env::set_var(ENV_USER, v),
+            _ => (), // do nothing if not ok
+        }
+
+        match password {
+            Ok(v) => env::set_var(ENV_PASS, v),
+            _ => (),
+        }
+
+        match key {
+            Ok(v) => env::set_var(ENV_KEY, v),
+            _ => (),
         }
     }
 }
