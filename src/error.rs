@@ -3,7 +3,7 @@ use thiserror::Error;
 /// Defines error variants found within this library.
 #[derive(Debug, Error)]
 pub enum NeocitiesErr {
-    /// An unrecognized command was provided; the application could not proceed 
+    /// An unrecognized command was provided; the application could not proceed
     #[error("invalid command")]
     InvalidCommand,
 
@@ -19,7 +19,11 @@ pub enum NeocitiesErr {
     #[error("missing password: check environment variables")]
     MissingPassword,
 
-    /// And error was returned from the Neocities API
+    /// An error was returned from the Neocities API
     #[error(transparent)]
     HttpRequestError(#[from] Box<dyn std::error::Error>),
+
+    /// An error was returned from std::io
+    #[error(transparent)]
+    StdIoError(#[from] std::io::Error),
 }
