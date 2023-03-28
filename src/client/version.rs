@@ -71,12 +71,12 @@ mod tests {
         let mut result = Vec::new();
         let v = Version::new();
         if let Err(e) = v.write(&mut result) {
-            panic!("test failed while writing to write method: '{}'", e);
+            panic!("trouble using write method of version: '{}'", e);
         };
 
         let s = match String::from_utf8(result) {
             Ok(v) => v,
-            Err(e) => panic!("test failed while writing to write method: '{}'", e),
+            Err(e) => panic!("could not convert result of Vec<u8> to String: '{}'", e),
         };
 
         assert_eq!(s.contains("Neocities client"), true);
