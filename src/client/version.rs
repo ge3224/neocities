@@ -1,6 +1,6 @@
 use super::command::Executable;
 use crate::error::NeocitiesErr;
-use std::io::{self, Write};
+use std::io;
 
 /// The string literal a user must type to run functionality in this module
 pub const KEY: &'static str = "version";
@@ -23,19 +23,21 @@ impl Version {
             long: String::from(DESC),
         }
     }
-}
 
-impl Executable for Version {
-    fn run(&self, _args: Vec<String>) -> Result<(), NeocitiesErr> {
+    fn write(&self, mut writer: impl std::io::Write) -> Result<(), NeocitiesErr> {
         let output = format!(
             "Neocities client, \x1b[1;32mversion\x1b[0m: {}\n",
             env!("CARGO_PKG_VERSION")
         );
 
-        let mut stdout = io::stdout();
-        stdout.write_all(output.as_bytes())?;
-
+        writer.write_all(output.as_bytes())?;
         Ok(())
+    }
+}
+
+impl Executable for Version {
+    fn run(&self, _args: Vec<String>) -> Result<(), NeocitiesErr> {
+        self.write(io::stdout())
     }
 
     fn get_usage(&self) -> &str {
@@ -62,5 +64,22 @@ mod tests {
         assert_eq!(v.get_long_desc(), DESC);
         assert_eq!(v.get_short_desc(), DESC_SHORT);
         assert_eq!(v.get_usage().contains(KEY), true);
+    }
+
+    #[test]
+    fn output() {
+        let mut result = Vec::new();
+        let v = Version::new();
+        if let Err(e) = v.write(&mut result) {
+            panic!("test failed while writing to write method: '{}'", e);
+        };
+
+        let s = match String::from_utf8(result) {
+            Ok(v) => v,
+            Err(e) => panic!("test failed while writing to write method: '{}'", e),
+        };
+
+        assert_eq!(s.contains("Neocities client"), true);
+        assert_eq!(s.contains("version"), true);
     }
 }
