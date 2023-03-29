@@ -6,6 +6,8 @@ use crate::error::NeocitiesErr;
 
 /// The string literal a user must type to run functionality in this module
 pub const HELP: &'static str = "help";
+const DESC: &'static str = "Show usage instructions for a command";
+const DESC_SHORT: &'static str = "Show help";
 
 /// Displays help for a specific command included in this Neocities client
 pub struct Help {
@@ -19,38 +21,53 @@ impl Help {
     pub fn new() -> Help {
         Help {
             usage: String::from(format!("\x1b[1;32m{}\x1b[0m [command]", HELP)),
-            short: String::from("Show help"),
-            long: String::from("Show usage instructions for a command"),
+            short: String::from(DESC_SHORT),
+            long: String::from(DESC),
         }
     }
 
-    fn print_usage(&self) {
-        println!("\n{}\n", self.get_long_desc());
-        println!("usage: {}\n", self.usage);
+    fn write_ascii_art(&self, mut writer: impl std::io::Write) -> Result<(), NeocitiesErr> {
+        writer.write_all(NC_ASCII_ART.as_bytes())?;
+        Ok(())
     }
 
-    fn print_usage_other_command(&self, cmd: Command) {
-        println!("\n{}\n", cmd.get_long_desc());
-        println!("usage: {}\n", cmd.get_usage());
+    fn write_cmd_help(
+        &self,
+        cmd: Command,
+        mut writer: impl std::io::Write,
+    ) -> Result<(), NeocitiesErr> {
+        let desc = format!("\n{}\n", cmd.get_long_desc());
+        writer.write_all(desc.as_bytes())?;
+
+        let usage = format!("usage: {}\n", cmd.get_usage());
+        writer.write_all(usage.as_bytes())?;
+        Ok(())
+    }
+
+    fn write_help_msg(&self, mut writer: impl std::io::Write) -> Result<(), NeocitiesErr> {
+        writer.write_all(HELP_MSG.as_bytes())?;
+        Ok(())
     }
 }
 
 impl Executable for Help {
     fn run(&self, args: Vec<String>) -> Result<(), NeocitiesErr> {
+        let stdout = std::io::stdout();
+
         if args.len() < 1 {
-            println!("{}", CAT);
-            println!("{HELP_MSG}");
+            self.write_ascii_art(&stdout)?;
+            self.write_help_msg(&stdout)?;
             return Ok(());
         }
 
         match args[0].as_str() {
-            list::KEY => self.print_usage_other_command(Command::new(CommandKind::List)),
-            info::KEY => self.print_usage_other_command(Command::new(CommandKind::Info)),
-            version::KEY => self.print_usage_other_command(Command::new(CommandKind::Version)),
-            upload::KEY => self.print_usage_other_command(Command::new(CommandKind::Upload)),
-            delete::KEY => self.print_usage_other_command(Command::new(CommandKind::Delete)),
-            key::KEY => self.print_usage_other_command(Command::new(CommandKind::Key)),
-            help::HELP => self.print_usage(),
+            list::KEY => self.write_cmd_help(Command::new(CommandKind::List), &stdout)?,
+            info::KEY => self.write_cmd_help(Command::new(CommandKind::Info), &stdout)?,
+            version::KEY => self.write_cmd_help(Command::new(CommandKind::Version), &stdout)?,
+            upload::KEY => self.write_cmd_help(Command::new(CommandKind::Upload), &stdout)?,
+            delete::KEY => self.write_cmd_help(Command::new(CommandKind::Delete), &stdout)?,
+            key::KEY => self.write_cmd_help(Command::new(CommandKind::Key), &stdout)?,
+            help::HELP => self.write_cmd_help(Command::new(CommandKind::Help), &stdout)?,
             _ => return Err(NeocitiesErr::InvalidCommand),
         };
 
@@ -104,8 +121,23 @@ You can also use your Neocities API key (Optional):
     export NEOCITIES_KEY=<your_key>
 ";
 
-const CAT: &'static str = "
- /\\-/\\ 
+const NC_ASCII_ART: &'static str = "
+ /\\-/\\
 ( o_o )  |\\ | _    _.|-. _  _  /`| |
 ==_Y_==  | \\|(/_()(_||_|(/__\\  \\,|_|
 ";
+
+#[cfg(test)]
+mod tests {
+    use super::{Help, DESC, DESC_SHORT, HELP};
+    use crate::client::command::Executable;
+
+    #[test]
+    fn usage_desc() {
+        let h = Help::new();
+        assert_eq!(h.get_long_desc(), DESC);
+        assert_eq!(h.get_short_desc(), DESC_SHORT);
+        assert_eq!(h.get_usage().contains(HELP), true);
+        assert_eq!(h.get_usage().contains("[command]"), true);
+    }
+}
