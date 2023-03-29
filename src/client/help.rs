@@ -48,29 +48,37 @@ impl Help {
         writer.write_all(HELP_MSG.as_bytes())?;
         Ok(())
     }
+
+    fn route_help(
+        &self,
+        args: Vec<String>,
+        mut writer: impl std::io::Write,
+    ) -> Result<(), NeocitiesErr> {
+        if args.len() < 1 {
+            self.write_ascii_art(&mut writer)?;
+            self.write_help_msg(&mut writer)?;
+            return Ok(());
+        }
+
+        match args[0].as_str() {
+            list::KEY => self.write_cmd_help(Command::new(CommandKind::List), writer)?,
+            info::KEY => self.write_cmd_help(Command::new(CommandKind::Info), writer)?,
+            version::KEY => self.write_cmd_help(Command::new(CommandKind::Version), writer)?,
+            upload::KEY => self.write_cmd_help(Command::new(CommandKind::Upload), writer)?,
+            delete::KEY => self.write_cmd_help(Command::new(CommandKind::Delete), writer)?,
+            key::KEY => self.write_cmd_help(Command::new(CommandKind::Key), writer)?,
+            help::HELP => self.write_cmd_help(Command::new(CommandKind::Help), writer)?,
+            _ => return Err(NeocitiesErr::InvalidCommand),
+        };
+
+        Ok(())
+    }
 }
 
 impl Executable for Help {
     fn run(&self, args: Vec<String>) -> Result<(), NeocitiesErr> {
         let stdout = std::io::stdout();
-
-        if args.len() < 1 {
-            self.write_ascii_art(&stdout)?;
-            self.write_help_msg(&stdout)?;
-            return Ok(());
-        }
-
-        match args[0].as_str() {
-            list::KEY => self.write_cmd_help(Command::new(CommandKind::List), &stdout)?,
-            info::KEY => self.write_cmd_help(Command::new(CommandKind::Info), &stdout)?,
-            version::KEY => self.write_cmd_help(Command::new(CommandKind::Version), &stdout)?,
-            upload::KEY => self.write_cmd_help(Command::new(CommandKind::Upload), &stdout)?,
-            delete::KEY => self.write_cmd_help(Command::new(CommandKind::Delete), &stdout)?,
-            key::KEY => self.write_cmd_help(Command::new(CommandKind::Key), &stdout)?,
-            help::HELP => self.write_cmd_help(Command::new(CommandKind::Help), &stdout)?,
-            _ => return Err(NeocitiesErr::InvalidCommand),
-        };
-
+        self.route_help(args, stdout)?;
         Ok(())
     }
 
