@@ -129,8 +129,12 @@ const NC_ASCII_ART: &'static str = "
 
 #[cfg(test)]
 mod tests {
-    use super::{Help, DESC, DESC_SHORT, HELP};
-    use crate::client::command::Executable;
+    use super::{Help, DESC, DESC_SHORT, HELP, HELP_MSG, NC_ASCII_ART};
+    use crate::client::{
+        command::{Command, CommandKind, Executable},
+        list::List,
+        version::Version,
+    };
 
     #[test]
     fn usage_desc() {
@@ -139,5 +143,62 @@ mod tests {
         assert_eq!(h.get_short_desc(), DESC_SHORT);
         assert_eq!(h.get_usage().contains(HELP), true);
         assert_eq!(h.get_usage().contains("[command]"), true);
+    }
+
+    #[test]
+    fn ascii_art_output() {
+        let mut result = Vec::new();
+        let h = Help::new();
+
+        if let Err(e) = h.write_ascii_art(&mut result) {
+            panic!("trouble using write_ascii_art method of help: '{}'", e);
+        };
+        assert_eq!(result, NC_ASCII_ART.as_bytes());
+    }
+
+    #[test]
+    fn help_msg_output() {
+        let mut result = Vec::new();
+        let h = Help::new();
+        if let Err(e) = h.write_help_msg(&mut result) {
+            panic!("trouble using write_help_msg method of help: '{}'", e);
+        }
+        assert_eq!(result, HELP_MSG.as_bytes());
+    }
+
+    #[test]
+    fn help_on_help_cmd_output() {
+        let mut result = Vec::new();
+        let h = Help::new();
+        if let Err(e) = h.write_cmd_help(Command::new(CommandKind::Help), &mut result) {
+            panic!("trouble calling write_cmd_help method of help: '{}'", e);
+        }
+
+        let s = match String::from_utf8(result) {
+            Ok(v) => v,
+            Err(e) => panic!("could not convert result of Vec<u8> to String: '{}'", e),
+        };
+
+        assert_eq!(s.contains(h.get_usage()), true);
+        assert_eq!(s.contains(h.get_long_desc()), true);
+    }
+
+    #[test]
+    fn help_on_other_cmd_output() {
+        let mut result = Vec::new();
+        let h = Help::new();
+        let v = Version::new();
+
+        if let Err(e) = h.write_cmd_help(Command::new(CommandKind::Version), &mut result) {
+            panic!("trouble calling write_cmd_help method of help: '{}'", e);
+        }
+
+        let s = match String::from_utf8(result) {
+            Ok(v) => v,
+            Err(e) => panic!("could not convert result of Vec<u8> to String: '{}'", e),
+        };
+
+        assert_eq!(s.contains(v.get_usage()), true);
+        assert_eq!(s.contains(v.get_long_desc()), true);
     }
 }
