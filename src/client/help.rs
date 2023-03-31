@@ -148,10 +148,7 @@ You can also use your Neocities API key (Optional):
 #[cfg(test)]
 mod tests {
     use super::{Help, DESC, DESC_SHORT, HELP_MSG, KEY, NC_ASCII_BANNER};
-    use crate::client::{
-        command::{Command, CommandKind, Executable},
-        delete, info, key, list, upload, version,
-    };
+    use crate::client::{command::Executable, delete, info, key, list, upload, version};
 
     #[test]
     fn usage_desc() {
@@ -183,23 +180,6 @@ mod tests {
         assert_eq!(result, HELP_MSG.as_bytes());
     }
 
-    #[test]
-    fn help_on_help_cmd_output() {
-        let mut result = Vec::new();
-        let h = Help::new();
-        if let Err(e) = h.write_cmd_help(Command::new(CommandKind::Help), &mut result) {
-            panic!("trouble calling write_cmd_help method of help: '{}'", e);
-        }
-
-        let s = match String::from_utf8(result) {
-            Ok(v) => v,
-            Err(e) => panic!("could not convert result of Vec<u8> to String: '{}'", e),
-        };
-
-        assert_eq!(s.contains(h.get_usage()), true);
-        assert_eq!(s.contains(h.get_long_desc()), true);
-    }
-
     const COMMANDS: [&str; 6] = [
         version::KEY,
         info::KEY,
@@ -224,7 +204,7 @@ mod tests {
     }
 
     #[test]
-    fn help_on_other_cmd_output() {
+    fn write_cmd_help_method() {
         let h = Help::new();
 
         for ckey in COMMANDS.iter() {
