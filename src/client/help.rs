@@ -24,6 +24,25 @@ impl Help {
         }
     }
 
+    fn write(
+        &self,
+        args: Vec<String>,
+        mut writer: impl std::io::Write,
+    ) -> Result<(), NeocitiesErr> {
+        // output banner and general help message if no arguments were provided
+        if args.len() < 1 {
+            self.write_ascii_art(&mut writer)?;
+            self.write_help_msg(&mut writer)?;
+            return Ok(());
+        }
+
+        // output command-specific help
+        let cmd = self.get_cmd(args[0].as_str())?;
+        self.write_cmd_help(cmd, writer)?;
+
+        Ok(())
+    }
+
     fn write_ascii_art(&self, mut writer: impl std::io::Write) -> Result<(), NeocitiesErr> {
         writer.write_all(&NC_ASCII_BANNER)?;
         Ok(())
@@ -44,25 +63,6 @@ impl Help {
 
     fn write_help_msg(&self, mut writer: impl std::io::Write) -> Result<(), NeocitiesErr> {
         writer.write_all(HELP_MSG.as_bytes())?;
-        Ok(())
-    }
-
-    fn write(
-        &self,
-        args: Vec<String>,
-        mut writer: impl std::io::Write,
-    ) -> Result<(), NeocitiesErr> {
-        // output banner and general help message if no arguments were provided
-        if args.len() < 1 {
-            self.write_ascii_art(&mut writer)?;
-            self.write_help_msg(&mut writer)?;
-            return Ok(());
-        }
-
-        // output command-specific help
-        let cmd = self.get_cmd(args[0].as_str())?;
-        self.write_cmd_help(cmd, writer)?;
-
         Ok(())
     }
 
@@ -150,8 +150,7 @@ mod tests {
     use super::{Help, DESC, DESC_SHORT, HELP_MSG, KEY, NC_ASCII_BANNER};
     use crate::client::{
         command::{Command, CommandKind, Executable},
-        delete, info, key, list, upload,
-        version::{self, Version},
+        delete, info, key, list, upload, version,
     };
 
     #[test]
@@ -171,7 +170,6 @@ mod tests {
         if let Err(e) = h.write_ascii_art(&mut result) {
             panic!("trouble using write_ascii_art method of help: '{}'", e);
         };
-        // assert_eq!(result, NC_ASCII_ART.as_bytes());
         assert_eq!(result, NC_ASCII_BANNER);
     }
 
