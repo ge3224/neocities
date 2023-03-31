@@ -6,8 +6,6 @@ use crate::error::NeocitiesErr;
 
 /// The string literal a user must type to run functionality in this module
 pub const HELP: &'static str = "help";
-const DESC: &'static str = "Show usage instructions for a command";
-const DESC_SHORT: &'static str = "Show help";
 
 /// Displays help for a specific command included in this Neocities client
 pub struct Help {
@@ -27,7 +25,7 @@ impl Help {
     }
 
     fn write_ascii_art(&self, mut writer: impl std::io::Write) -> Result<(), NeocitiesErr> {
-        writer.write_all(NC_ASCII_ART.as_bytes())?;
+        writer.write_all(&NC_ASCII_BANNER)?;
         Ok(())
     }
 
@@ -49,7 +47,7 @@ impl Help {
         Ok(())
     }
 
-    fn route_help(
+    fn route_cmd(
         &self,
         args: Vec<String>,
         mut writer: impl std::io::Write,
@@ -78,7 +76,7 @@ impl Help {
 impl Executable for Help {
     fn run(&self, args: Vec<String>) -> Result<(), NeocitiesErr> {
         let stdout = std::io::stdout();
-        self.route_help(args, stdout)?;
+        self.route_cmd(args, stdout)?;
         Ok(())
     }
 
@@ -94,6 +92,17 @@ impl Executable for Help {
         self.long.as_str()
     }
 }
+
+const DESC: &'static str = "Show usage instructions for a command";
+
+const DESC_SHORT: &'static str = "Show help";
+
+const NC_ASCII_BANNER: [u8; 82] = [
+    10, 32, 47, 92, 45, 47, 92, 10, 40, 32, 111, 95, 111, 32, 41, 32, 32, 124, 92, 32, 124, 32, 95,
+    32, 32, 32, 32, 95, 46, 124, 45, 46, 32, 95, 32, 32, 95, 32, 32, 47, 96, 124, 32, 124, 10, 61,
+    61, 95, 89, 95, 61, 61, 32, 32, 124, 32, 92, 124, 40, 47, 95, 40, 41, 40, 95, 124, 124, 95,
+    124, 40, 47, 95, 95, 92, 32, 32, 92, 44, 124, 95, 124, 10,
+];
 
 const HELP_MSG: &'static str = "\
 Usage:
@@ -129,18 +138,11 @@ You can also use your Neocities API key (Optional):
     export NEOCITIES_KEY=<your_key>
 ";
 
-const NC_ASCII_ART: &'static str = "
- /\\-/\\
-( o_o )  |\\ | _    _.|-. _  _  /`| |
-==_Y_==  | \\|(/_()(_||_|(/__\\  \\,|_|
-";
-
 #[cfg(test)]
 mod tests {
-    use super::{Help, DESC, DESC_SHORT, HELP, HELP_MSG, NC_ASCII_ART};
+    use super::{Help, DESC, DESC_SHORT, HELP, HELP_MSG, NC_ASCII_BANNER};
     use crate::client::{
         command::{Command, CommandKind, Executable},
-        list::List,
         version::Version,
     };
 
@@ -161,7 +163,8 @@ mod tests {
         if let Err(e) = h.write_ascii_art(&mut result) {
             panic!("trouble using write_ascii_art method of help: '{}'", e);
         };
-        assert_eq!(result, NC_ASCII_ART.as_bytes());
+        // assert_eq!(result, NC_ASCII_ART.as_bytes());
+        assert_eq!(result, NC_ASCII_BANNER);
     }
 
     #[test]
