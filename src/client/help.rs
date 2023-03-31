@@ -48,6 +48,11 @@ impl Help {
         Ok(())
     }
 
+    fn write_help_msg(&self, mut writer: impl std::io::Write) -> Result<(), NeocitiesErr> {
+        writer.write_all(HELP_MSG.as_bytes())?;
+        Ok(())
+    }
+
     fn write_cmd_help(
         &self,
         cmd: Command,
@@ -58,11 +63,6 @@ impl Help {
 
         let usage = format!("usage: {}\n", cmd.get_usage());
         writer.write_all(usage.as_bytes())?;
-        Ok(())
-    }
-
-    fn write_help_msg(&self, mut writer: impl std::io::Write) -> Result<(), NeocitiesErr> {
-        writer.write_all(HELP_MSG.as_bytes())?;
         Ok(())
     }
 
@@ -148,7 +148,10 @@ You can also use your Neocities API key (Optional):
 #[cfg(test)]
 mod tests {
     use super::{Help, DESC, DESC_SHORT, HELP_MSG, KEY, NC_ASCII_BANNER};
-    use crate::client::{command::Executable, delete, info, key, list, upload, version};
+    use crate::{
+        client::{command::Executable, delete, info, key, list, upload, version},
+        error::NeocitiesErr,
+    };
 
     #[test]
     fn usage_desc() {
@@ -160,24 +163,25 @@ mod tests {
     }
 
     #[test]
-    fn ascii_art_output() {
+    fn ascii_art_output() -> Result<(), NeocitiesErr> {
         let mut result = Vec::new();
         let h = Help::new();
 
-        if let Err(e) = h.write_ascii_art(&mut result) {
-            panic!("trouble using write_ascii_art method of help: '{}'", e);
-        };
+        h.write_ascii_art(&mut result)?;
         assert_eq!(result, NC_ASCII_BANNER);
+
+        Ok(())
     }
 
     #[test]
-    fn help_msg_output() {
+    fn help_msg_output() -> Result<(), NeocitiesErr> {
         let mut result = Vec::new();
         let h = Help::new();
-        if let Err(e) = h.write_help_msg(&mut result) {
-            panic!("trouble using write_help_msg method of help: '{}'", e);
-        }
+
+        h.write_help_msg(&mut result)?;
         assert_eq!(result, HELP_MSG.as_bytes());
+
+        Ok(())
     }
 
     const COMMANDS: [&str; 6] = [
@@ -190,41 +194,32 @@ mod tests {
     ];
 
     #[test]
-    fn get_cmd_method() {
+    fn get_cmd_method() -> Result<(), NeocitiesErr> {
         let h = Help::new();
 
         for ckey in COMMANDS.iter() {
-            let command = h.get_cmd(ckey);
-            if let Ok(cmd) = command {
-                assert_eq!(cmd.get_usage().contains(ckey), true);
-            } else {
-                panic!("invalid command");
-            }
+            let cmd = h.get_cmd(ckey)?;
+            assert_eq!(cmd.get_usage().contains(ckey), true);
         }
+
+        Ok(())
     }
 
     #[test]
-    fn write_cmd_help_method() {
+    fn write_cmd_help_method() -> Result<(), NeocitiesErr> {
         let h = Help::new();
 
         for ckey in COMMANDS.iter() {
-            let command = h.get_cmd(ckey);
-            if let Ok(cmd) = command {
-                let mut result = Vec::new();
+            let mut result = Vec::new();
 
-                if let Err(e) = h.write_cmd_help(cmd, &mut result) {
-                    panic!("trouble calling write_cmd_help method: '{}'", e);
-                }
+            let cmd = h.get_cmd(ckey)?;
+            h.write_cmd_help(cmd, &mut result)?;
 
-                let str = match String::from_utf8(result) {
-                    Ok(s) => s,
-                    Err(e) => panic!("could not convert result of Vec<u8> to String: '{}'", e),
-                };
+            let str = String::from_utf8(result)?;
 
-                assert_eq!(str.contains(ckey), true);
-            } else {
-                panic!("invalid command");
-            }
+            assert_eq!(str.contains(ckey), true);
         }
+
+        Ok(())
     }
 }
