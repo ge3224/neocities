@@ -47,18 +47,19 @@ impl Help {
         Ok(())
     }
 
-    fn route_cmd(
+    fn write(
         &self,
         args: Vec<String>,
         mut writer: impl std::io::Write,
     ) -> Result<(), NeocitiesErr> {
-        // display banner and help message if no arguments were provided
+        // output banner and general help message if no arguments were provided
         if args.len() < 1 {
             self.write_ascii_art(&mut writer)?;
             self.write_help_msg(&mut writer)?;
             return Ok(());
         }
 
+        // output command-specific help
         let cmd = self.get_cmd(args[0].as_str())?;
         self.write_cmd_help(cmd, writer)?;
 
@@ -82,7 +83,7 @@ impl Help {
 impl Executable for Help {
     fn run(&self, args: Vec<String>) -> Result<(), NeocitiesErr> {
         let stdout = std::io::stdout();
-        self.route_cmd(args, stdout)?;
+        self.write(args, stdout)?;
         Ok(())
     }
 
@@ -201,22 +202,23 @@ mod tests {
         assert_eq!(s.contains(h.get_long_desc()), true);
     }
 
+    const COMMANDS: [&str; 6] = [
+        version::KEY,
+        info::KEY,
+        key::KEY,
+        list::KEY,
+        upload::KEY,
+        delete::KEY,
+    ];
+
     #[test]
     fn get_cmd_method() {
-        let modules = vec![
-            version::KEY,
-            info::KEY,
-            key::KEY,
-            list::KEY,
-            upload::KEY,
-            delete::KEY,
-        ];
         let h = Help::new();
 
-        for m in modules.iter() {
-            let cmd = h.get_cmd(m);
-            if let Ok(c) = cmd {
-                assert_eq!(c.get_usage().contains(m), true);
+        for ckey in COMMANDS.iter() {
+            let command = h.get_cmd(ckey);
+            if let Ok(cmd) = command {
+                assert_eq!(cmd.get_usage().contains(ckey), true);
             } else {
                 panic!("invalid command");
             }
@@ -225,20 +227,26 @@ mod tests {
 
     #[test]
     fn help_on_other_cmd_output() {
-        let mut result = Vec::new();
         let h = Help::new();
-        let v = Version::new();
 
-        if let Err(e) = h.write_cmd_help(Command::new(CommandKind::Version), &mut result) {
-            panic!("trouble calling write_cmd_help method of help: '{}'", e);
+        for ckey in COMMANDS.iter() {
+            let command = h.get_cmd(ckey);
+            if let Ok(cmd) = command {
+                let mut result = Vec::new();
+
+                if let Err(e) = h.write_cmd_help(cmd, &mut result) {
+                    panic!("trouble calling write_cmd_help method: '{}'", e);
+                }
+
+                let str = match String::from_utf8(result) {
+                    Ok(s) => s,
+                    Err(e) => panic!("could not convert result of Vec<u8> to String: '{}'", e),
+                };
+
+                assert_eq!(str.contains(ckey), true);
+            } else {
+                panic!("invalid command");
+            }
         }
-
-        let s = match String::from_utf8(result) {
-            Ok(v) => v,
-            Err(e) => panic!("could not convert result of Vec<u8> to String: '{}'", e),
-        };
-
-        assert_eq!(s.contains(v.get_usage()), true);
-        assert_eq!(s.contains(v.get_long_desc()), true);
     }
 }
