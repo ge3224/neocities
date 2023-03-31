@@ -56,7 +56,7 @@ impl Executable for Version {
 #[cfg(test)]
 mod tests {
     use super::{Version, DESC, DESC_SHORT, KEY};
-    use crate::client::command::Executable;
+    use crate::{client::command::Executable, error::NeocitiesErr};
 
     #[test]
     fn usage_desc() {
@@ -67,19 +67,16 @@ mod tests {
     }
 
     #[test]
-    fn output() {
+    fn output() -> Result<(), NeocitiesErr> {
         let mut result = Vec::new();
         let v = Version::new();
-        if let Err(e) = v.write(&mut result) {
-            panic!("trouble using write method of version: '{}'", e);
-        };
+        v.write(&mut result)?;
 
-        let s = match String::from_utf8(result) {
-            Ok(v) => v,
-            Err(e) => panic!("could not convert result of Vec<u8> to String: '{}'", e),
-        };
+        let s = String::from_utf8(result)?;
 
         assert_eq!(s.contains("Neocities client"), true);
         assert_eq!(s.contains("version"), true);
+
+        Ok(())
     }
 }
