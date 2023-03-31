@@ -5,7 +5,7 @@ use super::{
 use crate::error::NeocitiesErr;
 
 /// The string literal a user must type to run functionality in this module
-pub const HELP: &'static str = "help";
+pub const KEY: &'static str = "help";
 
 /// Displays help for a specific command included in this Neocities client
 pub struct Help {
@@ -18,7 +18,7 @@ impl Help {
     /// A constructor that returns an instance of `Help`.
     pub fn new() -> Help {
         Help {
-            usage: String::from(format!("\x1b[1;32m{}\x1b[0m [command]", HELP)),
+            usage: String::from(format!("\x1b[1;32m{}\x1b[0m [command]", KEY)),
             short: String::from(DESC_SHORT),
             long: String::from(DESC),
         }
@@ -52,24 +52,30 @@ impl Help {
         args: Vec<String>,
         mut writer: impl std::io::Write,
     ) -> Result<(), NeocitiesErr> {
+        // display banner and help message if no arguments were provided
         if args.len() < 1 {
             self.write_ascii_art(&mut writer)?;
             self.write_help_msg(&mut writer)?;
             return Ok(());
         }
 
-        match args[0].as_str() {
-            list::KEY => self.write_cmd_help(Command::new(CommandKind::List), writer)?,
-            info::KEY => self.write_cmd_help(Command::new(CommandKind::Info), writer)?,
-            version::KEY => self.write_cmd_help(Command::new(CommandKind::Version), writer)?,
-            upload::KEY => self.write_cmd_help(Command::new(CommandKind::Upload), writer)?,
-            delete::KEY => self.write_cmd_help(Command::new(CommandKind::Delete), writer)?,
-            key::KEY => self.write_cmd_help(Command::new(CommandKind::Key), writer)?,
-            help::HELP => self.write_cmd_help(Command::new(CommandKind::Help), writer)?,
-            _ => return Err(NeocitiesErr::InvalidCommand),
-        };
+        let cmd = self.get_cmd(args[0].as_str())?;
+        self.write_cmd_help(cmd, writer)?;
 
         Ok(())
+    }
+
+    fn get_cmd(&self, arg: &str) -> Result<Command, NeocitiesErr> {
+        match arg {
+            list::KEY => Ok(Command::new(CommandKind::List)),
+            info::KEY => Ok(Command::new(CommandKind::Info)),
+            version::KEY => Ok(Command::new(CommandKind::Version)),
+            upload::KEY => Ok(Command::new(CommandKind::Upload)),
+            delete::KEY => Ok(Command::new(CommandKind::Delete)),
+            key::KEY => Ok(Command::new(CommandKind::Key)),
+            help::KEY => Ok(Command::new(CommandKind::Help)),
+            _ => Err(NeocitiesErr::InvalidCommand),
+        }
     }
 }
 
@@ -97,11 +103,11 @@ const DESC: &'static str = "Show usage instructions for a command";
 
 const DESC_SHORT: &'static str = "Show help";
 
-const NC_ASCII_BANNER: [u8; 82] = [
+const NC_ASCII_BANNER: [u8; 83] = [
     10, 32, 47, 92, 45, 47, 92, 10, 40, 32, 111, 95, 111, 32, 41, 32, 32, 124, 92, 32, 124, 32, 95,
     32, 32, 32, 32, 95, 46, 124, 45, 46, 32, 95, 32, 32, 95, 32, 32, 47, 96, 124, 32, 124, 10, 61,
     61, 95, 89, 95, 61, 61, 32, 32, 124, 32, 92, 124, 40, 47, 95, 40, 41, 40, 95, 124, 124, 95,
-    124, 40, 47, 95, 95, 92, 32, 32, 92, 44, 124, 95, 124, 10,
+    124, 40, 47, 95, 95, 92, 32, 32, 92, 44, 124, 95, 124, 10, 10,
 ];
 
 const HELP_MSG: &'static str = "\
@@ -140,10 +146,11 @@ You can also use your Neocities API key (Optional):
 
 #[cfg(test)]
 mod tests {
-    use super::{Help, DESC, DESC_SHORT, HELP, HELP_MSG, NC_ASCII_BANNER};
+    use super::{Help, DESC, DESC_SHORT, HELP_MSG, KEY, NC_ASCII_BANNER};
     use crate::client::{
         command::{Command, CommandKind, Executable},
-        version::Version,
+        delete, info, key, list, upload,
+        version::{self, Version},
     };
 
     #[test]
@@ -151,7 +158,7 @@ mod tests {
         let h = Help::new();
         assert_eq!(h.get_long_desc(), DESC);
         assert_eq!(h.get_short_desc(), DESC_SHORT);
-        assert_eq!(h.get_usage().contains(HELP), true);
+        assert_eq!(h.get_usage().contains(KEY), true);
         assert_eq!(h.get_usage().contains("[command]"), true);
     }
 
@@ -192,6 +199,28 @@ mod tests {
 
         assert_eq!(s.contains(h.get_usage()), true);
         assert_eq!(s.contains(h.get_long_desc()), true);
+    }
+
+    #[test]
+    fn get_cmd_method() {
+        let modules = vec![
+            version::KEY,
+            info::KEY,
+            key::KEY,
+            list::KEY,
+            upload::KEY,
+            delete::KEY,
+        ];
+        let h = Help::new();
+
+        for m in modules.iter() {
+            let cmd = h.get_cmd(m);
+            if let Ok(c) = cmd {
+                assert_eq!(c.get_usage().contains(m), true);
+            } else {
+                panic!("invalid command");
+            }
+        }
     }
 
     #[test]
