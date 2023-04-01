@@ -5,7 +5,6 @@ use crate::error::NeocitiesErr;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 use serde_json::Value;
-use std::error::Error;
 
 /// Handles the requesting of site information from the Neocities API at `/api/info`
 pub struct NcInfo {}
@@ -46,7 +45,7 @@ pub struct Info {
 }
 
 impl NcInfo {
-    fn request_info(args: &Vec<String>) -> Result<HttpRequestInfo, Box<dyn std::error::Error>> {
+    fn request_info(args: &Vec<String>) -> Result<HttpRequestInfo, NeocitiesErr> {
         let cred = Credentials::new();
 
         let url: String;
@@ -60,11 +59,7 @@ impl NcInfo {
             let auth = Auth::authenticate(cred, String::from("info"), None);
 
             match auth {
-                Err(e) => {
-                    let err: Box<dyn Error> =
-                        format!("problem authenticating credentials: {e}").into();
-                    return Err(err);
-                }
+                Err(e) => return Err(NeocitiesErr::HttpRequestError(e.into())),
                 Ok(a) => {
                     url = a.url;
                     api_key = a.api_key;
@@ -94,13 +89,13 @@ impl NcInfo {
         // get http path and api_key for headers
         let pk = match NcInfo::request_info(args) {
             Ok(v) => v,
-            Err(e) => return Err(NeocitiesErr::HttpRequestError(e)),
+            Err(e) => return Err(NeocitiesErr::HttpRequestError(e.into())),
         };
 
         match get_request(pk.uri, pk.api_key) {
             Ok(res) => match NcInfo::to_info_response(res) {
                 Ok(ir) => Ok(ir),
-                Err(e) => Err(NeocitiesErr::HttpRequestError(Box::new(e))),
+                Err(e) => Err(NeocitiesErr::HttpRequestError(e.into())),
             },
             Err(e) => Err(NeocitiesErr::HttpRequestError(e)),
         }
