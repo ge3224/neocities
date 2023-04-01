@@ -1,3 +1,5 @@
+use crate::error::NeocitiesErr;
+
 use super::credentials::{Auth, Credentials, QueryString};
 use super::http::{get_request, HttpRequestInfo};
 use serde_derive::Deserialize;
@@ -38,9 +40,7 @@ pub struct File {
 }
 
 impl NcList {
-    fn request_info(
-        file_path: Option<String>,
-    ) -> Result<HttpRequestInfo, Box<dyn std::error::Error>> {
+    fn request_info(file_path: Option<String>) -> Result<HttpRequestInfo, NeocitiesErr> {
         let cred = Credentials::new();
 
         let mut query_string: Option<QueryString> = None;
@@ -59,7 +59,7 @@ impl NcList {
         match auth {
             Err(e) => {
                 let err: Box<dyn Error> = format!("problem authenticating credentials: {e}").into();
-                return Err(err);
+                return Err(NeocitiesErr::HttpRequestError(err));
             }
             Ok(a) => {
                 url = a.url;
@@ -76,34 +76,28 @@ impl NcList {
         Ok(pk)
     }
 
-    fn to_list_response(
-        value: serde_json::Value,
-    ) -> Result<ListResponse, Box<dyn std::error::Error>> {
-        let attempt = serde_json::from_value(value);
-        match attempt {
+    fn to_list_response(value: serde_json::Value) -> Result<ListResponse, NeocitiesErr> {
+        match serde_json::from_value(value) {
             Ok(res) => Ok(res),
-            _ => {
-                let e: Box<dyn std::error::Error> = String::from("a problem occurred while converting the deserialized json to the ListResponse type").into();
-                return Err(e);
-            }
+            Err(e) => return Err(NeocitiesErr::SerdeDeserializationError(e)),
         }
     }
 
     /// Prepares and sends a request to the `api/list` endpoint of the Neocities API. It awaits a
     /// response and returns either a FileList or an error.
-    pub fn fetch(path: Option<String>) -> Result<ListResponse, Box<dyn Error>> {
+    pub fn fetch(path: Option<String>) -> Result<ListResponse, NeocitiesErr> {
         // get http path and api_key for headers
         let pk = match NcList::request_info(path) {
             Ok(v) => v,
-            Err(e) => return Err(e),
+            Err(e) => return Err(NeocitiesErr::HttpRequestError(Box::new(e))),
         };
 
         match get_request(pk.uri, pk.api_key) {
             Ok(res) => match NcList::to_list_response(res) {
                 Ok(ir) => Ok(ir),
-                Err(e) => Err(e),
+                Err(e) => Err(NeocitiesErr::HttpRequestError(Box::new(e))),
             },
-            Err(e) => Err(e),
+            Err(e) => Err(NeocitiesErr::HttpRequestError(e)),
         }
     }
 }
