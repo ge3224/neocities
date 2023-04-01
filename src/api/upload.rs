@@ -1,8 +1,8 @@
 use super::credentials::{Auth, Credentials};
 use super::http::{post_request_multipart, HttpRequestInfo};
+use crate::error::NeocitiesErr;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
-use std::error::Error;
 
 /// Handles the request to upload file(s) to a Neocities website using the
 /// following endpoint: `/api/upload`
@@ -21,7 +21,7 @@ pub struct UploadResponse {
 }
 
 impl NcUpload {
-    fn request_info(args: Vec<String>) -> Result<HttpRequestInfo, Box<dyn std::error::Error>> {
+    fn request_info(args: Vec<String>) -> Result<HttpRequestInfo, NeocitiesErr> {
         let cred = Credentials::new();
         let uri: String;
         let api_key: Option<String>;
@@ -33,10 +33,7 @@ impl NcUpload {
                 uri = a.url;
                 api_key = a.api_key;
             }
-            Err(e) => {
-                let err: Box<dyn Error> = format!("problem authenticating credentials: {e}").into();
-                return Err(err);
-            }
+            Err(e) => return Err(NeocitiesErr::HttpRequestError(e.into())),
         }
 
         let hri = HttpRequestInfo {
@@ -49,34 +46,29 @@ impl NcUpload {
         Ok(hri)
     }
 
-    fn to_upload_response(
-        value: serde_json::Value,
-    ) -> Result<UploadResponse, Box<dyn std::error::Error>> {
+    fn to_upload_response(value: serde_json::Value) -> Result<UploadResponse, NeocitiesErr> {
         let attempt = serde_json::from_value(value);
         match attempt {
             Ok(res) => Ok(res),
-            _ => {
-                let e: Box<dyn std::error::Error> = String::from("a problem occurred while converting the deserialized json to the UploadResponse type").into();
-                return Err(e);
-            }
+            Err(e) => return Err(NeocitiesErr::HttpRequestError(e.into())),
         }
     }
 
     /// Prepares and sends a request containing a multipart form file upload. It awaits a response and
     /// returns either a UploadResponse or an error.
-    pub fn fetch(args: Vec<String>) -> Result<UploadResponse, Box<dyn Error>> {
+    pub fn fetch(args: Vec<String>) -> Result<UploadResponse, NeocitiesErr> {
         // get http path and api_key for headers
         let req_info = match NcUpload::request_info(args) {
             Ok(v) => v,
-            Err(e) => return Err(e),
+            Err(e) => return Err(NeocitiesErr::HttpRequestError(e.into())),
         };
 
         match post_request_multipart(req_info.uri, req_info.api_key, req_info.multipart) {
             Ok(res) => match NcUpload::to_upload_response(res) {
                 Ok(ir) => Ok(ir),
-                Err(e) => Err(e),
+                Err(e) => Err(NeocitiesErr::HttpRequestError(e.into())),
             },
-            Err(e) => Err(e),
+            Err(e) => Err(NeocitiesErr::HttpRequestError(e)),
         }
     }
 }
