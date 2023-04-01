@@ -1,10 +1,7 @@
-use std::{env, error::Error};
-
-use url::form_urlencoded::byte_serialize;
-
-use crate::client::help;
-
 use super::API_URL;
+use crate::{client::help, error::NeocitiesErr};
+use std::env;
+use url::form_urlencoded::byte_serialize;
 
 /// The string literal that must be used when setting an environment variable for the
 /// Neocities API key.
@@ -82,7 +79,7 @@ impl Auth {
         cred: Credentials,
         path: String,
         query_string: Option<QueryString>,
-    ) -> Result<Auth, Box<dyn Error>> {
+    ) -> Result<Auth, NeocitiesErr> {
         let mut url: String;
         let mut api_key: Option<String> = None;
 
@@ -100,16 +97,7 @@ impl Auth {
                     let user_urlencoded: String = byte_serialize(u.as_bytes()).collect();
                     user_urlencoded
                 }
-                None => {
-                    // the client module should already validate that `get_username` returns a
-                    // Some(u), but we create an error to return as a fallback
-                    let err: Box<dyn Error> = String::from(format!(
-                        "problem accessing environment variable {}",
-                        ENV_USER
-                    ))
-                    .into();
-                    return Err(err);
-                }
+                None => return Err(NeocitiesErr::MissingUser),
             };
 
             let pass = match cred.get_password() {
@@ -117,16 +105,7 @@ impl Auth {
                     let pass_urlencoded: String = byte_serialize(p.as_bytes()).collect();
                     pass_urlencoded
                 }
-                None => {
-                    // the client module should already validate that `get_password` returns a
-                    // Some(p), but we create an error to return as a fallback
-                    let err: Box<dyn Error> = String::from(format!(
-                        "problem accessing environment variable {}",
-                        ENV_PASS
-                    ))
-                    .into();
-                    return Err(err);
-                }
+                None => return Err(NeocitiesErr::MissingPassword),
             };
 
             // user:pass url
