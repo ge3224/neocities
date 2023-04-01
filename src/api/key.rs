@@ -1,7 +1,6 @@
-use crate::error::NeocitiesErr;
-
 use super::http::get_request;
 use super::API_URL;
+use crate::error::NeocitiesErr;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 
