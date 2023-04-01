@@ -68,7 +68,7 @@ impl NcUpload {
                 Ok(ir) => Ok(ir),
                 Err(e) => Err(NeocitiesErr::HttpRequestError(e.into())),
             },
-            Err(e) => Err(NeocitiesErr::HttpRequestError(e)),
+            Err(e) => Err(NeocitiesErr::HttpRequestError(e.into())),
         }
     }
 }

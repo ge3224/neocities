@@ -98,30 +98,20 @@ impl Executable for List {
             },
         };
 
-        match NcList::fetch(path) {
-            Ok(data) => {
-                if data.files.len() > 0 {
-                    for file in data.files.iter() {
-                        if details {
-                            self.output_detailed(
-                                &file.path,
-                                file.is_directory,
-                                file.size,
-                                &file.updated_at,
-                            )
-                        } else {
-                            self.output_basic(&file.path, file.is_directory);
-                        }
-                    }
+        let data = NcList::fetch(path)?;
+
+        if data.files.len() > 0 {
+            for file in data.files.iter() {
+                if details {
+                    self.output_detailed(&file.path, file.is_directory, file.size, &file.updated_at)
                 } else {
-                    println!("No files were found");
-                };
-                Ok(())
+                    self.output_basic(&file.path, file.is_directory);
+                }
             }
-            Err(e) => {
-                return Err(NeocitiesErr::HttpRequestError(e));
-            }
-        }
+        } else {
+            println!("No files were found");
+        };
+        Ok(())
     }
 
     fn get_usage(&self) -> &str {

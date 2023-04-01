@@ -49,10 +49,8 @@ impl Executable for Upload {
             return Ok(());
         }
 
-        match NcUpload::fetch(args) {
-            Ok(data) => println!("{} - {}", data.result, data.message),
-            Err(e) => return Err(NeocitiesErr::HttpRequestError(e)),
-        }
+        let data = NcUpload::fetch(args)?;
+        println!("{} - {}", data.result, data.message);
 
         Ok(())
     }

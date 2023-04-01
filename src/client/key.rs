@@ -86,10 +86,8 @@ impl Executable for Key {
             }
         };
 
-        match NcKey::fetch(user, pass) {
-            Ok(data) => self.write("API Key", data.api_key, &mut stdout)?,
-            Err(e) => return Err(NeocitiesErr::HttpRequestError(e)),
-        }
+        let data = NcKey::fetch(user, pass)?;
+        self.write("API Key", data.api_key, &mut stdout)?;
 
         Ok(())
     }

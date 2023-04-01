@@ -35,7 +35,7 @@ impl NcDelete {
                 url = a.url;
                 api_key = a.api_key;
             }
-            Err(e) => return Err(NeocitiesErr::HttpRequestError(e)),
+            Err(e) => return Err(NeocitiesErr::HttpRequestError(e.into())),
         }
 
         let mut files = String::from("");

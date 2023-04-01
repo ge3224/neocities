@@ -92,7 +92,7 @@ impl NcList {
                 Ok(ir) => Ok(ir),
                 Err(e) => Err(NeocitiesErr::HttpRequestError(Box::new(e))),
             },
-            Err(e) => Err(NeocitiesErr::HttpRequestError(e)),
+            Err(e) => Err(NeocitiesErr::HttpRequestError(e.into())),
         }
     }
 }

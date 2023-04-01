@@ -76,7 +76,7 @@ impl Executable for Info {
 
                 Ok(())
             }
-            Err(e) => return Err(NeocitiesErr::HttpRequestError(e)),
+            Err(e) => return Err(e),
         }
     }
 

@@ -78,10 +78,8 @@ impl Executable for Delete {
             }
         }
 
-        match NcDelete::fetch(args) {
-            Ok(data) => println!("{} - {}", data.result, data.message),
-            Err(e) => return Err(NeocitiesErr::HttpRequestError(e)),
-        }
+        let data = NcDelete::fetch(args)?;
+        println!("{} - {}", data.result, data.message);
 
         Ok(())
     }
