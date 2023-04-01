@@ -50,7 +50,7 @@ impl NcUpload {
         let attempt = serde_json::from_value(value);
         match attempt {
             Ok(res) => Ok(res),
-            Err(e) => return Err(NeocitiesErr::HttpRequestError(e.into())),
+            Err(e) => return Err(NeocitiesErr::SerdeDeserializationError(e)),
         }
     }
 
