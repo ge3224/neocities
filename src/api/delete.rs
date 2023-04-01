@@ -2,9 +2,9 @@ use super::credentials::Credentials;
 use super::http::post_request_body;
 use super::http::HttpRequestInfo;
 use crate::api::credentials::Auth;
+use crate::error::NeocitiesErr;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
-use std::error::Error;
 
 /// Handles the request to delete file(s) from a Neocities website using the
 /// following endpoint: `/api/delete`
@@ -24,7 +24,7 @@ pub struct DeleteResponse {
 }
 
 impl NcDelete {
-    fn request_info(args: Vec<String>) -> Result<HttpRequestInfo, Box<dyn std::error::Error>> {
+    fn request_info(args: Vec<String>) -> Result<HttpRequestInfo, NeocitiesErr> {
         let url: String;
         let api_key: Option<String>;
         let cred = Credentials::new();
@@ -35,7 +35,7 @@ impl NcDelete {
                 url = a.url;
                 api_key = a.api_key;
             }
-            Err(e) => return Err(format!("problem authenticating credentials: {e}").into()),
+            Err(e) => return Err(NeocitiesErr::HttpRequestError(e)),
         }
 
         let mut files = String::from("");
@@ -55,34 +55,29 @@ impl NcDelete {
         Ok(pk)
     }
 
-    fn to_delete_response(
-        value: serde_json::Value,
-    ) -> Result<DeleteResponse, Box<dyn std::error::Error>> {
+    fn to_delete_response(value: serde_json::Value) -> Result<DeleteResponse, NeocitiesErr> {
         let attempt = serde_json::from_value(value);
         match attempt {
             Ok(res) => Ok(res),
-            _ => {
-                let e: Box<dyn std::error::Error> = String::from("a problem occurred while converting the deserialized json to the DeleteResponse type").into();
-                return Err(e);
-            }
+            Err(e) => return Err(NeocitiesErr::SerdeDeserializationError(e)),
         }
     }
 
     /// Prepares and sends a request for specified files to be deleted from a Neocities user's website.
     /// It awaits a response and returns either a DeleteResponse or an error.
-    pub fn fetch(args: Vec<String>) -> Result<DeleteResponse, Box<dyn Error>> {
+    pub fn fetch(args: Vec<String>) -> Result<DeleteResponse, NeocitiesErr> {
         // get http path and api_key for headers
         let req_info = match NcDelete::request_info(args) {
             Ok(v) => v,
-            Err(e) => return Err(e),
+            Err(e) => return Err(NeocitiesErr::HttpRequestError(e.into())),
         };
 
         match post_request_body(req_info.uri, req_info.api_key, req_info.body) {
             Ok(res) => match NcDelete::to_delete_response(res) {
                 Ok(ir) => Ok(ir),
-                Err(e) => Err(e),
+                Err(e) => Err(NeocitiesErr::HttpRequestError(e.into())),
             },
-            Err(e) => Err(e),
+            Err(e) => Err(NeocitiesErr::HttpRequestError(e)),
         }
     }
 }
