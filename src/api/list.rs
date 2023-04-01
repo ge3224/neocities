@@ -1,7 +1,6 @@
-use crate::error::NeocitiesErr;
-
 use super::credentials::{Auth, Credentials, QueryString};
 use super::http::{get_request, HttpRequestInfo};
+use crate::error::NeocitiesErr;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 
