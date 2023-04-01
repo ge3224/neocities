@@ -19,6 +19,10 @@ pub enum NeocitiesErr {
     #[error("missing password: check environment variables")]
     MissingPassword,
 
+    /// A problem occurred while deserializing json data
+    #[error(transparent)]
+    SerdeDeserializationError(#[from] serde_json::Error),
+
     /// An error was returned from the Neocities API
     #[error(transparent)]
     HttpRequestError(#[from] Box<dyn std::error::Error>),
