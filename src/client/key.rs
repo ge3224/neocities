@@ -24,43 +24,71 @@ impl Key {
     pub fn new() -> Key {
         Key {
             usage: String::from(format!("\x1b[1;32m{}\x1b[0m", KEY)),
-            short: String::from("Neocities API Key"),
-            long: String::from("Retrieve an API Key for your Neocities user account"),
+            short: String::from(DESC_SHORT),
+            long: String::from(DESC),
         }
     }
 
-    fn print_new_key(&self, key: &str, value: String) {
-        println!("\n\x1b[1;92m{}: \x1b[0m {}", key, value);
+    fn write(
+        &self,
+        key: &str,
+        value: String,
+        mut writer: impl std::io::Write,
+    ) -> Result<(), NeocitiesErr> {
+        let output = format!("\n\x1b[1;92m{}: \x1b[0m {}\n{}", key, value, USE_KEY_MSG);
+        writer.write_all(output.as_bytes())?;
+        Ok(())
+    }
+
+    fn write_key_is_set(
+        &self,
+        key: String,
+        mut writer: impl std::io::Write,
+    ) -> Result<(), NeocitiesErr> {
+        let output = format!("{KEY_SET_MSG}: {}", key);
+        writer.write_all(output.as_bytes())?;
+        Ok(())
+    }
+
+    fn write_env_help(&self, mut writer: impl std::io::Write) -> Result<(), NeocitiesErr> {
+        writer.write_all(help::ENV_VAR_MSG.as_bytes())?;
+        Ok(())
+    }
+
+    fn url_encode(&self, env_var: String) -> String {
+        byte_serialize(env_var.as_bytes()).collect()
     }
 }
 
 impl Executable for Key {
     fn run(&self, _args: Vec<String>) -> Result<(), NeocitiesErr> {
         let cred = Credentials::new();
+        let mut stdout = std::io::stdout();
+
         if let Some(key) = cred.get_api_key() {
-            println!("{KEY_SET_MSG}: {}", key);
+            self.write_key_is_set(key, &mut stdout)?;
             return Ok(());
         }
 
-        let user = cred.get_username();
-
-        let pass = cred.get_password();
-
-        if user.is_some() && pass.is_some() {
-            let user_urlencoded: String = byte_serialize(user.unwrap().as_bytes()).collect();
-
-            let pass_urlencoded: String = byte_serialize(pass.unwrap().as_bytes()).collect();
-
-            match NcKey::fetch(user_urlencoded, pass_urlencoded) {
-                Ok(data) => {
-                    self.print_new_key("API Key", data.api_key);
-
-                    println!("{USE_KEY_MSG}");
-                }
-                Err(e) => return Err(NeocitiesErr::HttpRequestError(e)),
+        let user = match cred.get_username() {
+            Some(u) => self.url_encode(u),
+            None => {
+                self.write_env_help(&mut stdout)?;
+                return Ok(());
             }
-        } else {
-            println!("{}", help::ENV_VAR_MSG);
+        };
+
+        let pass = match cred.get_password() {
+            Some(p) => self.url_encode(p),
+            None => {
+                self.write_env_help(&mut stdout)?;
+                return Ok(());
+            }
+        };
+
+        match NcKey::fetch(user, pass) {
+            Ok(data) => self.write("API Key", data.api_key, &mut stdout)?,
+            Err(e) => return Err(NeocitiesErr::HttpRequestError(e)),
         }
 
         Ok(())
@@ -79,6 +107,10 @@ impl Executable for Key {
     }
 }
 
+const DESC: &'static str = "Retrieve an API Key for your Neocities user account";
+
+const DESC_SHORT: &'static str = "Neocities API Key";
+
 const KEY_SET_MSG: &'static str = "
 Your Neocities API key has already been set for the NEOCITIES_KEY environment variable 
 ";
@@ -90,3 +122,17 @@ Example (Linux):
 
     export NEOCITIES_KEY=<your_api_key>
 ";
+
+#[cfg(test)]
+mod tests {
+    use super::{Key, DESC, DESC_SHORT, KEY};
+    use crate::client::command::Executable;
+
+    #[test]
+    fn usage_desc() {
+        let k = Key::new();
+        assert_eq!(k.get_usage().contains(KEY), true);
+        assert_eq!(k.get_short_desc(), DESC_SHORT);
+        assert_eq!(k.get_long_desc(), DESC);
+    }
+}
