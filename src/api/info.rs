@@ -1,6 +1,7 @@
 use super::credentials::{Auth, Credentials};
 use super::http::{get_request, HttpRequestInfo};
 use crate::api::API_URL;
+use crate::error::NeocitiesErr;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 use serde_json::Value;
@@ -80,34 +81,28 @@ impl NcInfo {
         Ok(pk)
     }
 
-    fn to_info_response(
-        value: serde_json::Value,
-    ) -> Result<InfoResponse, Box<dyn std::error::Error>> {
-        let attempt = serde_json::from_value(value);
-        match attempt {
+    fn to_info_response(value: serde_json::Value) -> Result<InfoResponse, NeocitiesErr> {
+        match serde_json::from_value(value) {
             Ok(res) => Ok(res),
-            _ => {
-                let e: Box<dyn std::error::Error> = String::from("a problem occurred while converting the deserialized json to the InfoResponse type").into();
-                return Err(e);
-            }
+            Err(e) => Err(NeocitiesErr::SerdeDeserializationError(e)),
         }
     }
 
     /// Prepares and sends a request for information about a specified Neocities website. It awaits a
     /// response and returns either SiteInfo or an error.
-    pub fn fetch(args: &Vec<String>) -> Result<InfoResponse, Box<dyn std::error::Error>> {
+    pub fn fetch(args: &Vec<String>) -> Result<InfoResponse, NeocitiesErr> {
         // get http path and api_key for headers
         let pk = match NcInfo::request_info(args) {
             Ok(v) => v,
-            Err(e) => return Err(e),
+            Err(e) => return Err(NeocitiesErr::HttpRequestError(e)),
         };
 
         match get_request(pk.uri, pk.api_key) {
             Ok(res) => match NcInfo::to_info_response(res) {
                 Ok(ir) => Ok(ir),
-                Err(e) => Err(e),
+                Err(e) => Err(NeocitiesErr::HttpRequestError(Box::new(e))),
             },
-            Err(e) => Err(e),
+            Err(e) => Err(NeocitiesErr::HttpRequestError(e)),
         }
     }
 }

@@ -4,7 +4,6 @@ use super::credentials::{Auth, Credentials, QueryString};
 use super::http::{get_request, HttpRequestInfo};
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
-use std::error::Error;
 
 /// Handles the requesting of a list of a Neocities website's directory contents using the
 /// following Neocities API endpoint `/api/list`
@@ -57,10 +56,7 @@ impl NcList {
         let auth = Auth::authenticate(cred, String::from("list"), query_string);
 
         match auth {
-            Err(e) => {
-                let err: Box<dyn Error> = format!("problem authenticating credentials: {e}").into();
-                return Err(NeocitiesErr::HttpRequestError(err));
-            }
+            Err(e) => return Err(NeocitiesErr::HttpRequestError(e.into())),
             Ok(a) => {
                 url = a.url;
                 api_key = a.api_key;
