@@ -4,6 +4,8 @@ use reqwest::{header::AUTHORIZATION, multipart, Body, Client, Response, StatusCo
 use tokio::fs::File;
 use tokio_util::codec::{BytesCodec, FramedRead};
 
+use crate::error::NeocitiesErr;
+
 /// Contains specific data for forming http requests to interact with the Neocities API.
 pub struct HttpRequestInfo {
     /// The path in an http request-line
@@ -105,37 +107,56 @@ pub async fn post_request_body(
     uri: String,
     api_key: Option<String>,
     body: Option<String>,
-) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+) -> Result<serde_json::Value, NeocitiesErr> {
     let files = match body {
         Some(f) => f,
         None => {
             let e: Box<dyn std::error::Error> =
                 String::from("not files were given for this request").into();
-            return Err(e);
+            return Err(NeocitiesErr::HttpRequestError(e.into()));
         }
     };
 
     let req = reqwest::Client::new();
-    let res: reqwest::Response;
-    if let Some(k) = api_key {
-        res = req
-            .post(&uri)
-            .header(reqwest::header::AUTHORIZATION, format!("Bearer {}", k))
-            .body(files)
-            .send()
-            .await?;
-    } else {
-        res = req.post(&uri).body(files).send().await?;
+
+    let res: reqwest::Response = match api_key {
+        Some(k) => {
+            let attempt = req
+                .post(&uri)
+                .header(reqwest::header::AUTHORIZATION, format!("Bearer {}", k))
+                .body(files)
+                .send()
+                .await;
+            match attempt {
+                Ok(r) => r,
+                Err(e) => return Err(NeocitiesErr::HttpRequestError(e.into())),
+            }
+        }
+        None => {
+            let attempt = req.post(&uri).body(files).send().await;
+            match attempt {
+                Ok(r) => r,
+                Err(e) => return Err(NeocitiesErr::HttpRequestError(e.into())),
+            }
+        }
+    };
+
+    if let reqwest::StatusCode::OK = res.status() {
+        let attempt = res.text().await;
+        match attempt {
+            Ok(t) => {
+                match serde_json::from_str(&t) {
+                    Ok(b) => return Ok(b),
+                    Err(e) => return Err(NeocitiesErr::SerdeDeserializationError(e)),
+                };
+            }
+            Err(e) => return Err(NeocitiesErr::HttpRequestError(e.into())),
+        }
     }
 
-    let status = res.status();
-    if let reqwest::StatusCode::OK = status {
-        let raw = res.text().await?;
-        let body: serde_json::Value = serde_json::from_str(&raw)?;
-        Ok(body)
-    } else {
-        Err(status_message(status).into())
-    }
+    return Err(NeocitiesErr::HttpRequestError(
+        "a problem occurred while processing a request to a post request".into(),
+    ));
 }
 
 fn status_message(code: StatusCode) -> String {

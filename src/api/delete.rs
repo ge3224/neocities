@@ -72,12 +72,11 @@ impl NcDelete {
             Err(e) => return Err(NeocitiesErr::HttpRequestError(e.into())),
         };
 
-        match post_request_body(req_info.uri, req_info.api_key, req_info.body) {
-            Ok(res) => match NcDelete::to_delete_response(res) {
-                Ok(ir) => Ok(ir),
-                Err(e) => Err(NeocitiesErr::HttpRequestError(e.into())),
-            },
-            Err(e) => Err(NeocitiesErr::HttpRequestError(e)),
+        let res = post_request_body(req_info.uri, req_info.api_key, req_info.body)?;
+
+        match NcDelete::to_delete_response(res) {
+            Ok(ir) => Ok(ir),
+            Err(e) => Err(NeocitiesErr::HttpRequestError(e.into())),
         }
     }
 }
