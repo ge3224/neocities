@@ -1,3 +1,5 @@
+use crate::error::NeocitiesErr;
+
 use super::http::get_request;
 use super::API_URL;
 use serde_derive::Deserialize;
@@ -22,30 +24,24 @@ impl NcKey {
         return format!("https://{}:{}@{}key", user, password, API_URL);
     }
 
-    fn to_api_key_response(
-        value: serde_json::Value,
-    ) -> Result<ApiKeyResponse, Box<dyn std::error::Error>> {
-        let attempt = serde_json::from_value(value);
-        match attempt {
+    fn to_api_key_response(value: serde_json::Value) -> Result<ApiKeyResponse, NeocitiesErr> {
+        match serde_json::from_value(value) {
             Ok(res) => Ok(res),
-            _ => {
-                let e: Box<dyn std::error::Error> = String::from("a problem occurred while converting the deserialized json to the ApiKeyResponse type").into();
-                return Err(e);
-            }
+            Err(e) => return Err(NeocitiesErr::SerdeDeserializationError(e)),
         }
     }
 
     /// Prepares and sends a request for an API key to Neocities at the `api/key` endpoint. It awaits a
     /// response and returns either an ApiKey or an error.
-    pub fn fetch(user: String, pass: String) -> Result<ApiKeyResponse, Box<dyn std::error::Error>> {
+    pub fn fetch(user: String, pass: String) -> Result<ApiKeyResponse, NeocitiesErr> {
         let url = NcKey::prepare_url(user, pass);
 
         match get_request(url, None) {
             Ok(res) => match NcKey::to_api_key_response(res) {
                 Ok(akr) => Ok(akr),
-                Err(e) => Err(e),
+                Err(e) => Err(NeocitiesErr::HttpRequestError(Box::new(e))),
             },
-            Err(e) => Err(e),
+            Err(e) => Err(NeocitiesErr::HttpRequestError(e)),
         }
     }
 }
