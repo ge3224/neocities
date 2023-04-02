@@ -40,23 +40,38 @@ impl Key {
         Ok(())
     }
 
-    fn write_key_is_set(
-        &self,
-        key: String,
-        mut writer: impl std::io::Write,
-    ) -> Result<(), NeocitiesErr> {
-        let output = format!("{KEY_SET_MSG}: {}", key);
-        writer.write_all(output.as_bytes())?;
-        Ok(())
-    }
-
-    fn write_env_help(&self, mut writer: impl std::io::Write) -> Result<(), NeocitiesErr> {
-        writer.write_all(help::ENV_VAR_MSG.as_bytes())?;
-        Ok(())
-    }
-
     fn url_encode(&self, env_var: String) -> String {
         byte_serialize(env_var.as_bytes()).collect()
+    }
+
+    fn check_env_vars(
+        &self,
+        cred: Credentials,
+        mut writer: impl std::io::Write,
+    ) -> Result<Option<(String, String)>, NeocitiesErr> {
+        if let Some(key) = cred.get_api_key() {
+            let output = format!("{KEY_SET_MSG}: {}", key);
+            writer.write_all(output.as_bytes())?;
+            return Ok(None);
+        }
+
+        let user = match cred.get_username() {
+            Some(u) => self.url_encode(u),
+            None => {
+                writer.write_all(help::ENV_VAR_MSG.as_bytes())?;
+                return Ok(None);
+            }
+        };
+
+        let pass = match cred.get_password() {
+            Some(p) => self.url_encode(p),
+            None => {
+                writer.write_all(help::ENV_VAR_MSG.as_bytes())?;
+                return Ok(None);
+            }
+        };
+
+        Ok(Some((user, pass)))
     }
 }
 
@@ -65,25 +80,10 @@ impl Executable for Key {
         let cred = Credentials::new();
         let mut stdout = std::io::stdout();
 
-        if let Some(key) = cred.get_api_key() {
-            self.write_key_is_set(key, &mut stdout)?;
-            return Ok(());
-        }
-
-        let user = match cred.get_username() {
-            Some(u) => self.url_encode(u),
-            None => {
-                self.write_env_help(&mut stdout)?;
-                return Ok(());
-            }
-        };
-
-        let pass = match cred.get_password() {
-            Some(p) => self.url_encode(p),
-            None => {
-                self.write_env_help(&mut stdout)?;
-                return Ok(());
-            }
+        let check = self.check_env_vars(cred, &stdout)?;
+        let (user, pass) = match check {
+            Some(u_p) => u_p,
+            None => return Ok(()),
         };
 
         let data = NcKey::fetch(user, pass)?;
