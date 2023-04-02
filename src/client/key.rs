@@ -29,13 +29,8 @@ impl Key {
         }
     }
 
-    fn write(
-        &self,
-        key: &str,
-        value: String,
-        mut writer: impl std::io::Write,
-    ) -> Result<(), NeocitiesErr> {
-        let output = format!("\n\x1b[1;92m{}: \x1b[0m {}\n{}", key, value, USE_KEY_MSG);
+    fn write(&self, key: &String, mut writer: impl std::io::Write) -> Result<(), NeocitiesErr> {
+        let output = format!("\n\x1b[1;92mAPI KEY: \x1b[0m {}\n{}", key, USE_KEY_MSG);
         writer.write_all(output.as_bytes())?;
         Ok(())
     }
@@ -82,12 +77,12 @@ impl Executable for Key {
 
         let check = self.check_env_vars(cred, &stdout)?;
         let (user, pass) = match check {
-            Some(u_p) => u_p,
+            Some(u_and_p) => u_and_p,
             None => return Ok(()),
         };
 
         let data = NcKey::fetch(user, pass)?;
-        self.write("API Key", data.api_key, &mut stdout)?;
+        self.write(&data.api_key, &mut stdout)?;
 
         Ok(())
     }
@@ -124,7 +119,7 @@ Example (Linux):
 #[cfg(test)]
 mod tests {
     use super::{Key, DESC, DESC_SHORT, KEY};
-    use crate::client::command::Executable;
+    use crate::{client::command::Executable, error::NeocitiesErr};
 
     #[test]
     fn usage_desc() {
@@ -132,5 +127,19 @@ mod tests {
         assert_eq!(k.get_usage().contains(KEY), true);
         assert_eq!(k.get_short_desc(), DESC_SHORT);
         assert_eq!(k.get_long_desc(), DESC);
+    }
+
+    #[test]
+    fn writer_method() -> Result<(), NeocitiesErr> {
+        let mut result = Vec::new();
+        let k = Key::new();
+        let mock_key = String::from("foo");
+
+        k.write(&mock_key, &mut result)?;
+
+        let s = String::from_utf8(result)?;
+        assert_eq!(s.contains(mock_key.as_str()), true);
+
+        Ok(())
     }
 }
