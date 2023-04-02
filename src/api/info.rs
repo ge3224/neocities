@@ -67,13 +67,14 @@ impl NcInfo {
             }
         }
 
-        let pk = HttpRequestInfo {
+        let ri = HttpRequestInfo {
             uri: url,
             api_key,
             body: None,
             multipart: None,
         };
-        Ok(pk)
+
+        Ok(ri)
     }
 
     fn to_info_response(value: serde_json::Value) -> Result<InfoResponse, NeocitiesErr> {
@@ -87,18 +88,10 @@ impl NcInfo {
     /// response and returns either SiteInfo or an error.
     pub fn fetch(args: &Vec<String>) -> Result<InfoResponse, NeocitiesErr> {
         // get http path and api_key for headers
-        let pk = match NcInfo::request_info(args) {
-            Ok(v) => v,
-            Err(e) => return Err(NeocitiesErr::HttpRequestError(e.into())),
-        };
-
-        match get_request(pk.uri, pk.api_key) {
-            Ok(res) => match NcInfo::to_info_response(res) {
-                Ok(ir) => Ok(ir),
-                Err(e) => Err(NeocitiesErr::HttpRequestError(e.into())),
-            },
-            Err(e) => Err(NeocitiesErr::HttpRequestError(e.into())),
-        }
+        let ri = NcInfo::request_info(args)?;
+        let res = get_request(ri.uri, ri.api_key)?;
+        let nci = NcInfo::to_info_response(res)?;
+        Ok(nci)
     }
 }
 

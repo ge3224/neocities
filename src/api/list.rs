@@ -82,18 +82,10 @@ impl NcList {
     /// response and returns either a FileList or an error.
     pub fn fetch(path: Option<String>) -> Result<ListResponse, NeocitiesErr> {
         // get http path and api_key for headers
-        let pk = match NcList::request_info(path) {
-            Ok(v) => v,
-            Err(e) => return Err(NeocitiesErr::HttpRequestError(Box::new(e))),
-        };
-
-        match get_request(pk.uri, pk.api_key) {
-            Ok(res) => match NcList::to_list_response(res) {
-                Ok(ir) => Ok(ir),
-                Err(e) => Err(NeocitiesErr::HttpRequestError(Box::new(e))),
-            },
-            Err(e) => Err(NeocitiesErr::HttpRequestError(e.into())),
-        }
+        let pk = NcList::request_info(path)?;
+        let res = get_request(pk.uri, pk.api_key)?;
+        let ir = NcList::to_list_response(res)?;
+        Ok(ir)
     }
 }
 

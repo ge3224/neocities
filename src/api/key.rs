@@ -34,14 +34,9 @@ impl NcKey {
     /// response and returns either an ApiKey or an error.
     pub fn fetch(user: String, pass: String) -> Result<ApiKeyResponse, NeocitiesErr> {
         let url = NcKey::prepare_url(user, pass);
-
-        match get_request(url, None) {
-            Ok(res) => match NcKey::to_api_key_response(res) {
-                Ok(akr) => Ok(akr),
-                Err(e) => Err(NeocitiesErr::HttpRequestError(Box::new(e))),
-            },
-            Err(e) => Err(NeocitiesErr::HttpRequestError(e.into())),
-        }
+        let res = get_request(url, None)?;
+        let akr = NcKey::to_api_key_response(res)?;
+        Ok(akr)
     }
 }
 

@@ -29,7 +29,7 @@ pub async fn get_request(
         Some(k) => {
             let attempt = req
                 .get(uri.as_str())
-                .header(reqwest::header::AUTHORIZATION, format!("Bearer {}", k))
+                .header(AUTHORIZATION, format!("Bearer {}", k))
                 .send()
                 .await;
             match attempt {
@@ -162,7 +162,7 @@ pub async fn post_request_body(
         Some(k) => {
             let attempt = req
                 .post(&uri)
-                .header(reqwest::header::AUTHORIZATION, format!("Bearer {}", k))
+                .header(AUTHORIZATION, format!("Bearer {}", k))
                 .body(files)
                 .send()
                 .await;

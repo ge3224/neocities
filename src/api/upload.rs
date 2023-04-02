@@ -58,18 +58,10 @@ impl NcUpload {
     /// returns either a UploadResponse or an error.
     pub fn fetch(args: Vec<String>) -> Result<UploadResponse, NeocitiesErr> {
         // get http path and api_key for headers
-        let req_info = match NcUpload::request_info(args) {
-            Ok(v) => v,
-            Err(e) => return Err(NeocitiesErr::HttpRequestError(e.into())),
-        };
-
-        match post_request_multipart(req_info.uri, req_info.api_key, req_info.multipart) {
-            Ok(res) => match NcUpload::to_upload_response(res) {
-                Ok(ir) => Ok(ir),
-                Err(e) => Err(NeocitiesErr::HttpRequestError(e.into())),
-            },
-            Err(e) => Err(NeocitiesErr::HttpRequestError(e.into())),
-        }
+        let req_info = NcUpload::request_info(args)?;
+        let res = post_request_multipart(req_info.uri, req_info.api_key, req_info.multipart)?;
+        let ur = NcUpload::to_upload_response(res)?;
+        Ok(ur)
     }
 }
 
