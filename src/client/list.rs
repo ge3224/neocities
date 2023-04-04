@@ -31,8 +31,8 @@ impl List {
         }
     }
 
-    fn write(&self, value: &str, mut writer: impl std::io::Write) -> Result<(), NeocitiesErr> {
-        let output = format!("\n{}\n", value);
+    fn write(&self, msg: &str, mut writer: impl std::io::Write) -> Result<(), NeocitiesErr> {
+        let output = format!("\n{}\n", msg);
         writer.write_all(output.as_bytes())?;
         Ok(())
     }

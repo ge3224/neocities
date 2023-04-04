@@ -2,7 +2,7 @@ use super::command::Executable;
 use crate::{
     api::{
         credentials::{Credentials, ENV_VAR_MSG},
-        upload::NcUpload,
+        upload::{NcUpload, UploadResponse},
     },
     error::NeocitiesErr,
 };
@@ -26,33 +26,45 @@ impl Upload {
                 "\x1b[1;32m{}\x1b[0m <filename> [<another filename>]",
                 KEY
             )),
-            short: String::from("Upload files to Neocities"),
-            long: String::from("Upload files to your Neocities website"),
+            short: String::from(DESC_SHORT),
+            long: String::from(DESC),
         }
     }
-}
 
-impl Upload {
-    fn print_usage(&self) {
-        println!("\n{}\n", self.get_long_desc());
-        println!("usage: {}\n", self.usage);
+    fn write(&self, msg: &str, mut writer: impl std::io::Write) -> Result<(), NeocitiesErr> {
+        let output = format!("\n{}\n", msg);
+        writer.write_all(output.as_bytes())?;
+        Ok(())
+    }
+
+    fn parse_response(
+        &self,
+        res: UploadResponse,
+        mut writer: impl std::io::Write,
+    ) -> Result<(), NeocitiesErr> {
+        let output = format!("\n{} - {}\n", &res.result, &res.message);
+        writer.write_all(output.as_bytes())?;
+        Ok(())
     }
 }
 
 impl Executable for Upload {
     fn run(&self, args: Vec<String>) -> Result<(), NeocitiesErr> {
+        let mut stdout = std::io::stdout();
+
         if args.len() < 1 {
-            self.print_usage();
+            let output = format!("{}\nusage: {}", self.get_long_desc(), self.get_usage());
+            self.write(output.as_str(), &mut stdout)?;
             return Ok(());
         }
 
         if Credentials::have_env_vars() != true {
-            println!("{}", ENV_VAR_MSG);
+            self.write(ENV_VAR_MSG, &mut stdout)?;
             return Ok(());
         }
 
         let data = NcUpload::fetch(args)?;
-        println!("{} - {}", data.result, data.message);
+        self.parse_response(data, &mut stdout)?;
 
         Ok(())
     }
@@ -67,5 +79,66 @@ impl Executable for Upload {
 
     fn get_long_desc(&self) -> &str {
         self.long.as_str()
+    }
+}
+
+const DESC_SHORT: &'static str = "Upload files to Neocities";
+
+const DESC: &'static str = "Upload files to your Neocities website";
+
+#[cfg(test)]
+mod tests {
+    use super::{Upload, DESC, DESC_SHORT, KEY};
+    use crate::{api::upload::UploadResponse, client::command::Executable, error::NeocitiesErr};
+
+    #[test]
+    fn get_usage_method() {
+        let up = Upload::new();
+        assert_eq!(up.get_usage().contains(KEY), true);
+    }
+
+    #[test]
+    fn get_long_desc_method() {
+        let u = Upload::new();
+        assert_eq!(u.get_long_desc(), DESC);
+    }
+
+    #[test]
+    fn get_short_desc_method() {
+        let u = Upload::new();
+        assert_eq!(u.get_short_desc(), DESC_SHORT);
+    }
+
+    #[test]
+    fn write_method() -> Result<(), NeocitiesErr> {
+        let u = Upload::new();
+        let mut output = Vec::new();
+        u.write("foo", &mut output)?;
+
+        let s = String::from_utf8(output)?;
+
+        assert_eq!(s.contains("foo"), true);
+
+        Ok(())
+    }
+
+    #[test]
+    fn parse_response_method() -> Result<(), NeocitiesErr> {
+        let mock_res = UploadResponse {
+            result: String::from("foo"),
+            error_type: None,
+            message: String::from("bar"),
+        };
+
+        let u = Upload::new();
+        let mut output = Vec::new();
+        u.parse_response(mock_res, &mut output)?;
+
+        let s = String::from_utf8(output)?;
+
+        assert_eq!(s.contains("foo"), true);
+        assert_eq!(s.contains("bar"), true);
+
+        Ok(())
     }
 }
