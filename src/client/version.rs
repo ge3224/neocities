@@ -4,8 +4,6 @@ use std::io;
 
 /// The string literal a user must type to run functionality in this module
 pub const KEY: &'static str = "version";
-const DESC: &'static str = "Show the version number of the neocities client";
-const DESC_SHORT: &'static str = "Show neocities version";
 
 /// An implementation of `Executable` that outputs the version of this `neocities_cli` application
 pub struct Version {
@@ -52,6 +50,9 @@ impl Executable for Version {
         self.long.as_str()
     }
 }
+
+const DESC: &'static str = "Show the version number of this Neocities client";
+const DESC_SHORT: &'static str = "Show neocities version";
 
 #[cfg(test)]
 mod tests {

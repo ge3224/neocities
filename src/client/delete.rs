@@ -38,43 +38,46 @@ impl Delete {
 
     fn warning(
         &self,
-        args: &Vec<String>,
+        args: Vec<String>,
         mut writer: impl std::io::Write,
     ) -> Result<bool, NeocitiesErr> {
-        let intro =
-            format!("\x1b[93mWarning.\x1b[0m Are you sure you want to delete the following files?");
-        self.write(intro.as_str(), &mut writer)?;
+        let warn = "\x1b[93mWarning.\x1b[0m Are you sure you want to delete the following files?\n";
+        self.write(warn, &mut writer)?;
 
         for (i, arg) in args.iter().enumerate() {
-            let item = format!("{}: \x1b[92m{}\x1b[0m", i + 1, arg);
+            let item = format!("{}: \x1b[92m{}\x1b[0m\n", i + 1, arg);
             self.write(item.as_str(), &mut writer)?;
         }
 
-        self.write("Please input either Y or N.", &mut writer)?;
+        self.write("Please input either Y or N.\n", &mut writer)?;
+
+        let mut cancel_delete = true;
 
         loop {
             let mut input = String::new();
 
-            io::stdin().read_line(&mut input).unwrap();
+            io::stdin().read_line(&mut input)?;
 
             let input = input.trim();
 
             match input {
                 "Y" | "y" => {
-                    self.write("Ok. Continuing with delete of files.", &mut writer)?;
+                    self.write("Ok. Continuing with delete of files.\n", &mut writer)?;
+                    cancel_delete = false;
                     break;
                 }
                 "N" | "n" => {
-                    self.write("Canceling delete operation.", &mut writer)?;
-                    return Ok(false);
+                    self.write("Canceling delete operation.\n", &mut writer)?;
+                    break;
                 }
                 _ => {
-                    let err = format!("Invalid input: '{}'. Please try again.", input);
+                    let err = format!("Invalid input: '{}'. Please try again.\n", input);
                     self.write(err.as_str(), &mut writer)?;
                 }
             }
         }
-        Ok(true)
+
+        Ok(cancel_delete)
     }
 }
 
@@ -83,7 +86,7 @@ impl Executable for Delete {
         let mut stdout = std::io::stdout();
 
         if args.len() < 1 {
-            let output = format!("\n{}\nusage: {}\n", self.get_long_desc(), self.get_usage());
+            let output = format!("{}\nusage: {}\n", self.get_long_desc(), self.get_usage());
             self.write(output.as_str(), &mut stdout)?;
             return Ok(());
         }
@@ -93,11 +96,14 @@ impl Executable for Delete {
             return Ok(());
         }
 
-        let proceed = self.warning(&args, &mut stdout)?;
+        let cancel = self.warning(args[..].to_vec(), &mut stdout)?;
 
-        if proceed == true {
+        if cancel == false {
             let data = NcDelete::fetch(args)?;
-            let output = format!("{} - {}", data.result, data.message);
+            let output = format!(
+                "\x1b[93mStatus\x1b[0m: {} - {}\n",
+                data.result, data.message
+            );
             self.write(output.as_str(), &mut stdout)?;
         }
 

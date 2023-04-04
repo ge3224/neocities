@@ -32,8 +32,7 @@ impl List {
     }
 
     fn write(&self, msg: &str, mut writer: impl std::io::Write) -> Result<(), NeocitiesErr> {
-        let output = format!("\n{}\n", msg);
-        writer.write_all(output.as_bytes())?;
+        writer.write_all(msg.as_bytes())?;
         Ok(())
     }
 
@@ -75,7 +74,7 @@ impl List {
                 }
             }
         } else {
-            self.write("No files were found", &mut writer)?;
+            self.write("No files were found\n", &mut writer)?;
         };
 
         Ok(())
@@ -104,10 +103,10 @@ impl List {
 
         let output: String;
         if is_dir {
-            output = format!("{}{}/\x1b[90m {}\x1b[0m", self.dir_color, path, date);
+            output = format!("{}{}/\x1b[90m {}\x1b[0m\n", self.dir_color, path, date);
         } else {
             output = format!(
-                "{}{}\x1b[0m ({})\x1b[90m {}\x1b[0m",
+                "{}{}\x1b[0m ({})\x1b[90m {}\x1b[0m\n",
                 self.file_color, path, file_size, date
             );
         }
@@ -124,9 +123,9 @@ impl List {
     ) -> Result<(), NeocitiesErr> {
         let output: String;
         if is_dir {
-            output = format!("{}{}/\x1b[0m", self.dir_color, path);
+            output = format!("{}{}/\x1b[0m\n", self.dir_color, path);
         } else {
-            output = format!("{}{}\x1b[0m", self.file_color, path,);
+            output = format!("{}{}\x1b[0m\n", self.file_color, path,);
         }
         self.write(output.as_str(), &mut writer)?;
 

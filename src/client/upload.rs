@@ -32,7 +32,7 @@ impl Upload {
     }
 
     fn write(&self, msg: &str, mut writer: impl std::io::Write) -> Result<(), NeocitiesErr> {
-        let output = format!("\n{}\n", msg);
+        let output = format!("{}", msg);
         writer.write_all(output.as_bytes())?;
         Ok(())
     }
@@ -42,7 +42,10 @@ impl Upload {
         res: UploadResponse,
         mut writer: impl std::io::Write,
     ) -> Result<(), NeocitiesErr> {
-        let output = format!("\n{} - {}\n", &res.result, &res.message);
+        let output = format!(
+            "\x1b[93mStatus\x1b[0m: {} - {}\n",
+            &res.result, &res.message
+        );
         writer.write_all(output.as_bytes())?;
         Ok(())
     }
@@ -53,7 +56,7 @@ impl Executable for Upload {
         let mut stdout = std::io::stdout();
 
         if args.len() < 1 {
-            let output = format!("{}\nusage: {}", self.get_long_desc(), self.get_usage());
+            let output = format!("{}\nusage: {}\n", self.get_long_desc(), self.get_usage());
             self.write(output.as_str(), &mut stdout)?;
             return Ok(());
         }

@@ -47,7 +47,7 @@ impl Key {
         mut writer: impl std::io::Write,
     ) -> Result<Option<(String, String)>, NeocitiesErr> {
         if let Some(key) = cred.get_api_key() {
-            let output = format!("{KEY_SET_MSG}: {}", key);
+            let output = format!("{KEY_SET_MSG}\n{}\n", key);
             writer.write_all(output.as_bytes())?;
             return Ok(None);
         }
@@ -106,9 +106,8 @@ const DESC: &'static str = "Retrieve an API Key for your Neocities user account"
 
 const DESC_SHORT: &'static str = "Neocities API Key";
 
-const KEY_SET_MSG: &'static str = "
-Your Neocities API key has already been set for the NEOCITIES_KEY environment variable 
-";
+const KEY_SET_MSG: &'static str =
+    "Your Neocities API key is already set on your local machine, $NEOCITIES_KEY:";
 
 const USE_KEY_MSG: &'static str = "
 Use your API key by setting the following environment variable: 
