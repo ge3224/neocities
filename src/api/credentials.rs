@@ -122,7 +122,7 @@ impl Credentials {
 
         callback();
 
-        // retore
+        // restore
         Self::set_app_env(u_wrapped, p_wrapped, k_wrapped);
     }
 }
