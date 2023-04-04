@@ -43,23 +43,23 @@ Alternatively, you can use the `NEOCITIES_KEY` variable.
 - Upload files to your website:
 
 ```bash
-neocities upload foo.html bar.js folder/baz.jpg
+neocities_cli upload foo.html bar.js folder/baz.jpg
 ```
 
 - Delete files from your website:
 
 ```bash
-neocities delete foo.html folder/baz.jpg
+neocities_cli delete foo.html folder/baz.jpg
 ```
 
 - Get a list of available commands:
 
 ```bash
-neocities
+neocities_cli
 
 # Output...
 #
-# usage: neocities <command> [<args>]
+# usage: neocities _cli <command> [<args>]
 # 
 # 
 # Commands:

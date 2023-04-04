@@ -114,7 +114,7 @@ const NC_ASCII_BANNER: [u8; 83] = [
 const HELP_MSG: &'static str = "\
 Usage:
 
-\x1b[1;32mneocities\x1b[0m <command> [<args>]
+\x1b[1;32mneocities_cli\x1b[0m <command> [<args>]
 
 Commands:
 
