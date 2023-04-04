@@ -214,9 +214,8 @@ impl QueryString {
 
 #[cfg(test)]
 mod tests {
-    use crate::{client::info, error::NeocitiesErr};
-
     use super::{Auth, Credentials};
+    use crate::{client::info, error::NeocitiesErr};
     use serial_test::serial;
 
     #[test]
