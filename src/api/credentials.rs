@@ -188,7 +188,7 @@ impl Auth {
 
 /// Messaging about setting up environment variables so this client can interact with the Neocities API.
 pub const ENV_VAR_MSG: &'static str = "
-Before you can interact with Neocities, you must first set the following 
+Before you can interact with Neocities CLI, you must first set the following 
 environment variables:
 Example (Linux):
     export NEOCITIES_USER=<your_username>
