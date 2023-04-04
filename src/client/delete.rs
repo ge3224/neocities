@@ -26,36 +26,31 @@ impl Delete {
             usage: String::from(format!(
                 "\x1b[1;32m{KEY}\x1b[0m <filename> [<another filename>]"
             )),
-            short: String::from("Delete files from Neocities"),
-            long: String::from("Delete files from your Neocities website"),
+            short: String::from(DESC_SHORT),
+            long: String::from(DESC),
         }
     }
 
-    fn print_usage(&self) {
-        println!("\n{}\n", self.get_long_desc());
-        println!("usage: {}\n", self.usage);
+    fn write(&self, msg: &str, mut writer: impl std::io::Write) -> Result<(), NeocitiesErr> {
+        writer.write_all(msg.as_bytes())?;
+        Ok(())
     }
-}
 
-impl Executable for Delete {
-    fn run(&self, args: Vec<String>) -> Result<(), NeocitiesErr> {
-        if args.len() < 1 {
-            self.print_usage();
-            return Ok(());
-        }
-
-        if Credentials::have_env_vars() != true {
-            println!("{}", ENV_VAR_MSG);
-            return Ok(());
-        }
-
-        println!("\x1b[93mWarning.\x1b[0m Are you sure you want to delete the following files?");
+    fn warning(
+        &self,
+        args: &Vec<String>,
+        mut writer: impl std::io::Write,
+    ) -> Result<bool, NeocitiesErr> {
+        let intro =
+            format!("\x1b[93mWarning.\x1b[0m Are you sure you want to delete the following files?");
+        self.write(intro.as_str(), &mut writer)?;
 
         for (i, arg) in args.iter().enumerate() {
-            println!("{}: \x1b[92m{}\x1b[0m", i + 1, arg);
+            let item = format!("{}: \x1b[92m{}\x1b[0m", i + 1, arg);
+            self.write(item.as_str(), &mut writer)?;
         }
 
-        println!("Please input either Y or N.");
+        self.write("Please input either Y or N.", &mut writer)?;
 
         loop {
             let mut input = String::new();
@@ -66,21 +61,45 @@ impl Executable for Delete {
 
             match input {
                 "Y" | "y" => {
-                    println!("Ok. Continuing with delete of files.");
+                    self.write("Ok. Continuing with delete of files.", &mut writer)?;
                     break;
                 }
                 "N" | "n" => {
-                    println!("Canceling delete operation.");
-                    return Ok(());
+                    self.write("Canceling delete operation.", &mut writer)?;
+                    return Ok(false);
                 }
                 _ => {
-                    println!("Invalid input: '{}'. Please try again.", input);
+                    let err = format!("Invalid input: '{}'. Please try again.", input);
+                    self.write(err.as_str(), &mut writer)?;
                 }
             }
         }
+        Ok(true)
+    }
+}
 
-        let data = NcDelete::fetch(args)?;
-        println!("{} - {}", data.result, data.message);
+impl Executable for Delete {
+    fn run(&self, args: Vec<String>) -> Result<(), NeocitiesErr> {
+        let mut stdout = std::io::stdout();
+
+        if args.len() < 1 {
+            let output = format!("\n{}\nusage: {}\n", self.get_long_desc(), self.get_usage());
+            self.write(output.as_str(), &mut stdout)?;
+            return Ok(());
+        }
+
+        if Credentials::have_env_vars() != true {
+            self.write(ENV_VAR_MSG, &mut stdout)?;
+            return Ok(());
+        }
+
+        let proceed = self.warning(&args, &mut stdout)?;
+
+        if proceed == true {
+            let data = NcDelete::fetch(args)?;
+            let output = format!("{} - {}", data.result, data.message);
+            self.write(output.as_str(), &mut stdout)?;
+        }
 
         Ok(())
     }
@@ -95,5 +114,47 @@ impl Executable for Delete {
 
     fn get_long_desc(&self) -> &str {
         self.long.as_str()
+    }
+}
+
+const DESC: &'static str = "Delete files from your Neocities website";
+
+const DESC_SHORT: &'static str = "Delete files from Neocities";
+
+#[cfg(test)]
+mod tests {
+    use crate::{client::command::Executable, error::NeocitiesErr};
+
+    use super::{Delete, DESC, DESC_SHORT, KEY};
+
+    #[test]
+    fn get_usage_method() {
+        let d = Delete::new();
+        assert_eq!(d.get_usage().contains(KEY), true);
+    }
+
+    #[test]
+    fn get_description_method() {
+        let d = Delete::new();
+        assert_eq!(d.get_long_desc(), DESC);
+    }
+
+    #[test]
+    fn get_short_description_method() {
+        let d = Delete::new();
+        assert_eq!(d.get_short_desc(), DESC_SHORT);
+    }
+
+    #[test]
+    fn write_method() -> Result<(), NeocitiesErr> {
+        let d = Delete::new();
+        let mut output = Vec::new();
+        d.write("foo", &mut output)?;
+
+        let s = String::from_utf8(output)?;
+
+        assert_eq!(s.contains("foo"), true);
+
+        Ok(())
     }
 }
