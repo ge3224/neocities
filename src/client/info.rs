@@ -37,7 +37,7 @@ impl Info {
 impl Executable for Info {
     fn run(&self, args: Vec<String>) -> Result<(), NeocitiesErr> {
         if args.len() < 1 {
-            if Credentials::credit_check() != true {
+            if Credentials::have_env_vars() != true {
                 println!("{}", ENV_VAR_MSG);
                 return Ok(());
             }

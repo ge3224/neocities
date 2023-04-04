@@ -44,7 +44,7 @@ impl Executable for Delete {
             return Ok(());
         }
 
-        if Credentials::credit_check() != true {
+        if Credentials::have_env_vars() != true {
             println!("{}", ENV_VAR_MSG);
             return Ok(());
         }

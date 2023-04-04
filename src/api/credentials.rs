@@ -52,8 +52,8 @@ impl Credentials {
         }
     }
 
-    /// Checks if environment variables have been set to interact with the Neocitiese API.
-    pub fn credit_check() -> bool {
+    /// Checks if essential environment variables have been set to interact with the Neocitiese API.
+    pub fn have_env_vars() -> bool {
         let cred = Credentials::new();
 
         if cred.get_username().is_none() || cred.get_password().is_none() {
@@ -251,23 +251,47 @@ mod tests {
 
     #[test]
     #[serial(env)]
-    fn cred_check_helper_fn() {
+    fn have_no_env_vars() {
         Credentials::run_inside_temp_env(None, None, None, &|| {
-            assert_eq!(Credentials::credit_check(), false);
-        });
-
-        let usr = "foo";
-        let pass = "bar";
-        let key = "baz";
-
-        Credentials::run_inside_temp_env(Some(usr), Some(pass), Some(key), &|| {
-            assert_eq!(Credentials::credit_check(), true);
+            assert_eq!(Credentials::have_env_vars(), false);
         });
     }
 
     #[test]
     #[serial(env)]
-    fn authenticate_fn() {
+    fn have_env_vars_usr() {
+        Credentials::run_inside_temp_env(Some("foo"), None, None, &|| {
+            assert_eq!(Credentials::have_env_vars(), false);
+        });
+    }
+
+    #[test]
+    #[serial(env)]
+    fn have_env_vars_pass() {
+        Credentials::run_inside_temp_env(None, Some("bar"), None, &|| {
+            assert_eq!(Credentials::have_env_vars(), false);
+        });
+    }
+
+    #[test]
+    #[serial(env)]
+    fn have_env_vars_usr_pass() {
+        Credentials::run_inside_temp_env(Some("foo"), Some("bar"), None, &|| {
+            assert_eq!(Credentials::have_env_vars(), true);
+        });
+    }
+
+    #[test]
+    #[serial(env)]
+    fn have_all_env_vars_set() {
+        Credentials::run_inside_temp_env(Some("foo"), Some("bar"), Some("baz"), &|| {
+            assert_eq!(Credentials::have_env_vars(), true);
+        });
+    }
+
+    #[test]
+    #[serial(env)]
+    fn auth_no_env_vars() {
         Credentials::run_inside_temp_env(None, None, None, &|| {
             let result = Auth::authenticate(Credentials::new(), info::KEY, None);
             assert_eq!(
@@ -275,7 +299,11 @@ mod tests {
                 NeocitiesErr::MissingUser.to_string()
             );
         });
+    }
 
+    #[test]
+    #[serial(env)]
+    fn auth_no_env_password() {
         Credentials::run_inside_temp_env(Some("foo"), None, None, &|| {
             let result = Auth::authenticate(Credentials::new(), info::KEY, None);
             assert_eq!(
@@ -283,7 +311,11 @@ mod tests {
                 NeocitiesErr::MissingPassword.to_string()
             );
         });
+    }
 
+    #[test]
+    #[serial(env)]
+    fn auth_no_env_api_key() {
         Credentials::run_inside_temp_env(Some("foo"), Some("bar"), None, &|| {
             let result = Auth::authenticate(Credentials::new(), info::KEY, None);
             assert_eq!(result.is_ok(), true);
@@ -292,6 +324,21 @@ mod tests {
                 format!("https://{}:{}@neocities.org/api/info", "foo", "bar")
             );
             assert_eq!(result.unwrap().api_key, None);
+        });
+    }
+
+    #[test]
+    #[serial(env)]
+    fn auth_all_env_vars_set() {
+        Credentials::run_inside_temp_env(Some("foo"), Some("bar"), Some("baz"), &|| {
+            let result = Auth::authenticate(Credentials::new(), info::KEY, None);
+            assert_eq!(result.is_ok(), true);
+            assert_eq!(
+                result.as_ref().unwrap().url,
+                format!("https://neocities.org/api/info")
+            );
+            assert_eq!(result.as_ref().unwrap().api_key.is_some(), true);
+            assert_eq!(result.unwrap().api_key.unwrap(), "baz".to_string());
         });
     }
 }
