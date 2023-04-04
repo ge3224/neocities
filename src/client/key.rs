@@ -145,7 +145,7 @@ mod tests {
 
     #[test]
     #[serial(env)]
-    fn env_vars_handler_method() {
+    fn no_env_vars() {
         Credentials::run_inside_temp_env(None, None, None, &|| {
             let k = Key::new();
             let c = Credentials::new();
@@ -156,7 +156,41 @@ mod tests {
             assert_eq!(vars.unwrap(), None);
             assert_eq!(output, ENV_VAR_MSG.as_bytes());
         });
+    }
 
+    #[test]
+    #[serial(env)]
+    fn partial_env_vars_usr() {
+        Credentials::run_inside_temp_env(Some("foo"), None, None, &|| {
+            let k = Key::new();
+            let c = Credentials::new();
+            let mut output = Vec::new();
+            let vars = k.env_vars_handler(c, &mut output);
+
+            assert_eq!(vars.is_ok(), true);
+            assert_eq!(vars.unwrap(), None);
+            assert_eq!(output, ENV_VAR_MSG.as_bytes());
+        });
+    }
+
+    #[test]
+    #[serial(env)]
+    fn partial_env_vars_password() {
+        Credentials::run_inside_temp_env(None, Some("bar"), None, &|| {
+            let k = Key::new();
+            let c = Credentials::new();
+            let mut output = Vec::new();
+            let vars = k.env_vars_handler(c, &mut output);
+
+            assert_eq!(vars.is_ok(), true);
+            assert_eq!(vars.unwrap(), None);
+            assert_eq!(output, ENV_VAR_MSG.as_bytes());
+        });
+    }
+
+    #[test]
+    #[serial(env)]
+    fn basic_env_vars() {
         Credentials::run_inside_temp_env(Some("foo"), Some("bar"), None, &|| {
             let k = Key::new();
             let c = Credentials::new();
@@ -170,7 +204,11 @@ mod tests {
             assert_eq!(user, "foo");
             assert_eq!(pass, "bar");
         });
+    }
 
+    #[test]
+    #[serial(env)]
+    fn all_env_vars() {
         Credentials::run_inside_temp_env(Some("foo"), Some("bar"), Some("baz"), &|| {
             let k = Key::new();
             let c = Credentials::new();
