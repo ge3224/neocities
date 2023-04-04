@@ -146,62 +146,43 @@ mod tests {
     #[test]
     #[serial(cred)]
     fn env_vars_handler_method() {
-        Credentials::run_inside_temp_env(
-            None,
-            None,
-            None,
-            Box::new(|| {
-                let k = Key::new();
-                let c = Credentials::new();
-                let mut output = Vec::new();
-                let vars = k.env_vars_handler(c, &mut output);
+        Credentials::run_inside_temp_env(None, None, None, &|| {
+            let k = Key::new();
+            let c = Credentials::new();
+            let mut output = Vec::new();
+            let vars = k.env_vars_handler(c, &mut output);
 
-                assert_eq!(vars.is_ok(), true);
-                assert_eq!(vars.unwrap(), None);
-                assert_eq!(output, ENV_VAR_MSG.as_bytes());
-            }),
-        );
+            assert_eq!(vars.is_ok(), true);
+            assert_eq!(vars.unwrap(), None);
+            assert_eq!(output, ENV_VAR_MSG.as_bytes());
+        });
 
-        const FOO: &'static str = "foo";
-        const BAR: &'static str = "bar";
-        const BAZ: &'static str = "baz";
+        Credentials::run_inside_temp_env(Some("foo"), Some("bar"), None, &|| {
+            let k = Key::new();
+            let c = Credentials::new();
+            let mut output = Vec::new();
+            let vars = k.env_vars_handler(c, &mut output);
 
-        Credentials::run_inside_temp_env(
-            Some(FOO),
-            Some(BAR),
-            None,
-            Box::new(|| {
-                let k = Key::new();
-                let c = Credentials::new();
-                let mut output = Vec::new();
-                let vars = k.env_vars_handler(c, &mut output);
+            assert_eq!(vars.as_ref().is_ok(), true);
+            assert_eq!(output.len(), 0);
 
-                assert_eq!(vars.as_ref().is_ok(), true);
-                assert_eq!(output.len(), 0);
+            let (user, pass) = vars.unwrap().unwrap();
+            assert_eq!(user, "foo");
+            assert_eq!(pass, "bar");
+        });
 
-                let (user, pass) = vars.unwrap().unwrap();
-                assert_eq!(user, FOO);
-                assert_eq!(pass, BAR);
-            }),
-        );
+        Credentials::run_inside_temp_env(Some("foo"), Some("bar"), Some("baz"), &|| {
+            let k = Key::new();
+            let c = Credentials::new();
+            let mut output = Vec::new();
+            let vars = k.env_vars_handler(c, &mut output);
 
-        Credentials::run_inside_temp_env(
-            Some(FOO),
-            Some(BAR),
-            Some(BAZ),
-            Box::new(|| {
-                let k = Key::new();
-                let c = Credentials::new();
-                let mut output = Vec::new();
-                let vars = k.env_vars_handler(c, &mut output);
+            assert_eq!(vars.as_ref().is_ok(), true);
+            assert_eq!(vars.unwrap(), None);
 
-                assert_eq!(vars.as_ref().is_ok(), true);
-                assert_eq!(vars.unwrap(), None);
-
-                let s = String::from_utf8(output);
-                assert_eq!(s.unwrap().contains(KEY_SET_MSG), true);
-            }),
-        );
+            let s = String::from_utf8(output);
+            assert_eq!(s.unwrap().contains(KEY_SET_MSG), true);
+        });
     }
 
     #[test]

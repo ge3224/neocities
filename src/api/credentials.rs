@@ -89,7 +89,7 @@ impl Credentials {
         user: Option<&str>,
         password: Option<&str>,
         api_key: Option<&str>,
-        callback: Box<dyn FnOnce()>,
+        callback: &dyn Fn(),
     ) {
         let u_orig: String;
         let u_wrapped = match env::var(ENV_USER) {
@@ -216,71 +216,49 @@ mod tests {
     use super::Credentials;
     use serial_test::serial;
 
-    const MOCK_USER: &'static str = "potatoes";
-    const MOCK_PASSWORD: &'static str = "fries";
-    const MOCK_KEY: &'static str = "chips";
-
     #[test]
     #[serial(cred)]
     fn env_key() {
-        Credentials::run_inside_temp_env(
-            Some(MOCK_USER),
-            Some(MOCK_PASSWORD),
-            Some(MOCK_KEY),
-            Box::new(|| {
-                let creds = Credentials::new();
-                assert_eq!(creds.get_api_key().unwrap(), MOCK_KEY);
-            }),
-        )
+        let key = "foo";
+        Credentials::run_inside_temp_env(None, None, Some(key), &|| {
+            let creds = Credentials::new();
+            assert_eq!(creds.get_api_key().unwrap(), key);
+        })
     }
 
     #[test]
     #[serial(cred)]
     fn env_user() {
-        Credentials::run_inside_temp_env(
-            Some(MOCK_USER),
-            Some(MOCK_PASSWORD),
-            Some(MOCK_KEY),
-            Box::new(|| {
-                let creds = Credentials::new();
-                assert_eq!(creds.get_username().unwrap(), MOCK_USER);
-            }),
-        )
+        let usr = "foo";
+        Credentials::run_inside_temp_env(Some(usr), None, None, &|| {
+            let creds = Credentials::new();
+            assert_eq!(creds.get_username().unwrap(), usr);
+        })
     }
 
     #[test]
     #[serial(cred)]
     fn env_pass() {
-        Credentials::run_inside_temp_env(
-            Some(MOCK_USER),
-            Some(MOCK_PASSWORD),
-            Some(MOCK_KEY),
-            Box::new(|| {
-                let creds = Credentials::new();
-                assert_eq!(creds.get_password().unwrap(), MOCK_PASSWORD);
-            }),
-        )
+        let pass = "foo";
+        Credentials::run_inside_temp_env(None, Some(pass), None, &|| {
+            let creds = Credentials::new();
+            assert_eq!(creds.get_password().unwrap(), pass);
+        })
     }
 
     #[test]
     #[serial(cred)]
     fn cred_check_helper_fn() {
-        Credentials::run_inside_temp_env(
-            None,
-            None,
-            None,
-            Box::new(|| {
-                assert_eq!(Credentials::credit_check(), false);
-            }),
-        );
+        Credentials::run_inside_temp_env(None, None, None, &|| {
+            assert_eq!(Credentials::credit_check(), false);
+        });
 
-        Credentials::run_inside_temp_env(
-            Some(MOCK_USER),
-            Some(MOCK_PASSWORD),
-            Some(MOCK_KEY),
-            Box::new(|| {
-                assert_eq!(Credentials::credit_check(), true);
-            }),
-        );
+        let usr = "foo";
+        let pass = "bar";
+        let key = "baz";
+
+        Credentials::run_inside_temp_env(Some(usr), Some(pass), Some(key), &|| {
+            assert_eq!(Credentials::credit_check(), true);
+        });
     }
 }

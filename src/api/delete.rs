@@ -91,19 +91,14 @@ mod tests {
     #[test]
     #[serial(cred)]
     fn delete_request_path() {
-        const FOO: &'static str = "foo";
+        let foo = "foo";
 
-        Credentials::run_inside_temp_env(
-            None,
-            None,
-            Some(FOO),
-            Box::new(|| {
-                let pk = NcDelete::request_info(vec![String::from(FOO)]).unwrap();
-                assert_eq!(pk.api_key.unwrap(), FOO);
-                assert_eq!(pk.uri, "https://neocities.org/api/delete");
-                assert_eq!(pk.body.unwrap(), format!("filenames[]={FOO}"));
-            }),
-        );
+        Credentials::run_inside_temp_env(None, None, Some(foo), &|| {
+            let pk = NcDelete::request_info(vec![String::from(foo)]).unwrap();
+            assert_eq!(pk.api_key.unwrap(), foo);
+            assert_eq!(pk.uri, "https://neocities.org/api/delete");
+            assert_eq!(pk.body.unwrap(), format!("filenames[]={foo}"));
+        });
     }
 
     #[test]
