@@ -129,6 +129,7 @@ impl Credentials {
 }
 
 /// Contains an appropriately formed url and optional api key.
+#[derive(Debug)]
 pub struct Auth {
     /// The url that will be used to send a request based on authentication
     pub url: String,
@@ -213,7 +214,9 @@ impl QueryString {
 
 #[cfg(test)]
 mod tests {
-    use super::Credentials;
+    use crate::{client::info, error::NeocitiesErr};
+
+    use super::{Auth, Credentials};
     use serial_test::serial;
 
     #[test]
@@ -259,6 +262,35 @@ mod tests {
 
         Credentials::run_inside_temp_env(Some(usr), Some(pass), Some(key), &|| {
             assert_eq!(Credentials::credit_check(), true);
+        });
+    }
+
+    #[test]
+    #[serial(env)]
+    fn authenticate_fn() {
+        Credentials::run_inside_temp_env(None, None, None, &|| {
+            let result = Auth::authenticate(Credentials::new(), info::KEY, None);
+            assert_eq!(
+                result.unwrap_err().to_string(),
+                NeocitiesErr::MissingUser.to_string()
+            );
+        });
+
+        Credentials::run_inside_temp_env(Some("foo"), None, None, &|| {
+            let result = Auth::authenticate(Credentials::new(), info::KEY, None);
+            assert_eq!(
+                result.unwrap_err().to_string(),
+                NeocitiesErr::MissingPassword.to_string()
+            );
+        });
+
+        Credentials::run_inside_temp_env(Some("foo"), Some("bar"), None, &|| {
+            let result = Auth::authenticate(Credentials::new(), info::KEY, None);
+            assert_eq!(result.is_ok(), true);
+            assert_eq!(
+                result.unwrap().url,
+                format!("https://{}:{}@neocities.org/api/info", "foo", "bar")
+            );
         });
     }
 }
