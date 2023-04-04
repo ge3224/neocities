@@ -144,7 +144,7 @@ mod tests {
     }
 
     #[test]
-    #[serial(cred)]
+    #[serial(env)]
     fn env_vars_handler_method() {
         Credentials::run_inside_temp_env(None, None, None, &|| {
             let k = Key::new();

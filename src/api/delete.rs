@@ -90,7 +90,7 @@ mod tests {
     use crate::api::{credentials::Credentials, delete::NcDelete};
 
     #[test]
-    #[serial(cred)]
+    #[serial(env)]
     fn delete_request_path() {
         let foo = "foo";
 

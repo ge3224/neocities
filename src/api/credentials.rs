@@ -217,7 +217,7 @@ mod tests {
     use serial_test::serial;
 
     #[test]
-    #[serial(cred)]
+    #[serial(env)]
     fn env_key() {
         let key = "foo";
         Credentials::run_inside_temp_env(None, None, Some(key), &|| {
@@ -227,7 +227,7 @@ mod tests {
     }
 
     #[test]
-    #[serial(cred)]
+    #[serial(env)]
     fn env_user() {
         let usr = "foo";
         Credentials::run_inside_temp_env(Some(usr), None, None, &|| {
@@ -237,7 +237,7 @@ mod tests {
     }
 
     #[test]
-    #[serial(cred)]
+    #[serial(env)]
     fn env_pass() {
         let pass = "foo";
         Credentials::run_inside_temp_env(None, Some(pass), None, &|| {
@@ -247,7 +247,7 @@ mod tests {
     }
 
     #[test]
-    #[serial(cred)]
+    #[serial(env)]
     fn cred_check_helper_fn() {
         Credentials::run_inside_temp_env(None, None, None, &|| {
             assert_eq!(Credentials::credit_check(), false);
