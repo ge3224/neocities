@@ -234,7 +234,7 @@ mod tests {
     fn basic_get_request() {
         let res = get_request("https://httpbin.org/ip".to_string(), None);
         assert_eq!(res.is_ok(), true);
-        // assert_ne!(res.unwrap()["origin"], "");
+        assert_ne!(res.unwrap()["origin"], "");
     }
 
     #[test]

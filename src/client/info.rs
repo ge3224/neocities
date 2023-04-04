@@ -1,6 +1,9 @@
-use super::{command::Executable, help};
+use super::command::Executable;
 use crate::{
-    api::{credentials::Credentials, info::NcInfo},
+    api::{
+        credentials::{Credentials, ENV_VAR_MSG},
+        info::NcInfo,
+    },
     error::NeocitiesErr,
 };
 
@@ -35,7 +38,7 @@ impl Executable for Info {
     fn run(&self, args: Vec<String>) -> Result<(), NeocitiesErr> {
         if args.len() < 1 {
             if Credentials::credit_check() != true {
-                println!("{}", help::ENV_VAR_MSG);
+                println!("{}", ENV_VAR_MSG);
                 return Ok(());
             }
         }

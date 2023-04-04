@@ -1,11 +1,12 @@
-use std::io;
-
 use super::command::Executable;
 use crate::{
-    api::{credentials::Credentials, delete::NcDelete},
-    client::help,
+    api::{
+        credentials::{Credentials, ENV_VAR_MSG},
+        delete::NcDelete,
+    },
     error::NeocitiesErr,
 };
+use std::io;
 
 /// The string literal a user must type to run functionality in this module
 pub const KEY: &'static str = "delete";
@@ -44,7 +45,7 @@ impl Executable for Delete {
         }
 
         if Credentials::credit_check() != true {
-            println!("{}", help::ENV_VAR_MSG);
+            println!("{}", ENV_VAR_MSG);
             return Ok(());
         }
 

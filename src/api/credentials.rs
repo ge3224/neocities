@@ -1,5 +1,5 @@
 use super::API_URL;
-use crate::{client::help, error::NeocitiesErr};
+use crate::error::NeocitiesErr;
 use std::env;
 use url::form_urlencoded::byte_serialize;
 
@@ -57,10 +57,60 @@ impl Credentials {
         let cred = Credentials::new();
 
         if cred.get_username().is_none() || cred.get_password().is_none() {
-            println!("{}", help::ENV_VAR_MSG);
+            println!("{}", ENV_VAR_MSG);
             return false;
         }
         return true;
+    }
+
+    /// Sets new values for, or deletes, environment variables associated with this app.
+    pub fn set_app_env(user: Option<String>, password: Option<String>, api_key: Option<String>) {
+        if let Some(u) = user {
+            env::set_var(ENV_USER, u)
+        } else {
+            env::remove_var(ENV_USER);
+        }
+
+        if let Some(p) = password {
+            env::set_var(ENV_PASS, p)
+        } else {
+            env::remove_var(ENV_PASS);
+        }
+
+        if let Some(k) = api_key {
+            env::set_var(ENV_KEY, k)
+        } else {
+            env::remove_var(ENV_KEY);
+        }
+    }
+
+    /// Runs a callback inside a temporary environment.
+    pub fn run_inside_temp_env(
+        user: Option<String>,
+        password: Option<String>,
+        api_key: Option<String>,
+        callback: Box<dyn FnOnce()>,
+    ) {
+        let user_original = match env::var(ENV_USER) {
+            Ok(u) => Some(u),
+            _ => None,
+        };
+
+        let pass_original = match env::var(ENV_PASS) {
+            Ok(p) => Some(p),
+            _ => None,
+        };
+
+        let key_original = match env::var(ENV_KEY) {
+            Ok(k) => Some(k),
+            _ => None,
+        };
+
+        Self::set_app_env(user, password, api_key);
+
+        callback();
+
+        Self::set_app_env(user_original, pass_original, key_original);
     }
 }
 
@@ -121,6 +171,17 @@ impl Auth {
     }
 }
 
+/// Messaging about setting up environment variables so this client can interact with the Neocities API.
+pub const ENV_VAR_MSG: &'static str = "
+Before you can interact with Neocities, you must first set the following 
+environment variables:
+Example (Linux):
+    export NEOCITIES_USER=<your_username>
+    export NEOCITIES_USER=<your_password>
+You can also use your Neocities API key (Optional): 
+    export NEOCITIES_KEY=<your_key>
+";
+
 /// Contains a required key and value that will be used to append a query string to a url
 pub struct QueryString {
     /// Any valid key in the Neocities API
@@ -138,91 +199,74 @@ impl QueryString {
 
 #[cfg(test)]
 mod tests {
-    use super::{ENV_PASS, ENV_USER};
-    use crate::api::credentials::{Credentials, ENV_KEY};
-    use std::env;
+    use super::Credentials;
+    use serial_test::serial;
 
-    // Run tests on single thread because parallel tests access same resource
-    // $ cargo test -- --test-threads=1
+    const MOCK_USER: &'static str = "potatoes";
+    const MOCK_PASSWORD: &'static str = "fries";
+    const MOCK_KEY: &'static str = "chips";
+
     #[test]
+    #[serial(cred)]
     fn env_key() {
-        let preserve = env::var(ENV_KEY);
-
-        env::set_var(ENV_KEY, "potatoes");
-        let creds = Credentials::new();
-        assert_eq!(creds.get_api_key().unwrap(), "potatoes");
-
-        match preserve {
-            Ok(v) => env::set_var(ENV_KEY, v),
-            _ => env::remove_var(ENV_KEY),
-        }
+        Credentials::run_inside_temp_env(
+            Some(MOCK_USER.to_string()),
+            Some(MOCK_PASSWORD.to_string()),
+            Some(MOCK_KEY.to_string()),
+            Box::new(|| {
+                let creds = Credentials::new();
+                assert_eq!(creds.get_api_key().unwrap(), MOCK_KEY);
+            }),
+        )
     }
 
     #[test]
+    #[serial(cred)]
     fn env_user() {
-        let preserve = env::var(ENV_USER);
-
-        env::set_var(ENV_USER, "fries");
-        let creds = Credentials::new();
-        assert_eq!(creds.get_username().unwrap(), "fries");
-
-        match preserve {
-            Ok(v) => env::set_var(ENV_USER, v),
-            _ => env::remove_var(ENV_USER),
-        }
+        Credentials::run_inside_temp_env(
+            Some(MOCK_USER.to_string()),
+            Some(MOCK_PASSWORD.to_string()),
+            Some(MOCK_KEY.to_string()),
+            Box::new(|| {
+                let creds = Credentials::new();
+                assert_eq!(creds.get_username().unwrap(), MOCK_USER);
+            }),
+        )
     }
 
     #[test]
+    #[serial(cred)]
     fn env_pass() {
-        let preserve = env::var(ENV_PASS);
-
-        env::set_var(ENV_PASS, "chips");
-        let creds = Credentials::new();
-        assert_eq!(creds.get_password().unwrap(), "chips");
-
-        match preserve {
-            Ok(v) => env::set_var(ENV_USER, v),
-            _ => env::remove_var(ENV_USER),
-        }
+        Credentials::run_inside_temp_env(
+            Some(MOCK_USER.to_string()),
+            Some(MOCK_PASSWORD.to_string()),
+            Some(MOCK_KEY.to_string()),
+            Box::new(|| {
+                let creds = Credentials::new();
+                assert_eq!(creds.get_password().unwrap(), MOCK_PASSWORD);
+            }),
+        )
     }
 
     #[test]
+    #[serial(cred)]
     fn cred_check_helper_fn() {
-        // preserve env vars
-        let username = env::var(ENV_USER);
-        let password = env::var(ENV_PASS);
-        let key = env::var(ENV_KEY);
+        Credentials::run_inside_temp_env(
+            None,
+            None,
+            None,
+            Box::new(|| {
+                assert_eq!(Credentials::credit_check(), false);
+            }),
+        );
 
-        // purge current state
-        env::remove_var(ENV_USER);
-        env::remove_var(ENV_PASS);
-        env::remove_var(ENV_KEY);
-
-        let test = Credentials::credit_check();
-        assert_eq!(test, false);
-
-        // set mock state
-        env::set_var(ENV_USER, "coffee");
-        env::set_var(ENV_PASS, "muffin");
-        env::set_var(ENV_KEY, "napkin");
-
-        let test = Credentials::credit_check();
-        assert_eq!(test, true);
-
-        // retore previous state
-        match username {
-            Ok(v) => env::set_var(ENV_USER, v),
-            _ => (), // do nothing if not ok
-        }
-
-        match password {
-            Ok(v) => env::set_var(ENV_PASS, v),
-            _ => (),
-        }
-
-        match key {
-            Ok(v) => env::set_var(ENV_KEY, v),
-            _ => (),
-        }
+        Credentials::run_inside_temp_env(
+            Some(MOCK_USER.to_string()),
+            Some(MOCK_PASSWORD.to_string()),
+            Some(MOCK_KEY.to_string()),
+            Box::new(|| {
+                assert_eq!(Credentials::credit_check(), true);
+            }),
+        );
     }
 }

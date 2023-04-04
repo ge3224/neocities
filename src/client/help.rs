@@ -130,21 +130,6 @@ Help for a specific command:
 \x1b[1;32mhelp\x1b[0m [command]
 ";
 
-/// Messaging about setting up environment variables so this client can interact with the Neocities API.
-pub const ENV_VAR_MSG: &'static str = "
-Before you can interact with Neocities, you must first set the following 
-environment variables:
-
-Example (Linux):
-
-    export NEOCITIES_USER=<your_username>
-    export NEOCITIES_USER=<your_password>
-
-You can also use your Neocities API key (Optional): 
-
-    export NEOCITIES_KEY=<your_key>
-";
-
 #[cfg(test)]
 mod tests {
     use super::{Help, DESC, DESC_SHORT, HELP_MSG, KEY, NC_ASCII_BANNER};

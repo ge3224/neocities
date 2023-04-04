@@ -1,7 +1,9 @@
 use super::command::Executable;
 use crate::{
-    api::{credentials::Credentials, upload::NcUpload},
-    client::help,
+    api::{
+        credentials::{Credentials, ENV_VAR_MSG},
+        upload::NcUpload,
+    },
     error::NeocitiesErr,
 };
 
@@ -45,7 +47,7 @@ impl Executable for Upload {
         }
 
         if Credentials::credit_check() != true {
-            println!("{}", help::ENV_VAR_MSG);
+            println!("{}", ENV_VAR_MSG);
             return Ok(());
         }
 

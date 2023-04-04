@@ -83,27 +83,27 @@ impl NcDelete {
 
 #[cfg(test)]
 mod tests {
+    use serial_test::serial;
+
     use super::DeleteResponse;
-    use crate::api::{credentials::ENV_KEY, delete::NcDelete};
-    use std::env;
+    use crate::api::{credentials::Credentials, delete::NcDelete};
 
     #[test]
+    #[serial(cred)]
     fn delete_request_path() {
-        let preserve_key = env::var(ENV_KEY);
-        env::set_var(ENV_KEY, "foo");
+        const FOO: &'static str = "foo";
 
-        let mock_args = vec![String::from("foo")];
-        let pk = NcDelete::request_info(mock_args).unwrap();
-
-        assert_eq!(pk.api_key.unwrap(), "foo");
-        assert_eq!(pk.uri, "https://neocities.org/api/delete");
-        assert_eq!(pk.body.unwrap(), "filenames[]=foo");
-
-        // reset environment var
-        match preserve_key {
-            Ok(v) => env::set_var(ENV_KEY, v),
-            _ => env::remove_var(ENV_KEY),
-        }
+        Credentials::run_inside_temp_env(
+            None,
+            None,
+            Some(String::from(FOO)),
+            Box::new(|| {
+                let pk = NcDelete::request_info(vec![String::from(FOO)]).unwrap();
+                assert_eq!(pk.api_key.unwrap(), FOO);
+                assert_eq!(pk.uri, "https://neocities.org/api/delete");
+                assert_eq!(pk.body.unwrap(), format!("filenames[]={FOO}"));
+            }),
+        );
     }
 
     #[test]

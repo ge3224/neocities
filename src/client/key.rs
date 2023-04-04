@@ -2,8 +2,10 @@ use url::form_urlencoded::byte_serialize;
 
 use super::command::Executable;
 use crate::{
-    api::{credentials::Credentials, key::NcKey},
-    client::help,
+    api::{
+        credentials::{Credentials, ENV_VAR_MSG},
+        key::NcKey,
+    },
     error::NeocitiesErr,
 };
 
@@ -29,7 +31,7 @@ impl Key {
         }
     }
 
-    fn write(&self, key: &String, mut writer: impl std::io::Write) -> Result<(), NeocitiesErr> {
+    fn write_key(&self, key: &String, mut writer: impl std::io::Write) -> Result<(), NeocitiesErr> {
         let output = format!("\n\x1b[1;92mAPI KEY: \x1b[0m {}\n{}", key, USE_KEY_MSG);
         writer.write_all(output.as_bytes())?;
         Ok(())
@@ -39,7 +41,7 @@ impl Key {
         byte_serialize(env_var.as_bytes()).collect()
     }
 
-    fn check_env_vars(
+    fn env_vars_handler(
         &self,
         cred: Credentials,
         mut writer: impl std::io::Write,
@@ -53,7 +55,7 @@ impl Key {
         let user = match cred.get_username() {
             Some(u) => self.url_encode(u),
             None => {
-                writer.write_all(help::ENV_VAR_MSG.as_bytes())?;
+                writer.write_all(ENV_VAR_MSG.as_bytes())?;
                 return Ok(None);
             }
         };
@@ -61,7 +63,7 @@ impl Key {
         let pass = match cred.get_password() {
             Some(p) => self.url_encode(p),
             None => {
-                writer.write_all(help::ENV_VAR_MSG.as_bytes())?;
+                writer.write_all(ENV_VAR_MSG.as_bytes())?;
                 return Ok(None);
             }
         };
@@ -75,14 +77,14 @@ impl Executable for Key {
         let cred = Credentials::new();
         let mut stdout = std::io::stdout();
 
-        let check = self.check_env_vars(cred, &stdout)?;
+        let check = self.env_vars_handler(cred, &stdout)?;
         let (user, pass) = match check {
             Some(u_and_p) => u_and_p,
             None => return Ok(()),
         };
 
         let data = NcKey::fetch(user, pass)?;
-        self.write(&data.api_key, &mut stdout)?;
+        self.write_key(&data.api_key, &mut stdout)?;
 
         Ok(())
     }
@@ -118,11 +120,16 @@ Example (Linux):
 
 #[cfg(test)]
 mod tests {
-    use super::{Key, DESC, DESC_SHORT, KEY};
-    use crate::{client::command::Executable, error::NeocitiesErr};
+    use super::{Key, DESC, DESC_SHORT, KEY, KEY_SET_MSG};
+    use crate::{
+        api::credentials::{Credentials, ENV_VAR_MSG},
+        client::command::Executable,
+        error::NeocitiesErr,
+    };
+    use serial_test::serial;
 
     #[test]
-    fn usage_desc() {
+    fn usage_desc_methods() {
         let k = Key::new();
         assert_eq!(k.get_usage().contains(KEY), true);
         assert_eq!(k.get_short_desc(), DESC_SHORT);
@@ -130,12 +137,80 @@ mod tests {
     }
 
     #[test]
-    fn writer_method() -> Result<(), NeocitiesErr> {
+    fn url_encode_method() {
+        let k = Key::new();
+        let mock = String::from("?");
+        assert_eq!(k.url_encode(mock), "%3F");
+    }
+
+    #[test]
+    #[serial(cred)]
+    fn env_vars_handler_method() {
+        Credentials::run_inside_temp_env(
+            None,
+            None,
+            None,
+            Box::new(|| {
+                let k = Key::new();
+                let c = Credentials::new();
+                let mut output = Vec::new();
+                let vars = k.env_vars_handler(c, &mut output);
+
+                assert_eq!(vars.is_ok(), true);
+                assert_eq!(vars.unwrap(), None);
+                assert_eq!(output, ENV_VAR_MSG.as_bytes());
+            }),
+        );
+
+        const FOO: &'static str = "foo";
+        const BAR: &'static str = "bar";
+        const BAZ: &'static str = "baz";
+
+        Credentials::run_inside_temp_env(
+            Some(String::from(FOO)),
+            Some(String::from(BAR)),
+            None,
+            Box::new(|| {
+                let k = Key::new();
+                let c = Credentials::new();
+                let mut output = Vec::new();
+                let vars = k.env_vars_handler(c, &mut output);
+
+                assert_eq!(vars.as_ref().is_ok(), true);
+                assert_eq!(output.len(), 0);
+
+                let (user, pass) = vars.unwrap().unwrap();
+                assert_eq!(user, FOO);
+                assert_eq!(pass, BAR);
+            }),
+        );
+
+        Credentials::run_inside_temp_env(
+            Some(String::from(FOO)),
+            Some(String::from(BAR)),
+            Some(String::from(BAZ)),
+            Box::new(|| {
+                let k = Key::new();
+                let c = Credentials::new();
+                let mut output = Vec::new();
+                let vars = k.env_vars_handler(c, &mut output);
+
+                assert_eq!(vars.as_ref().is_ok(), true);
+                assert_eq!(vars.unwrap(), None);
+
+                let s = String::from_utf8(output);
+                assert_eq!(s.unwrap().contains(KEY_SET_MSG), true);
+            }),
+        );
+    }
+
+    #[test]
+    fn write_key_method() -> Result<(), NeocitiesErr> {
         let mut result = Vec::new();
         let k = Key::new();
         let mock_key = String::from("foo");
 
-        k.write(&mock_key, &mut result)?;
+        k.write_key(&mock_key, &mut result)?;
 
         let s = String::from_utf8(result)?;
         assert_eq!(s.contains(mock_key.as_str()), true);
