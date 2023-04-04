@@ -288,9 +288,10 @@ mod tests {
             let result = Auth::authenticate(Credentials::new(), info::KEY, None);
             assert_eq!(result.is_ok(), true);
             assert_eq!(
-                result.unwrap().url,
+                result.as_ref().unwrap().url,
                 format!("https://{}:{}@neocities.org/api/info", "foo", "bar")
             );
+            assert_eq!(result.unwrap().api_key, None);
         });
     }
 }
