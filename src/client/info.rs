@@ -141,6 +141,8 @@ mod tests {
     fn parse_response_data() -> Result<(), NeocitiesErr> {
         let date = "Tue, 04 April 2023 18:49:21 +0000";
         let sitename = "foo";
+
+        // setup
         let mock_info = info::Info {
             sitename: String::from(sitename),
             views: 100,
@@ -156,6 +158,7 @@ mod tests {
             result: String::from("success"),
             info: mock_info,
         };
+
         let i = Info::new();
         let mut output = Vec::new();
         i.parse_response(mock, &mut output)?;
