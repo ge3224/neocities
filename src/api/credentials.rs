@@ -57,7 +57,6 @@ impl Credentials {
         let cred = Credentials::new();
 
         if cred.get_username().is_none() || cred.get_password().is_none() {
-            println!("{}", ENV_VAR_MSG);
             return false;
         }
         return true;
