@@ -1,5 +1,6 @@
 use super::credentials::{Auth, Credentials, QueryString};
 use super::http::{get_request, HttpRequestInfo};
+use crate::client::list;
 use crate::error::NeocitiesErr;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
@@ -52,7 +53,7 @@ impl NcList {
             });
         }
 
-        let auth = Auth::authenticate(cred, String::from("list"), query_string);
+        let auth = Auth::authenticate(cred, list::KEY, query_string);
 
         match auth {
             Err(e) => return Err(NeocitiesErr::HttpRequestError(e.into())),

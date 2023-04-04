@@ -141,7 +141,7 @@ impl Auth {
     /// Neocities API
     pub fn authenticate(
         cred: Credentials,
-        path: String,
+        path: &str,
         query_string: Option<QueryString>,
     ) -> Result<Auth, NeocitiesErr> {
         let mut url: String;

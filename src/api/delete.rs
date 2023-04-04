@@ -2,6 +2,7 @@ use super::credentials::Credentials;
 use super::http::post_request_body;
 use super::http::HttpRequestInfo;
 use crate::api::credentials::Auth;
+use crate::client::delete;
 use crate::error::NeocitiesErr;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
@@ -28,7 +29,7 @@ impl NcDelete {
         let url: String;
         let api_key: Option<String>;
         let cred = Credentials::new();
-        let auth = Auth::authenticate(cred, String::from("delete"), None);
+        let auth = Auth::authenticate(cred, delete::KEY, None);
 
         match auth {
             Ok(a) => {

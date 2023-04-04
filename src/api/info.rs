@@ -1,6 +1,7 @@
 use super::credentials::{Auth, Credentials};
 use super::http::{get_request, HttpRequestInfo};
 use crate::api::API_URL;
+use crate::client::info;
 use crate::error::NeocitiesErr;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
@@ -56,7 +57,7 @@ impl NcInfo {
         if args.len() > 0 {
             url = format!("https://{}/info?sitename={}", API_URL, args[0]);
         } else {
-            let auth = Auth::authenticate(cred, String::from("info"), None);
+            let auth = Auth::authenticate(cred, info::KEY, None);
 
             match auth {
                 Err(e) => return Err(NeocitiesErr::HttpRequestError(e.into())),

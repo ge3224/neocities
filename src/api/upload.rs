@@ -1,5 +1,6 @@
 use super::credentials::{Auth, Credentials};
 use super::http::{post_request_multipart, HttpRequestInfo};
+use crate::client::upload;
 use crate::error::NeocitiesErr;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
@@ -26,7 +27,7 @@ impl NcUpload {
         let uri: String;
         let api_key: Option<String>;
 
-        let auth = Auth::authenticate(cred, String::from("upload"), None);
+        let auth = Auth::authenticate(cred, upload::KEY, None);
 
         match auth {
             Ok(a) => {
