@@ -64,7 +64,7 @@ impl Credentials {
     }
 
     /// Sets new values for, or deletes, environment variables associated with this app.
-    pub fn set_app_env(user: Option<String>, password: Option<String>, api_key: Option<String>) {
+    pub fn set_app_env(user: Option<&str>, password: Option<&str>, api_key: Option<&str>) {
         if let Some(u) = user {
             env::set_var(ENV_USER, u)
         } else {
@@ -86,31 +86,45 @@ impl Credentials {
 
     /// Runs a callback inside a temporary environment.
     pub fn run_inside_temp_env(
-        user: Option<String>,
-        password: Option<String>,
-        api_key: Option<String>,
+        user: Option<&str>,
+        password: Option<&str>,
+        api_key: Option<&str>,
         callback: Box<dyn FnOnce()>,
     ) {
-        let user_original = match env::var(ENV_USER) {
-            Ok(u) => Some(u),
+        let u_orig: String;
+        let u_wrapped = match env::var(ENV_USER) {
+            Ok(u) => {
+                u_orig = u;
+                Some(u_orig.as_str())
+            }
             _ => None,
         };
 
-        let pass_original = match env::var(ENV_PASS) {
-            Ok(p) => Some(p),
+        let p_orig: String;
+        let p_wrapped = match env::var(ENV_PASS) {
+            Ok(p) => {
+                p_orig = p;
+                Some(p_orig.as_str())
+            }
             _ => None,
         };
 
-        let key_original = match env::var(ENV_KEY) {
-            Ok(k) => Some(k),
+        let k_orig: String;
+        let k_wrapped = match env::var(ENV_KEY) {
+            Ok(k) => {
+                k_orig = k;
+                Some(k_orig.as_str())
+            }
             _ => None,
         };
 
+        // set temp
         Self::set_app_env(user, password, api_key);
 
         callback();
 
-        Self::set_app_env(user_original, pass_original, key_original);
+        // retore
+        Self::set_app_env(u_wrapped, p_wrapped, k_wrapped);
     }
 }
 
@@ -210,9 +224,9 @@ mod tests {
     #[serial(cred)]
     fn env_key() {
         Credentials::run_inside_temp_env(
-            Some(MOCK_USER.to_string()),
-            Some(MOCK_PASSWORD.to_string()),
-            Some(MOCK_KEY.to_string()),
+            Some(MOCK_USER),
+            Some(MOCK_PASSWORD),
+            Some(MOCK_KEY),
             Box::new(|| {
                 let creds = Credentials::new();
                 assert_eq!(creds.get_api_key().unwrap(), MOCK_KEY);
@@ -224,9 +238,9 @@ mod tests {
     #[serial(cred)]
     fn env_user() {
         Credentials::run_inside_temp_env(
-            Some(MOCK_USER.to_string()),
-            Some(MOCK_PASSWORD.to_string()),
-            Some(MOCK_KEY.to_string()),
+            Some(MOCK_USER),
+            Some(MOCK_PASSWORD),
+            Some(MOCK_KEY),
             Box::new(|| {
                 let creds = Credentials::new();
                 assert_eq!(creds.get_username().unwrap(), MOCK_USER);
@@ -238,9 +252,9 @@ mod tests {
     #[serial(cred)]
     fn env_pass() {
         Credentials::run_inside_temp_env(
-            Some(MOCK_USER.to_string()),
-            Some(MOCK_PASSWORD.to_string()),
-            Some(MOCK_KEY.to_string()),
+            Some(MOCK_USER),
+            Some(MOCK_PASSWORD),
+            Some(MOCK_KEY),
             Box::new(|| {
                 let creds = Credentials::new();
                 assert_eq!(creds.get_password().unwrap(), MOCK_PASSWORD);
@@ -261,9 +275,9 @@ mod tests {
         );
 
         Credentials::run_inside_temp_env(
-            Some(MOCK_USER.to_string()),
-            Some(MOCK_PASSWORD.to_string()),
-            Some(MOCK_KEY.to_string()),
+            Some(MOCK_USER),
+            Some(MOCK_PASSWORD),
+            Some(MOCK_KEY),
             Box::new(|| {
                 assert_eq!(Credentials::credit_check(), true);
             }),

@@ -96,7 +96,7 @@ mod tests {
         Credentials::run_inside_temp_env(
             None,
             None,
-            Some(String::from(FOO)),
+            Some(FOO),
             Box::new(|| {
                 let pk = NcDelete::request_info(vec![String::from(FOO)]).unwrap();
                 assert_eq!(pk.api_key.unwrap(), FOO);

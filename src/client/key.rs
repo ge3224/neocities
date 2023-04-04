@@ -167,8 +167,8 @@ mod tests {
         const BAZ: &'static str = "baz";
 
         Credentials::run_inside_temp_env(
-            Some(String::from(FOO)),
-            Some(String::from(BAR)),
+            Some(FOO),
+            Some(BAR),
             None,
             Box::new(|| {
                 let k = Key::new();
@@ -186,9 +186,9 @@ mod tests {
         );
 
         Credentials::run_inside_temp_env(
-            Some(String::from(FOO)),
-            Some(String::from(BAR)),
-            Some(String::from(BAZ)),
+            Some(FOO),
+            Some(BAR),
+            Some(BAZ),
             Box::new(|| {
                 let k = Key::new();
                 let c = Credentials::new();
