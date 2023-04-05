@@ -6,23 +6,23 @@
  - Upload files to your website:
 
  ```bash
- $ neocities upload foo.html bar.js folder/baz.jpg
+ $ neocities_cli upload foo.html bar.js folder/baz.jpg
  ```
 
  - Delete files from your website:
 
  ```bash
- $ neocities delete foo.html folder/baz.jpg
+ $ neocities_cli delete foo.html folder/baz.jpg
  ```
 
  Get a list of available commands:
 
  ```bash
- $ neocities
+ $ neocities_cli
 
  // output ...
  //
- // usage: neocities <command> [<args>]
+ // usage: neocities_cli <command> [<args>]
  //
  // Commands:
  //    upload    Upload files to Neocities
