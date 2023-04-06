@@ -25,9 +25,13 @@ pub mod info;
 /// Implements the `Executable` trait and outputs the version of this `neocities_cli` application
 pub mod version;
 
-/// Implements the `Executable` trait and lists files that have been uploaded to a Neocities 
+/// Implements the `Executable` trait and lists files that have been uploaded to a Neocities
 /// user's website
 pub mod list;
 
 /// Implements the `Executable` trait and retrieves a Neocities API key for a registered user
 pub mod key;
+
+/// An `Executable` implementation that syncronizes the contents a local directory and its
+/// corresponding directory in a Neocities website
+pub mod sync;

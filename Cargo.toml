@@ -1,6 +1,6 @@
 [package]
 name = "neocities_cli"
-version = "0.1.3"
+version = "0.2.0"
 authors = ["Jacob Benison"]
 description = "A CLI tool for managing websites hosted on Neocities."
 keywords = ["neocities", "webmaster", "open-source", "static-site"]
