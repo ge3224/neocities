@@ -1,6 +1,11 @@
-use crate::error::NeocitiesErr;
-
 use super::command::Executable;
+use crate::{api::list::NcList, error::NeocitiesErr};
+use std::{
+    collections::HashMap,
+    fs::read_dir,
+    path::{Component, Path, PathBuf},
+};
+use url::Url;
 
 /// The string literal a user must type to run functionality in this module
 pub const KEY: &'static str = "sync";
@@ -33,27 +38,68 @@ impl<'a> Sync<'a> {
         Ok(())
     }
 
-    fn parse_args(
-        &self,
-        args: Vec<String>,
-        mut writer: impl std::io::Write,
-    ) -> Result<Option<(String, String)>, NeocitiesErr> {
-        let paths: Option<(String, String)> = match args.len() {
-            0 => None,
+    fn parse_args(&self, args: Vec<String>) -> Result<Option<(String, String)>, NeocitiesErr> {
+        let path = match args.len() {
+            0 => return Err(NeocitiesErr::InvalidArgument),
             _ => {
-                let local = &args[0][..];
-                let remote = match &args[0][..2] {
-                    "./" => args[0][1..].to_string(),
-                    _ => {
-                        self.write_usage(&mut writer)?;
-                        return Ok(None);
-                    }
-                };
-                Some((local.to_string(), remote))
+                let dp = Path::new(&args[0]); // ignore any args after the first
+                if dp.exists() == false || dp.is_dir() == false {
+                    return Err(NeocitiesErr::InvalidArgument);
+                }
+                dp.to_path_buf()
             }
         };
 
-        Ok(paths)
+        let mut url = Url::parse("https://neocities.org")?;
+        for cmp in path.components() {
+            if let Component::Normal(c) = cmp {
+                if let Some(part) = c.to_str() {
+                    url = url.join([part, "/"].concat().as_str())?;
+                }
+            }
+        }
+
+        let remote_path = url.path();
+        let local_path = match path.to_str() {
+            Some(p) => p,
+            None => return Err(NeocitiesErr::InvalidArgument),
+        };
+
+        Ok(Some((local_path.to_string(), remote_path.to_string())))
+    }
+
+    fn get_remote_hashmap(
+        &self,
+        target_path: &str,
+    ) -> Result<HashMap<String, String>, NeocitiesErr> {
+        let remote = NcList::fetch(None)?;
+        let file_list = remote.files;
+        let mut filtered: HashMap<String, String> = HashMap::new();
+        for file in file_list.iter() {
+            if file.path.contains(target_path) {
+                if let Some(sha) = &file.sha1_hash {
+                    filtered.insert(file.path.to_owned(), sha.to_owned());
+                }
+            }
+        }
+
+        Ok(filtered)
+    }
+
+    fn walk_dir(&self, dir_path: PathBuf) -> Result<(), NeocitiesErr> {
+        if dir_path.is_dir() {
+            for entry in read_dir(dir_path)? {
+                let entry = entry?;
+                let entry_path = entry.path();
+                if entry_path.is_dir() {
+                    self.walk_dir(entry_path)?;
+                } else {
+                    todo!();
+                }
+            }
+        }
+
+        Ok(())
     }
 }
 
@@ -66,7 +112,7 @@ impl<'a> Executable for Sync<'a> {
             return Ok(());
         }
 
-        let (_local, _remote) = match self.parse_args(args, &mut stdout)? {
+        let (_local, _remote) = match self.parse_args(args)? {
             Some(v) => v,
             None => return Ok(()),
         };
@@ -88,34 +134,36 @@ impl<'a> Executable for Sync<'a> {
 }
 
 const DESC: &'static str =
-    "Sync a local directory in your project with a corresponding directory on your Neocities website.";
+    "Synchronize a local directory in your project with a corresponding directory on your Neocities website.";
 
 const DESC_SHORT: &'static str = "Sync a local and a remote directory.";
 
 #[cfg(test)]
 mod tests {
+    use std::path::Path;
+
     use super::Sync;
     use crate::error::NeocitiesErr;
 
     #[test]
-    fn parse_args_method() -> Result<(), NeocitiesErr> {
+    fn parse_path_method() -> Result<(), NeocitiesErr> {
         let s = Sync::new();
-        let mut w1 = Vec::new();
 
-        let r1 = s.parse_args(vec![String::from("foo")], &mut w1)?;
-        let string = String::from_utf8(w1)?;
+        let (local, remote) = s.parse_args(vec!["./src/client".to_string()])?.unwrap();
+        assert_eq!(local, "./src/client");
+        assert_eq!(remote, "/src/client/");
 
-        assert_eq!(string.contains(&s.usage), true);
-        assert_eq!(r1, None);
+        Ok(())
+    }
 
-        let mut w2 = Vec::new();
-        let r2 = s.parse_args(vec![String::from("./foo")], &mut w2)?;
-        assert_eq!(w2.len() < 1, true);
-        assert_eq!(r2.is_some(), true);
-
-        let inner = r2.unwrap();
-        assert_eq!(&inner.0, "./foo");
-        assert_eq!(inner.1, "/foo");
+    #[test]
+    fn walk_dir_method() -> Result<(), NeocitiesErr> {
+        let s = Sync::new();
+        let p = Path::new("./src");
+        if p.exists() != true || p.is_dir() == false {
+            return Err(NeocitiesErr::InvalidArgument);
+        }
+        s.walk_dir(p.to_path_buf())?;
 
         Ok(())
     }

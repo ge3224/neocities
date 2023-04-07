@@ -40,7 +40,10 @@ impl List {
         let mut is_detailed = false;
         let path: Option<String> = match args.len() {
             0 => None,
-            1 => Some(String::from(&args[0])),
+            1 => match args[0].as_str() {
+                "-a" | "--all" => Some(String::from("")),
+                _ => Some(String::from(&args[0])),
+            },
             _ => match args[0].as_str() {
                 "-d" | "--details" => {
                     is_detailed = true;

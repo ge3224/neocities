@@ -34,4 +34,8 @@ pub enum NeocitiesErr {
     /// An error was returned from std::string
     #[error(transparent)]
     FromUtf8Error(#[from] std::string::FromUtf8Error),
+
+    /// A parse error occurred
+    #[error(transparent)]
+    ParseError(#[from] url::ParseError),
 }
