@@ -11,6 +11,10 @@ pub enum NeocitiesErr {
     #[error("invalid argument")]
     InvalidArgument,
 
+    /// An argument was provided that is not a directory
+    #[error("invalid path")]
+    InvalidPath,
+
     /// A required environment variable could not be parsed
     #[error("missing username: check environment variables")]
     MissingUser,
@@ -38,4 +42,12 @@ pub enum NeocitiesErr {
     /// A parse error occurred
     #[error(transparent)]
     ParseError(#[from] url::ParseError),
+
+    /// Could not convert from one int to another int type
+    #[error(transparent)]
+    TryFromIntError(#[from] std::num::TryFromIntError),
+
+    /// Could not determine time
+    #[error(transparent)]
+    SystemTimeError(#[from] std::time::SystemTimeError),
 }

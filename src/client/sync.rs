@@ -1,9 +1,15 @@
 use super::command::Executable;
-use crate::{api::list::NcList, error::NeocitiesErr};
+use crate::{
+    api::list::{File, NcList},
+    error::NeocitiesErr,
+};
+use sha1::{Digest, Sha1};
 use std::{
     collections::HashMap,
-    fs::read_dir,
+    fs::{self, read_dir},
+    os::unix::prelude::MetadataExt,
     path::{Component, Path, PathBuf},
+    time::UNIX_EPOCH,
 };
 use url::Url;
 
@@ -44,7 +50,7 @@ impl<'a> Sync<'a> {
             _ => {
                 let dp = Path::new(&args[0]); // ignore any args after the first
                 if dp.exists() == false || dp.is_dir() == false {
-                    return Err(NeocitiesErr::InvalidArgument);
+                    return Err(NeocitiesErr::InvalidPath);
                 }
                 dp.to_path_buf()
             }
@@ -62,42 +68,99 @@ impl<'a> Sync<'a> {
         let remote_path = url.path();
         let local_path = match path.to_str() {
             Some(p) => p,
-            None => return Err(NeocitiesErr::InvalidArgument),
+            None => return Err(NeocitiesErr::InvalidPath),
         };
 
         Ok(Some((local_path.to_string(), remote_path.to_string())))
     }
 
-    fn get_remote_hashmap(
-        &self,
-        target_path: &str,
-    ) -> Result<HashMap<String, String>, NeocitiesErr> {
-        // api returns a list of all files if no arguments are passed
+    fn hash_local_file(&self, filepath: PathBuf) -> Result<String, NeocitiesErr> {
+        let contents = fs::read(filepath)?;
+        let mut hasher = Sha1::new();
+
+        hasher.update(contents);
+        let result = hasher.finalize();
+        let sha_str = format!("{:02x}", result);
+
+        Ok(sha_str)
+    }
+
+    fn build_map_remote(&self, target_path: &str) -> Result<HashMap<String, File>, NeocitiesErr> {
+        // api returns a list of all files when no 'path' argument is passed
         let remote = NcList::fetch(None)?;
         let file_list = remote.files;
-        let mut filtered: HashMap<String, String> = HashMap::new();
+        let mut filtered: HashMap<String, File> = HashMap::new();
         for file in file_list.iter() {
             if file.path.contains(target_path) {
-                if let Some(sha) = &file.sha1_hash {
-                    filtered.insert(file.path.to_owned(), sha.to_owned());
-                }
+                filtered.insert(file.path.to_owned(), file.clone());
             }
         }
 
         Ok(filtered)
     }
 
-    fn walk_dir(&self, dir_path: PathBuf) -> Result<(), NeocitiesErr> {
-        if dir_path.is_dir() {
-            for entry in read_dir(dir_path)? {
+    fn build_map_local(
+        &self,
+        map: &mut HashMap<String, File>,
+        target_path: PathBuf,
+    ) -> Result<(), NeocitiesErr> {
+        if target_path.is_dir() {
+            for entry in read_dir(&target_path)? {
                 let entry = entry?;
-                let entry_path = entry.path();
-                if entry_path.is_dir() {
-                    self.walk_dir(entry_path)?;
+                if entry.path().is_dir() {
+                    self.build_map_local(map, entry.path())?;
                 } else {
-                    todo!();
+                    if let Some(p) = entry.path().to_str() {
+                        let size = i64::try_from(entry.metadata()?.size())?;
+
+                        let updated_at = entry
+                            .metadata()?
+                            .modified()?
+                            .duration_since(UNIX_EPOCH)?
+                            .as_secs();
+
+                        let sha = self.hash_local_file(entry.path())?;
+
+                        map.insert(
+                            p.to_owned(),
+                            File {
+                                path: p.to_string(),
+                                sha1_hash: Some(sha),
+                                is_directory: false,
+                                size: Some(size),
+                                updated_at: updated_at.to_string(),
+                            }
+                            .to_owned(),
+                        );
+                    }
                 }
             }
+        } else {
+            return Err(NeocitiesErr::InvalidPath);
+        };
+        Ok(())
+    }
+
+    fn diff_dir(
+        &self,
+        remote: &HashMap<String, File>,
+        target: PathBuf,
+    ) -> Result<(), NeocitiesErr> {
+        let mut local: HashMap<String, File> = HashMap::new();
+        self.build_map_local(&mut local, target)?;
+
+        let remote_only = remote.keys().filter(|k| local.contains_key(*k) == false);
+
+        println!("Remote files not found locally:");
+        for entry in remote_only {
+            println!("{entry}");
+        }
+
+        let local_only = local.keys().filter(|k| remote.contains_key(*k) == false);
+
+        println!("Local files not found remotely:");
+        for entry in local_only {
+            println!("{entry}");
         }
 
         Ok(())
@@ -141,30 +204,65 @@ const DESC_SHORT: &'static str = "Sync a local and a remote directory.";
 
 #[cfg(test)]
 mod tests {
-    use std::path::Path;
+    use std::{collections::HashMap, path::Path};
 
     use super::Sync;
-    use crate::error::NeocitiesErr;
+    use crate::{api::list::File, error::NeocitiesErr};
 
     #[test]
     fn parse_path_method() -> Result<(), NeocitiesErr> {
         let s = Sync::new();
 
-        let (local, remote) = s.parse_args(vec!["./src/client".to_string()])?.unwrap();
-        assert_eq!(local, "./src/client");
-        assert_eq!(remote, "/src/client/");
+        let (local, remote) = s.parse_args(vec!["./tests/fixtures".to_string()])?.unwrap();
+        assert_eq!(local, "./tests/fixtures");
+        assert_eq!(remote, "/tests/fixtures/");
 
         Ok(())
     }
 
     #[test]
-    fn walk_dir_method() -> Result<(), NeocitiesErr> {
+    fn hash_local_file() -> Result<(), NeocitiesErr> {
         let s = Sync::new();
-        let p = Path::new("./src");
+        let p = Path::new("tests/fixtures/foo.html");
+        if p.exists() != true || p.is_dir() == true {
+            return Err(NeocitiesErr::InvalidArgument);
+        }
+        let hash = s.hash_local_file(p.to_path_buf())?;
+        assert_eq!(hash, "2e006dc3f41f61e9d485937cdd2bbe95879ff34e");
+        Ok(())
+    }
+
+    #[test]
+    fn diff_dir() -> Result<(), NeocitiesErr> {
+        let mut mock_map: HashMap<String, File> = HashMap::new();
+
+        let mock_f1 = File {
+            path: "tests/fixtures/bad.html".to_string(),
+            is_directory: false,
+            size: Some(0),
+            updated_at: String::new(),
+            sha1_hash: Some("2e006dc3f41f61e9d485937cdd2bbe95879ff34e".to_string()),
+        };
+
+        mock_map.insert("tests/fixtures/bad.html".to_string(), mock_f1);
+
+        let mock_f2 = File {
+            path: "tests/fixtures/foo.html".to_string(),
+            is_directory: false,
+            size: Some(0),
+            updated_at: String::new(),
+            sha1_hash: Some("2e006dc3f41f61e9d485937cdd2bbe95879ff37e".to_string()),
+        };
+
+        mock_map.insert("tests/fixtures/foo.html".to_string(), mock_f2);
+
+        let s = Sync::new();
+        let p = Path::new("tests");
         if p.exists() != true || p.is_dir() == false {
             return Err(NeocitiesErr::InvalidArgument);
         }
-        s.walk_dir(p.to_path_buf())?;
+
+        s.diff_dir(&mock_map, p.to_path_buf())?;
 
         Ok(())
     }
