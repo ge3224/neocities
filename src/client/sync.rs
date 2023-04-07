@@ -72,6 +72,7 @@ impl<'a> Sync<'a> {
         &self,
         target_path: &str,
     ) -> Result<HashMap<String, String>, NeocitiesErr> {
+        // api returns a list of all files if no arguments are passed
         let remote = NcList::fetch(None)?;
         let file_list = remote.files;
         let mut filtered: HashMap<String, String> = HashMap::new();
