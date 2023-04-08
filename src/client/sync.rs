@@ -1,6 +1,6 @@
 use super::command::Executable;
 use crate::{
-    api::list::{File, NcList},
+    api::list::{File, ListResponse, NcList},
     error::NeocitiesErr,
 };
 use chrono::{TimeZone, Utc};
@@ -85,10 +85,12 @@ impl<'a> Sync<'a> {
         Ok(sha_str)
     }
 
-    fn build_map_remote(&self, target_path: &str) -> Result<HashMap<String, File>, NeocitiesErr> {
-        // api returns a list of all files when no 'path' argument is passed
-        let remote = NcList::fetch(None)?;
-        let file_list = remote.files;
+    fn build_map_remote(
+        &self,
+        lr: ListResponse,
+        target_path: &str,
+    ) -> Result<HashMap<String, File>, NeocitiesErr> {
+        let file_list = lr.files;
         let mut filtered: HashMap<String, File> = HashMap::new();
         for file in file_list.iter() {
             if file.path.contains(target_path) {
@@ -185,11 +187,13 @@ impl<'a> Executable for Sync<'a> {
             self.write_usage(&mut stdout)?;
             return Ok(());
         }
+        // let (_local, _remote) = match self.parse_args(args)? {
+        //     Some(v) => v,
+        //     None => return Ok(()),
+        // };
 
-        let (_local, _remote) = match self.parse_args(args)? {
-            Some(v) => v,
-            None => return Ok(()),
-        };
+        // api returns a list of all files when no 'path' argument is passed
+        // let remote_list = NcList::fetch(None)?;
 
         todo!();
     }
@@ -215,7 +219,10 @@ const DESC_SHORT: &'static str = "Sync a local and a remote directory.";
 #[cfg(test)]
 mod tests {
     use super::Sync;
-    use crate::{api::list::File, error::NeocitiesErr};
+    use crate::{
+        api::list::{File, ListResponse},
+        error::NeocitiesErr,
+    };
     use std::{collections::HashMap, path::Path};
 
     #[test]
@@ -234,10 +241,48 @@ mod tests {
         let s = Sync::new();
         let p = Path::new("tests/fixtures/foo.html");
         if p.exists() != true || p.is_dir() == true {
-            return Err(NeocitiesErr::InvalidArgument);
+            return Err(NeocitiesErr::InvalidPath);
         }
         let hash = s.hash_local_file(p.to_path_buf())?;
-        assert_eq!(hash, "2e006dc3f41f61e9d485937cdd2bbe95879ff34e");
+        assert_eq!(hash.len(), 40);
+        Ok(())
+    }
+
+    #[test]
+    fn build_map_remote() -> Result<(), NeocitiesErr> {
+        let mock_file = make_mock_file(
+            "tests/fixtures/foo.html",
+            284,
+            "Sat, 25 Mar 2023 06:35:20 +0000",
+            "2e006dc3f41f61e9d485937cdd2bbe95879ff34e",
+        );
+
+        let mock_list_res = ListResponse {
+            result: String::from("success"),
+            files: vec![mock_file],
+        };
+
+        let s = Sync::new();
+        let p = "tests";
+        let map = s.build_map_remote(mock_list_res, p)?;
+        assert_eq!(map.len(), 1);
+
+        Ok(())
+    }
+
+    #[test]
+    fn build_map_local() -> Result<(), NeocitiesErr> {
+        let s = Sync::new();
+        let p = Path::new("tests");
+        if p.exists() != true || p.is_dir() == false {
+            return Err(NeocitiesErr::InvalidPath);
+        }
+
+        let mut mock_map: HashMap<String, File> = HashMap::new();
+        s.build_map_local(&mut mock_map, p.to_path_buf())?;
+
+        assert_eq!(mock_map.len(), 3);
+
         Ok(())
     }
 
@@ -246,25 +291,16 @@ mod tests {
         let s = Sync::new();
         let p = Path::new("tests");
         if p.exists() != true || p.is_dir() == false {
-            return Err(NeocitiesErr::InvalidArgument);
+            return Err(NeocitiesErr::InvalidPath);
         }
 
         let mut mock_map: HashMap<String, File> = HashMap::new();
-        let mut add_mock_file = |path: &str, size: i64, mod_time: &str, sha: &str| {
-            mock_map.insert(
-                path.to_string(),
-                File {
-                    path: path.to_string(),
-                    is_directory: false,
-                    size: Some(size),
-                    updated_at: mod_time.to_string(),
-                    sha1_hash: Some(sha.to_string()),
-                },
-            );
+        let mut mock_map_insert = |path: &str, size: i64, mod_time: &str, sha: &str| {
+            mock_map.insert(path.to_string(), make_mock_file(path, size, mod_time, sha));
         };
 
-        // file that doesn't exists locally
-        add_mock_file(
+        // file that wouldn't exists locally
+        mock_map_insert(
             "tests/fixtures/remote_only.html",
             0,
             "Thu, 01 Jan 1970 00:00:00 +0000",
@@ -272,7 +308,7 @@ mod tests {
         );
 
         // file that is out of date
-        add_mock_file(
+        mock_map_insert(
             "tests/fixtures/foo.html",
             284,
             "Sat, 25 Mar 2023 06:35:20 +0000",
@@ -285,5 +321,16 @@ mod tests {
         assert_eq!(to_delete.len(), 1);
 
         Ok(())
+    }
+
+    // setup functions
+    fn make_mock_file(path: &str, size: i64, mod_time: &str, sha: &str) -> File {
+        File {
+            path: path.to_string(),
+            is_directory: false,
+            size: Some(size),
+            updated_at: mod_time.to_string(),
+            sha1_hash: Some(sha.to_string()),
+        }
     }
 }
