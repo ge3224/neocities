@@ -3,13 +3,13 @@ use crate::{
     api::list::{File, NcList},
     error::NeocitiesErr,
 };
+use chrono::{TimeZone, Utc};
 use sha1::{Digest, Sha1};
 use std::{
     collections::HashMap,
     fs::{self, read_dir},
-    os::unix::prelude::MetadataExt,
+    os::linux::fs::MetadataExt,
     path::{Component, Path, PathBuf},
-    time::UNIX_EPOCH,
 };
 use url::Url;
 
@@ -111,13 +111,13 @@ impl<'a> Sync<'a> {
                     self.build_map_local(map, entry.path())?;
                 } else {
                     if let Some(p) = entry.path().to_str() {
-                        let size = i64::try_from(entry.metadata()?.size())?;
+                        let size = i64::try_from(entry.metadata()?.st_size())?;
 
-                        let updated_at = entry
-                            .metadata()?
-                            .modified()?
-                            .duration_since(UNIX_EPOCH)?
-                            .as_secs();
+                        let mtime = entry.metadata()?.st_mtime();
+                        let updated_at = match Utc.timestamp_opt(mtime, 0) {
+                            chrono::LocalResult::Single(dt) => dt.to_rfc2822(),
+                            _ => String::from("unknown"),
+                        };
 
                         let sha = self.hash_local_file(entry.path())?;
 
@@ -128,7 +128,7 @@ impl<'a> Sync<'a> {
                                 sha1_hash: Some(sha),
                                 is_directory: false,
                                 size: Some(size),
-                                updated_at: updated_at.to_string(),
+                                updated_at,
                             }
                             .to_owned(),
                         );
@@ -145,25 +145,35 @@ impl<'a> Sync<'a> {
         &self,
         remote: &HashMap<String, File>,
         target: PathBuf,
-    ) -> Result<(), NeocitiesErr> {
+    ) -> Result<(Vec<String>, Vec<String>), NeocitiesErr> {
         let mut local: HashMap<String, File> = HashMap::new();
         self.build_map_local(&mut local, target)?;
 
-        let remote_only = remote.keys().filter(|k| local.contains_key(*k) == false);
+        let mut to_delete: Vec<String> = Vec::new();
+        let mut to_upload: Vec<String> = Vec::new();
 
-        println!("Remote files not found locally:");
+        let remote_only = remote.keys().filter(|k| local.contains_key(*k) == false);
         for entry in remote_only {
-            println!("{entry}");
+            to_delete.push(entry.to_string());
         }
 
         let local_only = local.keys().filter(|k| remote.contains_key(*k) == false);
-
-        println!("Local files not found remotely:");
         for entry in local_only {
-            println!("{entry}");
+            to_upload.push(entry.to_string());
         }
 
-        Ok(())
+        let shared = local.keys().filter(|k| remote.contains_key(*k));
+        for entry in shared {
+            if let Some(l) = &local[entry].sha1_hash {
+                if let Some(r) = &remote[entry].sha1_hash {
+                    if l != r {
+                        to_upload.push(entry.to_string());
+                    }
+                }
+            }
+        }
+
+        Ok((to_upload, to_delete))
     }
 }
 
@@ -204,10 +214,9 @@ const DESC_SHORT: &'static str = "Sync a local and a remote directory.";
 
 #[cfg(test)]
 mod tests {
-    use std::{collections::HashMap, path::Path};
-
     use super::Sync;
     use crate::{api::list::File, error::NeocitiesErr};
+    use std::{collections::HashMap, path::Path};
 
     #[test]
     fn parse_path_method() -> Result<(), NeocitiesErr> {
@@ -234,35 +243,46 @@ mod tests {
 
     #[test]
     fn diff_dir() -> Result<(), NeocitiesErr> {
-        let mut mock_map: HashMap<String, File> = HashMap::new();
-
-        let mock_f1 = File {
-            path: "tests/fixtures/bad.html".to_string(),
-            is_directory: false,
-            size: Some(0),
-            updated_at: String::new(),
-            sha1_hash: Some("2e006dc3f41f61e9d485937cdd2bbe95879ff34e".to_string()),
-        };
-
-        mock_map.insert("tests/fixtures/bad.html".to_string(), mock_f1);
-
-        let mock_f2 = File {
-            path: "tests/fixtures/foo.html".to_string(),
-            is_directory: false,
-            size: Some(0),
-            updated_at: String::new(),
-            sha1_hash: Some("2e006dc3f41f61e9d485937cdd2bbe95879ff37e".to_string()),
-        };
-
-        mock_map.insert("tests/fixtures/foo.html".to_string(), mock_f2);
-
         let s = Sync::new();
         let p = Path::new("tests");
         if p.exists() != true || p.is_dir() == false {
             return Err(NeocitiesErr::InvalidArgument);
         }
 
-        s.diff_dir(&mock_map, p.to_path_buf())?;
+        let mut mock_map: HashMap<String, File> = HashMap::new();
+        let mut add_mock_file = |path: &str, size: i64, mod_time: &str, sha: &str| {
+            mock_map.insert(
+                path.to_string(),
+                File {
+                    path: path.to_string(),
+                    is_directory: false,
+                    size: Some(size),
+                    updated_at: mod_time.to_string(),
+                    sha1_hash: Some(sha.to_string()),
+                },
+            );
+        };
+
+        // file that doesn't exists locally
+        add_mock_file(
+            "tests/fixtures/remote_only.html",
+            0,
+            "Thu, 01 Jan 1970 00:00:00 +0000",
+            "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        );
+
+        // file that is out of date
+        add_mock_file(
+            "tests/fixtures/foo.html",
+            284,
+            "Sat, 25 Mar 2023 06:35:20 +0000",
+            "2e006dc3f41f61e9d485937cdd2bbe95879ff34e",
+        );
+
+        let (to_upload, to_delete) = s.diff_dir(&mock_map, p.to_path_buf())?;
+
+        assert_eq!(to_upload.len(), 3);
+        assert_eq!(to_delete.len(), 1);
 
         Ok(())
     }
