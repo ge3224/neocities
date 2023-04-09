@@ -8,6 +8,7 @@ use sha1::{Digest, Sha1};
 use std::{
     collections::HashMap,
     fs::{self, read_dir},
+    io,
     os::linux::fs::MetadataExt,
     path::{Component, Path, PathBuf},
 };
@@ -21,6 +22,53 @@ pub struct Sync<'a> {
     desc: &'a str,
     desc_short: &'a str,
     usage: String,
+}
+
+impl<'a> Executable for Sync<'a> {
+    fn run(&self, args: Vec<String>) -> Result<(), NeocitiesErr> {
+        let mut stdout = std::io::stdout();
+
+        if args.len() < 1 {
+            self.write_usage(&mut stdout)?;
+            return Ok(());
+        }
+
+        let (local_path, remote_path) = match self.parse_args(args)? {
+            Some(v) => v,
+            None => return Ok(()),
+        };
+
+        // api returns a list of all files when no 'path' argument is passed
+        let all_remote = NcList::fetch(None)?;
+
+        let remote_map = self.build_map_remote(all_remote, &remote_path.to_string())?;
+
+        let local_file_path = Path::new(&local_path);
+        if local_file_path.exists() != true || local_file_path.is_dir() == false {
+            return Err(NeocitiesErr::InvalidPath);
+        }
+
+        let (upload_list, remove_list) =
+            self.diff_dir(&remote_map, local_file_path.to_path_buf())?;
+
+        let (cancel_upload, cancel_rm) = self.alert(upload_list, remove_list, &mut stdout)?;
+
+        println!("cancel_upload={}, cancel_rm={}", cancel_upload, cancel_rm);
+
+        todo!();
+    }
+
+    fn get_usage(&self) -> &str {
+        self.usage.as_str()
+    }
+
+    fn get_long_desc(&self) -> &str {
+        self.desc
+    }
+
+    fn get_short_desc(&self) -> &str {
+        self.desc_short
+    }
 }
 
 impl<'a> Sync<'a> {
@@ -177,37 +225,92 @@ impl<'a> Sync<'a> {
 
         Ok((to_upload, to_delete))
     }
-}
 
-impl<'a> Executable for Sync<'a> {
-    fn run(&self, args: Vec<String>) -> Result<(), crate::error::NeocitiesErr> {
-        let mut stdout = std::io::stdout();
+    fn alert(
+        &self,
+        upload_list: Vec<String>,
+        delete_list: Vec<String>,
+        mut writer: impl std::io::Write,
+    ) -> Result<(bool, bool), NeocitiesErr> {
+        let up_msg = "\x1b[93mUpload or update the following files...\x1b[0m\n";
+        self.write(up_msg, &mut writer)?;
 
-        if args.len() < 1 {
-            self.write_usage(&mut stdout)?;
-            return Ok(());
+        for (i, file) in upload_list.iter().enumerate() {
+            let msg = format!("{}. {}\n", i + 1, file);
+            self.write(msg.as_str(), &mut writer)?;
         }
-        // let (_local, _remote) = match self.parse_args(args)? {
-        //     Some(v) => v,
-        //     None => return Ok(()),
-        // };
 
-        // api returns a list of all files when no 'path' argument is passed
-        // let remote_list = NcList::fetch(None)?;
+        self.write(
+            "Please input one of the following options: (U)pload, (C)ancel.\n",
+            &mut writer,
+        )?;
 
-        todo!();
-    }
+        let mut cancel_up = true;
 
-    fn get_usage(&self) -> &str {
-        self.usage.as_str()
-    }
+        loop {
+            let mut input = String::new();
 
-    fn get_long_desc(&self) -> &str {
-        self.desc
-    }
+            io::stdin().read_line(&mut input)?;
 
-    fn get_short_desc(&self) -> &str {
-        self.desc_short
+            let input = input.trim();
+
+            match input {
+                "U" | "u" => {
+                    self.write("Ok. Uploading or upating files.\n", &mut writer)?;
+                    cancel_up = false;
+                    break;
+                }
+                "C" | "c" => {
+                    self.write("Canceling uploads.\n", &mut writer)?;
+                    break;
+                }
+                _ => {
+                    let err = format!("Invalid input: '{}'. Please try again.\n", input);
+                    self.write(err.as_str(), &mut writer)?;
+                }
+            }
+        }
+
+        let rm_msg = "\x1b[93mRemove the following files...\x1b[0m\n";
+        self.write(rm_msg, &mut writer)?;
+
+        for (i, file) in delete_list.iter().enumerate() {
+            let msg = format!("{}. {}\n", i + 1, file);
+            self.write(msg.as_str(), &mut writer)?;
+        }
+
+        self.write(
+            "Please input one of the following options: (R)emove, (C)ancel.\n",
+            &mut writer,
+        )?;
+
+        let mut cancel_rm = true;
+
+        loop {
+            let mut input = String::new();
+
+            io::stdin().read_line(&mut input)?;
+
+            let input = input.trim();
+
+            match input {
+                "R" | "r" => {
+                    self.write("Ok. Removing remote files.\n", &mut writer)?;
+                    cancel_rm = false;
+                    break;
+                }
+                "C" | "c" => {
+                    self.write("Canceling removal.\n", &mut writer)?;
+                    break;
+                }
+                _ => {
+                    let err = format!("Invalid input: '{}'. Please try again.\n", input);
+                    self.write(err.as_str(), &mut writer)?;
+                }
+            }
+        }
+
+        Ok((cancel_up, cancel_rm))
     }
 }
 
@@ -226,7 +329,7 @@ mod tests {
     use std::{collections::HashMap, path::Path};
 
     #[test]
-    fn parse_path_method() -> Result<(), NeocitiesErr> {
+    fn parse_args() -> Result<(), NeocitiesErr> {
         let s = Sync::new();
 
         let (local, remote) = s.parse_args(vec!["./tests/fixtures".to_string()])?.unwrap();
@@ -319,6 +422,27 @@ mod tests {
 
         assert_eq!(to_upload.len(), 3);
         assert_eq!(to_delete.len(), 1);
+
+        Ok(())
+    }
+
+    #[test]
+    fn alert() -> Result<(), NeocitiesErr> {
+        let s = Sync::new();
+
+        let mock_up = vec![
+            String::from("tests/fixtures/foo.html"),
+            String::from("tests/fixtures/bar.js"),
+            String::from("tests/fixtures/images/baz.html"),
+        ];
+
+        let mock_del = vec![String::from("tests/fixtures/remote_only.html")];
+
+        let mut mock_wr = Vec::new();
+
+        s.alert(mock_up, mock_del, &mut mock_wr)?;
+
+        assert_eq!(mock_wr.len() != 0, true);
 
         Ok(())
     }

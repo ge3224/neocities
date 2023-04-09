@@ -36,7 +36,7 @@ impl Delete {
         Ok(())
     }
 
-    fn warning(
+    fn alert_warn(
         &self,
         args: Vec<String>,
         mut writer: impl std::io::Write,
@@ -96,7 +96,7 @@ impl Executable for Delete {
             return Ok(());
         }
 
-        let cancel = self.warning(args[..].to_vec(), &mut stdout)?;
+        let cancel = self.alert_warn(args[..].to_vec(), &mut stdout)?;
 
         if cancel == false {
             let data = NcDelete::fetch(args)?;
