@@ -39,9 +39,13 @@ pub enum NeocitiesErr {
     #[error(transparent)]
     FromUtf8Error(#[from] std::string::FromUtf8Error),
 
-    /// A parse error occurred
+    /// An error occurred while parsing a url
     #[error(transparent)]
-    ParseError(#[from] url::ParseError),
+    ParseUrlError(#[from] url::ParseError),
+
+    /// An error occurred while parsing a date string
+    #[error(transparent)]
+    ParseDateError(#[from] chrono::ParseError),
 
     /// Could not convert from one int to another int type
     #[error(transparent)]

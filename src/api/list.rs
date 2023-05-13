@@ -2,8 +2,8 @@ use super::credentials::{Auth, Credentials, QueryString};
 use super::http::{get_request, HttpRequestInfo};
 use crate::client::list;
 use crate::error::NeocitiesErr;
-use serde_derive::Deserialize;
-use serde_derive::Serialize;
+use chrono::{DateTime, FixedOffset, Utc};
+use serde_derive::{Deserialize, Serialize};
 
 /// Handles the requesting of a list of a Neocities website's directory contents using the
 /// following Neocities API endpoint `/api/list`
@@ -36,6 +36,16 @@ pub struct File {
     /// A checksum for the file
     #[serde(rename = "sha1_hash")]
     pub sha1_hash: Option<String>,
+}
+
+impl File {
+    /// parses the updated_at field and returns a chrono::DateTime object is no error occurs.
+    pub fn parse_timestamp(&self) -> Result<DateTime<FixedOffset>, NeocitiesErr> {
+        match DateTime::parse_from_rfc2822(self.updated_at.as_str()) {
+            Ok(d) => Ok(d),
+            Err(e) => Err(NeocitiesErr::ParseDateError(e)),
+        }
+    }
 }
 
 impl NcList {
@@ -94,6 +104,7 @@ impl NcList {
 mod tests {
     use super::{ListResponse, NcList};
     use crate::api::credentials::ENV_KEY;
+    use chrono::{DateTime, FixedOffset, TimeZone, Utc};
     use std::env;
 
     #[test]
@@ -159,5 +170,9 @@ mod tests {
             ls_res.files[1].sha1_hash.as_ref().unwrap(),
             "cfdf0bda2557c322be78302da23c32fec72ffc0b"
         );
+
+        let dt = Utc.with_ymd_and_hms(2016, 02, 13, 03, 4, 00).unwrap();
+        let fixed_dt = dt.with_timezone(&FixedOffset::west_opt(0).unwrap());
+        assert_eq!(ls_res.files[0].parse_timestamp().unwrap(), fixed_dt.clone());
     }
 }
