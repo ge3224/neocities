@@ -39,7 +39,7 @@ pub struct File {
 }
 
 impl File {
-    /// parses the updated_at field and returns a chrono::DateTime object is no error occurs.
+    /// parses the updated_at field and returns a chrono::DateTime object if no error occurs.
     pub fn parse_timestamp(&self) -> Result<DateTime<FixedOffset>, NeocitiesErr> {
         match DateTime::parse_from_rfc2822(self.updated_at.as_str()) {
             Ok(d) => Ok(d),

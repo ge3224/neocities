@@ -202,11 +202,15 @@ impl<'a> Sync<'a> {
         let mut to_delete: Vec<String> = Vec::new();
         let mut to_upload: Vec<String> = Vec::new();
 
+        // files that exist on the website, but are not present in the local project directory
         let remote_only = remote.keys().filter(|k| local.contains_key(*k) == false);
         for entry in remote_only {
             to_delete.push(entry.to_string());
         }
 
+        // TODO option to download missing files
+
+        // files that exist in the local project directory, but are not present on the website
         let local_only = local.keys().filter(|k| remote.contains_key(*k) == false);
         for entry in local_only {
             to_upload.push(entry.to_string());
@@ -256,7 +260,7 @@ impl<'a> Sync<'a> {
 
             match input {
                 "U" | "u" => {
-                    self.write("Ok. Uploading or upating files.\n", &mut writer)?;
+                    self.write("Ok. Uploading or updating files.\n", &mut writer)?;
                     cancel_up = false;
                     break;
                 }
