@@ -51,7 +51,7 @@ impl<'a> Executable for Sync<'a> {
         let (upload_list, remove_list) =
             self.diff_dir(&remote_map, local_file_path.to_path_buf())?;
 
-        let (cancel_upload, cancel_rm) = self.alert(upload_list, remove_list, &mut stdout)?;
+        let (cancel_upload, cancel_rm) = self.sync_alert(upload_list, remove_list, &mut stdout)?;
 
         println!("cancel_upload={}, cancel_rm={}", cancel_upload, cancel_rm);
 
@@ -230,7 +230,7 @@ impl<'a> Sync<'a> {
         Ok((to_upload, to_delete))
     }
 
-    fn alert(
+    fn sync_alert(
         &self,
         upload_list: Vec<String>,
         delete_list: Vec<String>,
@@ -444,7 +444,7 @@ mod tests {
 
         let mut mock_wr = Vec::new();
 
-        s.alert(mock_up, mock_del, &mut mock_wr)?;
+        s.sync_alert(mock_up, mock_del, &mut mock_wr)?;
 
         assert_eq!(mock_wr.len() != 0, true);
 
