@@ -2,7 +2,7 @@ use super::credentials::{Auth, Credentials, QueryString};
 use super::http::{get_request, HttpRequestInfo};
 use crate::client::list;
 use crate::error::NeocitiesErr;
-use chrono::{DateTime, FixedOffset, Utc};
+use chrono::{DateTime, FixedOffset};
 use serde_derive::{Deserialize, Serialize};
 
 /// Handles the requesting of a list of a Neocities website's directory contents using the
@@ -104,7 +104,7 @@ impl NcList {
 mod tests {
     use super::{ListResponse, NcList};
     use crate::api::credentials::ENV_KEY;
-    use chrono::{DateTime, FixedOffset, TimeZone, Utc};
+    use chrono::{FixedOffset, TimeZone, Utc};
     use std::env;
 
     #[test]
