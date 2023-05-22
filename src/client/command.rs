@@ -18,6 +18,8 @@ pub enum CommandKind {
     Version,
     /// Corresponds to the `key` module
     Key,
+    /// Corresponds to the `diff` module
+    Diff,
     /// Corresponds to the `sync` module
     Sync,
 }
@@ -52,6 +54,7 @@ impl Command {
             CommandKind::Delete => Box::new(delete::Delete::new()),
             CommandKind::Key => Box::new(key::Key::new()),
             CommandKind::Sync => Box::new(sync::Sync::new()),
+            CommandKind::Diff => Box::new(diff::Diff::new()),
         };
 
         Command { exec }
