@@ -183,6 +183,19 @@ mod tests {
     use crate::{api::list, client::command::Executable, error::NeocitiesErr};
 
     #[test]
+    fn list_write() -> Result<(), NeocitiesErr> {
+        let list = List::new();
+        let mut output = Vec::new();
+        list.write("foo", &mut output)?;
+
+        let s = String::from_utf8(output)?;
+
+        assert_eq!(s.contains("foo"), true);
+
+        Ok(())
+    }
+
+    #[test]
     fn get_desc_method() {
         let l = List::new();
         assert_eq!(l.get_long_desc(), DESC);
@@ -278,19 +291,6 @@ mod tests {
 
         assert_eq!(s.contains("foo"), true);
         assert_eq!(s.contains("bar"), true);
-
-        Ok(())
-    }
-
-    #[test]
-    fn write_method() -> Result<(), NeocitiesErr> {
-        let l = List::new();
-        let mut output = Vec::new();
-        l.write("foo", &mut output)?;
-
-        let s = String::from_utf8(output)?;
-
-        assert_eq!(s.contains("foo"), true);
 
         Ok(())
     }
