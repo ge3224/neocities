@@ -23,6 +23,10 @@ pub enum NeocitiesErr {
     #[error("missing password: check environment variables")]
     MissingPassword,
 
+    /// A file at specified path does not exist
+    #[error("file at specified path does not exist")]
+    MissingFile,
+
     /// A problem occurred while deserializing json data
     #[error(transparent)]
     SerdeDeserializationError(#[from] serde_json::Error),
