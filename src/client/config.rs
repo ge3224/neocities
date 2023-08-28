@@ -1,7 +1,7 @@
 use super::{
     args::Args,
     command::{Command, CommandKind},
-    delete, diff, info, key, list, sync, upload, version,
+    delete, diff, info, key, list, upload, version,
 };
 use crate::error::NeocitiesErr;
 
@@ -30,7 +30,6 @@ impl Config {
                 info::KEY => Command::new(CommandKind::Info),
                 key::KEY => Command::new(CommandKind::Key),
                 diff::KEY => Command::new(CommandKind::Diff),
-                sync::KEY => Command::new(CommandKind::Sync),
                 _ => Command::new(CommandKind::Help),
             },
             _ => Command::new(CommandKind::Help),

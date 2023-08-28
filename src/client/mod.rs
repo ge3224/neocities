@@ -35,7 +35,3 @@ pub mod key;
 /// An implementation of `Executable` that diffs the state of a local project directory with its
 /// corresponding remote directory.
 pub mod diff;
-
-/// An `Executable` implementation that syncronizes the contents a local directory and its
-/// corresponding directory in a Neocities website
-pub mod sync;
