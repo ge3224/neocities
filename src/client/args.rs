@@ -5,7 +5,7 @@ pub struct Args {
     pub command: Option<String>,
 
     /// A vector of strings, which are collected from arguments a user inputs after the initial
-    /// command (e.g. `neocities <command> param1 param2).
+    /// command (e.g. `neocities <command> param1 param2`).
     pub params: Vec<String>,
 }
 
@@ -30,10 +30,7 @@ impl Args {
             params.push(param.clone());
         }
 
-        Args {
-            command,
-            params,
-        }
+        Args { command, params }
     }
 }
 
