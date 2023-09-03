@@ -23,10 +23,6 @@ This client is a command-line interface application for managing websites hosted
 
 https://user-images.githubusercontent.com/75739874/221270216-693d0626-59e0-4df3-a2cf-987cc0afff26.mp4
 
-<!--## Installation-->
-
- <!--- [ ]  TODO-->
-
 ## Setup
 
 Set two environment variables:
@@ -68,6 +64,7 @@ neocities_cli
 #    info      Info about Neocities websites
 #    key       Neocities API key
 #    list      List files on Neocities
+#    diff      Compare local with remote paths
 #    version   Show neocities client version
 # 
 # Help for a specific command:
