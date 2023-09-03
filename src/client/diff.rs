@@ -1,6 +1,6 @@
 use super::command::Executable;
 use crate::{
-    api::list::{File, NcList},
+    api::list::{File, ListResponse, NcList},
     error::NeocitiesErr,
 };
 use chrono::{TimeZone, Utc};
@@ -284,6 +284,16 @@ impl<'a> Diff<'a> {
         Ok(())
     }
 
+    // Fetch a list of all remote files from the Neocities API. Passing `None` as an argument
+    // retrieves a complete list of all files and subdirectories, where passing a path argument
+    // would retrieve a flat list of files for the path, not including the contents of
+    // subdirectories. See the [Neocities API reference](https://neocities.org/api).
+    fn get_nc_list_fetch(&self) -> Result<ListResponse, NeocitiesErr> {
+        let res = NcList::fetch(None)?;
+
+        Ok(res)
+    }
+
     /// Fetches remote items from the Neocities API and populates the provided map with item
     /// information that matches the specified target path.
     ///
@@ -297,19 +307,20 @@ impl<'a> Diff<'a> {
     /// # Returns
     ///
     /// Returns a `Result` indicating success or an error of type `NeocitiesErr`.
-    fn remote_items(
+    fn relevant_remote_items(
         &self,
         map: &mut HashMap<String, Item>,
         target_path: PathBuf,
+        list_fetch: ListResponse,
     ) -> Result<(), NeocitiesErr> {
         // Fetch a list of all remote files from the Neocities API. Passing `None` as an argument
         // retrieves a complete list of all files and subdirectories, where passing a path argument
         // would retrieve a flat list of files for the path, not including the contents of
         // subdirectories. See the [Neocities API reference](https://neocities.org/api).
-        let res = NcList::fetch(None)?;
+        // let list_response = NcList::fetch(None)?;
 
         // Iterate over each file in the fetched list.
-        for file in res.files.iter() {
+        for file in list_fetch.files.iter() {
             // Format the target path.
             let target = self.format_path(&target_path)?;
 
@@ -464,8 +475,10 @@ impl<'a> Diff<'a> {
         // Create a HashMap to store remote item information.
         let mut remote_map: HashMap<String, Item> = HashMap::new();
 
+        let list_fetch = self.get_nc_list_fetch()?;
+
         // Populate the remote_map with information about remote items.
-        self.remote_items(&mut remote_map, local)?;
+        self.relevant_remote_items(&mut remote_map, local, list_fetch)?;
 
         // Create a vector to store items with differences.
         let mut diff_list: Vec<Item> = Vec::new();
@@ -619,157 +632,439 @@ const DESC_SHORT: &'static str = "Compare a local and a remote path.";
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        collections::HashMap,
-        path::{Path, PathBuf},
-    };
+    use super::*;
+
+    use std::{collections::HashMap, fs, io::Cursor, path::PathBuf};
 
     use crate::{
-        api::list::File,
-        client::{command::Executable, diff::Item},
+        api::list::{File, ListResponse},
+        client::diff::{Item, DESC, DESC_SHORT, KEY},
         error::NeocitiesErr,
     };
 
-    use super::Diff;
     // use chrono::{TimeZone, Utc};
     use tempfile;
 
+    // Define a unit test function for the `new` function.
     #[test]
-    fn test_write() -> Result<(), NeocitiesErr> {
+    fn test_new() {
+        // Call the `new` function to create a `Diff` instance.
         let diff = Diff::new();
 
-        let mut output = Vec::new();
-        diff.write("foo", &mut output)?;
+        // Define the expected values for the fields.
 
-        let s = String::from_utf8(output)?;
+        // The expected long description (desc).
+        let expected_desc = DESC;
 
-        assert_eq!(s.contains("foo"), true);
+        // The expected short description (desc_short).
+        let expected_desc_short = DESC_SHORT;
 
-        Ok(())
+        // The expected usage information with ANSI color formatting (usage).
+        let expected_usage = format!("\x1b[1;32m{KEY}\x1b[0m ./<path>");
+
+        // Check that the actual values of the fields in the `diff` instance match the expected values.
+
+        // Assert that the `desc` field matches the expected description.
+        assert_eq!(diff.desc, expected_desc);
+
+        // Assert that the `desc_short` field matches the expected short description.
+        assert_eq!(diff.desc_short, expected_desc_short);
+
+        // Assert that the `usage` field matches the expected usage information.
+        assert_eq!(diff.usage, expected_usage);
     }
 
+    // Define a unit test function for the `write` method.
     #[test]
-    fn test_write_usage() -> Result<(), NeocitiesErr> {
+    fn test_write() {
+        // Create a test message.
+        let msg = "Hello, World!";
+
+        // Create a `Cursor` as a mock writer.
+        let mut writer = Cursor::new(Vec::new());
+
+        // Create a `Diff` instance for testing.
         let diff = Diff::new();
 
-        let mut output = Vec::new();
+        // Call the `write` function with the test message and mock writer.
+        let result = diff.write(&msg, &mut writer);
 
-        diff.write_usage(&mut output)?;
+        // Check that the result is Ok, indicating a successful write operation.
+        assert!(result.is_ok());
 
-        let s = String::from_utf8(output)?;
+        // Get the contents of the writer after the write operation.
+        let written_data = writer.into_inner();
 
-        assert_eq!(s.contains(diff.get_long_desc()), true);
+        // Convert the written data (byte vector) to a string for comparison.
+        let written_str = String::from_utf8_lossy(&written_data);
 
-        Ok(())
+        // Check that the written data matches the test message.
+        assert_eq!(written_str, msg);
     }
 
+    // Define a unit test function for the `write_usage` method.
     #[test]
-    fn test_parse_args() -> Result<(), NeocitiesErr> {
+    fn test_write_usage() {
+        // Create a test `Diff` instance with custom descriptions and usage information.
+        let diff = Diff {
+            desc: "foo",
+            desc_short: "bar",
+            usage: "baz".to_string(),
+        };
+
+        // Create a `Cursor` as a mock writer.
+        let mut writer = Cursor::new(Vec::new());
+
+        // Call the `write_usage` method with the mock writer.
+        let result = diff.write_usage(&mut writer);
+
+        // Check that the result is Ok, indicating a successful write operation.
+        assert!(result.is_ok());
+
+        // Get the contents of the writer after the write operation.
+        let written_data = writer.into_inner();
+
+        // Convert the written data (byte vector) to a string (`written_str`) for comparison.
+        let written_str = String::from_utf8_lossy(&written_data);
+
+        // Check that the written data contains the expected long description ("foo") and usage ("baz").
+        assert!(written_str.contains("foo"));
+        assert!(written_str.contains("baz"));
+    }
+
+    // Define a unit test function for the `parse_args` method when provided valid arguments.
+    #[test]
+    fn test_parse_args_valid() {
+        // Create a test vector of arguments with a single valid directory path.
+        let args = vec!["tests/fixtures/".to_string()];
+
+        // Create a test `Diff` instance.
         let diff = Diff::new();
 
-        assert_eq!(diff.parse_args(vec![String::from("")]).is_err(), true);
+        // Call the `parse_args` method with the test arguments.
+        let result = diff.parse_args(args);
 
-        assert_eq!(
-            diff.parse_args(vec![String::from("/tests/fixtures")])
-                .is_err(),
-            true
-        );
+        // Check that the result is Ok, indicating successful argument parsing.
+        assert!(result.is_ok());
 
-        assert_eq!(
-            diff.parse_args(vec![String::from("foo.html")]).is_err(),
-            true
-        );
+        // Extract the `path_buf` from the Ok result.
+        let path_buf = result.unwrap();
 
-        let path_1 = diff.parse_args(vec![String::from("./tests/fixtures")])?;
-
-        assert_eq!(path_1.to_str().unwrap(), "./tests/fixtures");
-
-        let path_2 = diff.parse_args(vec![String::from("tests/fixtures")])?;
-
-        assert_eq!(path_2.to_str().unwrap(), "tests/fixtures");
-
-        Ok(())
+        // Check that the `path_buf` contains the expected path ("tests/fixtures/").
+        assert_eq!(path_buf, PathBuf::from("tests/fixtures/"));
     }
 
+    // Define a unit test function for the `parse_args` method when provided an empty argument list.
+    #[test]
+    fn test_parse_args_invalid_empty() {
+        // Create an empty vector of arguments.
+        let args = Vec::new();
+
+        // Create a test `Diff` instance.
+        let diff = Diff::new();
+
+        // Call the `parse_args` method with no arguments.
+        let result = diff.parse_args(args);
+
+        // Check that the result is an Err, indicating that no arguments were provided.
+        assert!(result.is_err());
+    }
+
+    // Define a unit test function for the `parse_args` method when provided an invalid, nonexistent path.
+    #[test]
+    fn test_parse_args_invalid_nonexistent() {
+        // Create a test vector of arguments with a nonexistent directory path.
+        let args = vec!["/nonexistent/path".to_string()];
+
+        // Create a test `Diff` instance.
+        let diff = Diff::new();
+
+        // Call the `parse_args` method with the test arguments.
+        let result = diff.parse_args(args);
+
+        // Check that the result is an Err, indicating an invalid path (nonexistent).
+        assert!(result.is_err());
+    }
+
+    // Define a unit test function for the `parse_args` method when provided an invalid, non-directory path.
+    #[test]
+    fn test_parse_args_invalid_not_a_directory() {
+        // Create a temporary file path for testing and convert it to a string.
+        let temp_file_path = tempfile::NamedTempFile::new()
+            .unwrap()
+            .path()
+            .to_str()
+            .unwrap()
+            .to_string();
+
+        // Create a test vector of arguments with a file path instead of a directory path.
+        let args = vec![temp_file_path];
+
+        // Create a test `Diff` instance.
+        let diff = Diff::new();
+
+        // Call the `parse_args` method with the test arguments.
+        let result = diff.parse_args(args);
+
+        // Check that the result is an Err, indicating an invalid path (not a directory).
+        assert!(result.is_err());
+    }
+
+    // Define a unit test function for the `format_path` method.
     #[test]
     fn test_format_path() -> Result<(), NeocitiesErr> {
+        // Create a new `Diff` instance to use in the test.
         let diff = Diff::new();
 
+        // Create a mock `PathBuf` for testing, initially set to "./foo/".
         let mut mock_path = PathBuf::new();
         mock_path.push("./foo/");
 
+        // Assert that the formatted path matches the expected result "foo".
         assert_eq!(diff.format_path(&mock_path).unwrap(), "foo");
 
+        // Clear the mock path for the next test case.
         mock_path.clear();
 
+        // Update the mock path to "foo/".
         mock_path.push("foo/");
 
+        // Assert that the formatted path still matches "foo".
         assert_eq!(diff.format_path(&mock_path).unwrap(), "foo");
 
+        // Clear the mock path again.
         mock_path.clear();
 
+        // Set the mock path to "/foo/".
         mock_path.push("/foo/");
 
+        // Assert that the formatted path is still "foo".
         assert_eq!(diff.format_path(&mock_path).unwrap(), "foo");
 
+        // Add a filename "bar.html" to the mock path.
         mock_path.push("bar.html");
 
+        // Assert that the formatted path is now "foo/bar.html".
         assert_eq!(diff.format_path(&mock_path).unwrap(), "foo/bar.html");
 
+        // Clear the mock path for the final test case.
         mock_path.clear();
 
+        // Set the mock path to "foo/bar/baz.html".
         mock_path.push("foo/bar/baz.html");
 
+        // Assert that the formatted path is "foo/bar/baz.html".
         assert_eq!(diff.format_path(&mock_path).unwrap(), "foo/bar/baz.html");
+
+        // Return Ok(()) to indicate that all test cases passed successfully.
         Ok(())
     }
 
+    // Define a unit test function for the `get_local_item` method.
     #[test]
     fn test_get_local_item_file() -> Result<(), NeocitiesErr> {
+        // Create a temporary directory and a test file inside it.
         let temp_dir = tempfile::tempdir().expect("Failed to create temporary directory");
         let test_file_path = temp_dir.path().join("test_file.txt");
         std::fs::write(&test_file_path, "Hello, World!").expect("Failed to create test file");
 
+        // Create a new `Diff` instance to use in the test.
         let diff = Diff::new();
+
+        // Call the `get_local_item` method with the path to the test file.
         let result = diff.get_local_item(&test_file_path);
 
+        // Assert that the result is Ok, indicating success.
         assert!(result.is_ok());
 
+        // Extract the `item` from the Ok result.
         let item = result.unwrap();
+
+        // Assert that the formatted path of the `item` matches the test file's path.
         assert_eq!(
             format!("/{}", item.file.path),
             test_file_path.to_string_lossy().to_string()
         );
 
+        // Assert that the `item` represents a file (not a directory).
         assert_eq!(item.file.is_directory, false);
+
+        // Return Ok(()) to indicate that all test cases passed successfully.
         Ok(())
     }
 
+    // Define a unit test function for the `get_local_item` method when given a directory path.
     #[test]
     fn test_get_local_item_directory() -> Result<(), NeocitiesErr> {
+        // Create a temporary directory.
         let temp_dir = tempfile::tempdir().expect("Failed to create temporary directory");
 
+        // Create a new `Diff` instance to use in the test.
         let diff = Diff::new();
 
+        // Call the `get_local_item` method with the path to the temporary directory.
         let result = diff.get_local_item(&temp_dir.path().join(""));
 
+        // Assert that the result is Ok, indicating success.
         assert!(result.is_ok());
+
+        // Extract the `item` from the Ok result.
         let item = result.unwrap();
 
+        // Assert that the formatted path of the `item` matches the temporary directory's path.
         assert_eq!(
             format!("/{}", item.file.path),
             temp_dir.path().to_string_lossy().to_string()
         );
+
+        // Assert that the `item` represents a directory (not a file).
         assert_eq!(item.file.is_directory, true);
+
+        // Return Ok(()) to indicate that all test cases passed successfully.
         Ok(())
     }
 
+    // Define a unit test function for the `local_items` method.
     #[test]
-    fn test_missing_items() -> Result<(), NeocitiesErr> {
+    fn test_local_items() -> Result<(), NeocitiesErr> {
+        // Create a temporary directory for testing.
+        let temp_dir = tempfile::tempdir()?;
+
+        // Create a target directory within the temporary directory.
+        let target_dir = temp_dir.path().join("test_dir");
+        fs::create_dir(&target_dir.as_path())?;
+
+        // Create a test file within the target directory.
+        let test_file_path = target_dir.as_path().join("test_file.txt");
+        std::fs::write(&test_file_path, "Hello, World!").expect("Failed to create test file");
+
+        // Create a subdirectory within the target directory.
+        let subdir = target_dir.as_path().join("subdirectory");
+        fs::create_dir(&subdir.as_path())?;
+
+        // Create a test `Diff` instance for testing.
         let diff = Diff::new();
 
+        // Create a HashMap to store the local items.
+        let mut map: HashMap<String, Item> = HashMap::new();
+
+        // Call the `local_items` method with the test map and target directory.
+        let result = diff.local_items(&mut map, target_dir.clone());
+
+        // Check that the result is Ok, indicating successful item retrieval.
+        assert!(result.is_ok());
+
+        // Check that the map contains the expected number of items (3 in this case).
+        assert_eq!(map.len(), 3);
+
+        // Return Ok(()) to indicate that all test cases passed successfully.
+        Ok(())
+    }
+
+    // Define a unit test function for the `relevant_remote_items` method.
+    #[test]
+    fn test_relevant_remote_items() -> Result<(), NeocitiesErr> {
+        // Create a test `Diff` instance for testing.
+        let diff = Diff::new();
+
+        // Create a mock `HashMap` to store remote items.
+        let mut mock_remote_map: HashMap<String, Item> = HashMap::new();
+
+        // Create a mock `ListResponse` with a list of remote files.
+        let mock_list_response = ListResponse {
+            result: String::from("mock"),
+            files: vec![
+                File {
+                    path: String::from("test_dir/file1.txt"),
+                    is_directory: false,
+                    size: Some(42),
+                    updated_at: String::from("2023-08-01T12:34:56Z"),
+                    sha1_hash: Some(String::from("hash1")),
+                },
+                File {
+                    path: String::from("test_dir/file2.txt"),
+                    is_directory: false,
+                    size: Some(64),
+                    updated_at: String::from("2023-08-02T13:45:00Z"),
+                    sha1_hash: Some(String::from("hash2")),
+                },
+                File {
+                    path: String::from("test_dir/subdir/file3.txt"),
+                    is_directory: false,
+                    size: Some(128),
+                    updated_at: String::from("2023-08-03T14:56:01Z"),
+                    sha1_hash: Some(String::from("hash3")),
+                },
+            ],
+        };
+
+        // Define the target path for filtering.
+        let target_path = PathBuf::from("test_dir");
+
+        // Call the `relevant_remote_items` method with the mock map, target path, and mock list response.
+        diff.relevant_remote_items(
+            &mut mock_remote_map,
+            target_path.clone(),
+            mock_list_response,
+        )?;
+
+        // Check that the map contains the expected remote items and their information.
+        assert_eq!(mock_remote_map.len(), 3);
+        assert!(mock_remote_map.contains_key("test_dir/file1.txt"));
+        assert!(mock_remote_map.contains_key("test_dir/file2.txt"));
+        assert!(mock_remote_map.contains_key("test_dir/subdir/file3.txt"));
+
+        // Check the information of one remote item.
+        let remote_item = mock_remote_map.get("test_dir/file1.txt").unwrap();
+        assert_eq!(remote_item.on_remote, Some(true));
+        assert_eq!(remote_item.on_local, None);
+
+        // Return Ok(()) to indicate that the test passed successfully.
+        Ok(())
+    }
+
+    // Define a unit test function for the `hash` method.
+    #[test]
+    fn test_hash_file() -> Result<(), NeocitiesErr> {
+        // Create a temporary directory for testing.
+        let temp_dir = tempfile::tempdir()?;
+
+        // Define a test file name and content.
+        let file_name = "test_file.txt";
+        let file_content = "Hello, World!";
+
+        // Create the test file path within the temporary directory.
+        let test_file_path = temp_dir.path().join(file_name);
+
+        // Write the test content to the test file.
+        std::fs::write(&test_file_path, file_content)?;
+
+        // Create a test `Diff` instance for testing.
+        let diff = Diff::new();
+
+        // Call the `hash` method with the test file path.
+        let result = diff.hash(&test_file_path)?;
+
+        // Expected SHA-1 hash of the test content.
+        let expected_hash = "0a0a9f2a6772942557ab5355d76af442f8f65e01";
+
+        // Check that the result matches the expected SHA-1 hash.
+        assert_eq!(result, expected_hash);
+
+        // Return Ok(()) to indicate that the test passed successfully.
+        Ok(())
+    }
+
+    // Define a unit test function for the `missing_items` method.
+    #[test]
+    fn test_missing_items() -> Result<(), NeocitiesErr> {
+        // Create a test `Diff` instance for testing.
+        let diff = Diff::new();
+
+        // Create a mock HashMap `mock_map_a` to represent one set of items.
         let mut mock_map_a: HashMap<String, Item> = HashMap::new();
 
+        // Add items to `mock_map_a`.
         mock_map_a.insert(
             String::from("foo"),
             Item {
@@ -802,8 +1097,10 @@ mod tests {
             },
         );
 
+        // Create another mock HashMap `mock_map_b` to represent another set of items.
         let mut mock_map_b: HashMap<String, Item> = HashMap::new();
 
+        // Add items to `mock_map_b`.
         mock_map_b.insert(
             String::from("foo"),
             Item {
@@ -820,12 +1117,16 @@ mod tests {
             },
         );
 
+        // Call the `missing_items` method with `mock_map_a` and `mock_map_b`.
         let result_1 = diff.missing_items(&mock_map_a, &mock_map_b);
 
+        // Check that the result contains the expected number of missing items (1).
         assert_eq!(result_1.len(), 1);
 
+        // Check that the missing item key is as expected ("bar").
         assert_eq!(result_1[0], "bar");
 
+        // Add the missing item from `mock_map_a` to `mock_map_b`.
         mock_map_b.insert(
             String::from("bar"),
             Item {
@@ -842,19 +1143,26 @@ mod tests {
             },
         );
 
+        // Call the `missing_items` method again after adding the missing item.
         let result_2 = diff.missing_items(&mock_map_a, &mock_map_b);
 
+        // Check that there are no missing items in the updated `mock_map_b`.
         assert_eq!(result_2.len(), 0);
 
+        // Return Ok(()) to indicate that the test passed successfully.
         Ok(())
     }
 
+    // Define a unit test function for the `shared_items` method.
     #[test]
     fn test_shared_items() -> Result<(), NeocitiesErr> {
+        // Create a test `Diff` instance for testing.
         let diff = Diff::new();
 
+        // Create a mock HashMap `mock_map_a` to represent one set of items.
         let mut mock_map_a: HashMap<String, Item> = HashMap::new();
 
+        // Add an item to `mock_map_a`.
         mock_map_a.insert(
             String::from("foo"),
             Item {
@@ -871,8 +1179,10 @@ mod tests {
             },
         );
 
+        // Create another mock HashMap `mock_map_b` to represent another set of items.
         let mut mock_map_b: HashMap<String, Item> = HashMap::new();
 
+        // Add a matching item to `mock_map_b` with different `updated_at` and `sha1_hash`.
         mock_map_b.insert(
             String::from("foo"),
             Item {
@@ -889,29 +1199,22 @@ mod tests {
             },
         );
 
+        // Call the `shared_items` method with `mock_map_a` and `mock_map_b`.
         let result_1 = diff.shared_items(&mock_map_a, &mock_map_b);
 
+        // Check that the result contains the expected number of shared items (1).
         assert_eq!(result_1.len(), 1);
 
+        // Remove the shared item from `mock_map_b` for the second test case.
         let _ = &mock_map_b.remove("foo");
 
+        // Call the `shared_items` method again after removing the shared item.
         let result_2 = diff.shared_items(&mock_map_a, &mock_map_b);
 
+        // Check that there are no shared items in the updated `mock_map_b`.
         assert_eq!(result_2.len(), 0);
 
-        Ok(())
-    }
-
-    #[test]
-    fn test_hash() -> Result<(), NeocitiesErr> {
-        let diff = Diff::new();
-        let path = Path::new("tests/fixtures/foo.html");
-        if path.exists() != true || path.is_dir() == true {
-            return Err(NeocitiesErr::InvalidPath);
-        }
-        let hash = diff.hash(&path.to_path_buf())?;
-        assert_eq!(hash.len(), 40);
-
+        // Return Ok(()) to indicate that the test passed successfully.
         Ok(())
     }
 }
