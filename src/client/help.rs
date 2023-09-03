@@ -1,6 +1,6 @@
 use super::{
     command::{Command, CommandKind, Executable},
-    delete, help, info, key, list, upload, version,
+    delete, diff, help, info, key, list, upload, version,
 };
 use crate::error::NeocitiesErr;
 
@@ -70,11 +70,12 @@ impl Help {
         match arg {
             list::KEY => Ok(Command::new(CommandKind::List)),
             info::KEY => Ok(Command::new(CommandKind::Info)),
-            version::KEY => Ok(Command::new(CommandKind::Version)),
             upload::KEY => Ok(Command::new(CommandKind::Upload)),
             delete::KEY => Ok(Command::new(CommandKind::Delete)),
             key::KEY => Ok(Command::new(CommandKind::Key)),
+            diff::KEY => Ok(Command::new(CommandKind::Diff)),
             help::KEY => Ok(Command::new(CommandKind::Help)),
+            version::KEY => Ok(Command::new(CommandKind::Version)),
             _ => Err(NeocitiesErr::InvalidCommand),
         }
     }
@@ -123,6 +124,7 @@ Commands:
 \x1b[1;32minfo\x1b[0m      Info about Neocities websites
 \x1b[1;32mkey\x1b[0m       Neocities API key
 \x1b[1;32mlist\x1b[0m      List files on Neocities
+\x1b[1;32mdiff\x1b[0m      Compare local with remote paths
 \x1b[1;32mversion\x1b[0m   Show neocities client version
 
 Help for a specific command:

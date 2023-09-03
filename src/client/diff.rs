@@ -601,7 +601,7 @@ impl<'a> Executable for Diff<'a> {
 
 // The DESCRIPTION constant contains a brief explanation of the purpose of the Diff command.
 const DESC: &'static str =
-    "Compare the state of a local directory in your project with a corresponding directory on your Neocities website.";
+    "Compare the state of a local path in your project with a corresponding path on your Neocities website.";
 
 // The DESCRIPTION constant contains a brief explanation of the purpose of the Diff command.
 const DESC_SHORT: &'static str = "Compare a local and a remote path.";
