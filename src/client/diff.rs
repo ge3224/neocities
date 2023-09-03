@@ -30,20 +30,21 @@ pub struct Diff<'a> {
 /// Represents a file or directory along with its associated properties. This struct is used to
 /// store information about an item found at a local or remote path.
 pub struct Item {
-    /// The details of the file associated with this item.
+    /// Struct containing file data found for a specific path on a Neocities user's website
     file: File,
 
     /// Indicates whether the item is present at a remote location. The value is an optional
     /// boolean, where `Some(true)` indicates presence, `Some(false)` indicates absence, and `None`
-    /// indicates that presence or absence is unknown.
+    /// indicates that presence or absence has not been determined.
     on_remote: Option<bool>,
 
     /// Indicates whether the item is present at a local location. The value is an optional
     /// boolean, where `Some(true)` indicates presence, `Some(false)` indicates absence, and `None`
-    /// indicates that presence or absence is unknown.
+    /// indicates that presence or absence has not been determined.
     on_local: Option<bool>,
 
-    /// A textual remark or note associated with the item, providing additional information.
+    /// A textual note associated with the item, providing information regarding differences
+    /// between it and its local or remote counterpart.
     remark: String,
 }
 
@@ -53,10 +54,6 @@ impl<'a> Diff<'a> {
     /// This method initializes a `Diff` structure with predefined values for its descriptive
     /// fields and usage information. The constructed `Diff` instance can be used to perform
     /// various operations related to comparing files between local and remote locations.
-    ///
-    /// # Returns
-    ///
-    /// Returns a new instance of the `Diff` type with its fields initialized to default values.
     pub fn new() -> Diff<'a> {
         // Create a new `Diff` instance with default values for its fields.
         Diff {
@@ -85,7 +82,6 @@ impl<'a> Diff<'a> {
         // Convert the message to bytes and write it to the provided writer.
         writer.write_all(msg.as_bytes())?;
 
-        // Return Ok indicating successful completion.
         Ok(())
     }
 
@@ -110,16 +106,15 @@ impl<'a> Diff<'a> {
         // Write the formatted message to the provided writer using the `write` method.
         self.write(output.as_str(), &mut writer)?;
 
-        // Return Ok indicating successful completion.
         Ok(())
     }
 
-    /// Takes a vector of strings args and attempts to parse the first argument as a path. It
+    /// Takes a vector of String arguments and attempts to parse the first argument as a path. It
     /// returns a Result indicating either a valid path, as a PathBuf, or an error of type
     /// NeocitiesErr.
     fn parse_args(&self, args: Vec<String>) -> Result<PathBuf, NeocitiesErr> {
         match args.len() {
-            // If no arguments were provided, return an error indicating invalid argument.
+            // If no arguments were provided, return an error indicating an invalid argument.
             0 => return Err(NeocitiesErr::InvalidArgument),
             _ => {
                 // Extract the first argument as a path.
@@ -127,11 +122,11 @@ impl<'a> Diff<'a> {
 
                 // Check if the path exists and is a directory.
                 if path.exists() == false || path.is_dir() == false {
-                    // If the path doesn't exist or is not a directory, return an error indicating invalid path.
+                    // If the path doesn't exist or is not a directory, return an error indicating
+                    // an invalid path.
                     return Err(NeocitiesErr::InvalidPath);
                 }
 
-                // If the path is valid, return it as a PathBuf.
                 return Ok(path.to_path_buf());
             }
         };
@@ -139,7 +134,7 @@ impl<'a> Diff<'a> {
 
     /// Formats a given path by converting it into a concatenated string representation. This
     /// ensures that the resulting path string uses forward slashes as separators and is suitable
-    /// for comparison and storage purposes.
+    /// for comparing local and remote locations.
     ///
     /// # Arguments
     ///
@@ -148,7 +143,7 @@ impl<'a> Diff<'a> {
     ///
     /// # Returns
     ///
-    /// Returns a `Result` containing the normalized path string on success,
+    /// Returns a `Result` containing the formatted path string on success,
     /// or an error of type `NeocitiesErr` if normalization fails.
     fn format_path(&self, path: &PathBuf) -> Result<String, NeocitiesErr> {
         // Initialize an empty string to store the normalized path.
@@ -171,12 +166,41 @@ impl<'a> Diff<'a> {
             }
         }
 
-        // Return the successfully normalized path string.
         Ok(formatted)
     }
 
-    /// Retrieves information about a local item at the specified path and constructs an `Item`
-    /// instance.
+    /// Calculates the SHA-1 hash of the contents of the specified file.
+    ///
+    /// # Arguments
+    ///
+    /// - `self`:     A reference to the `Diff` instance invoking the method.
+    /// - `filepath`: A reference to the `PathBuf` representing the file's path.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `Result` containing the hexadecimal representation of the calculated SHA-1 hash
+    /// if successful, or an error of type `NeocitiesErr` if an issue occurs.
+    fn hash(&self, filepath: &PathBuf) -> Result<String, NeocitiesErr> {
+        // Read the contents of the file into a byte vector.
+        let contents = fs::read(filepath)?;
+
+        // Initialize a SHA-1 hasher instance.
+        let mut hasher = Sha1::new();
+
+        // Update the hasher with the file contents.
+        hasher.update(contents);
+
+        // Finalize the hashing process and retrieve the result as an array of bytes.
+        let result = hasher.finalize();
+
+        // Format the result bytes as a hexadecimal string.
+        let sha_str = format!("{:02x}", result);
+
+        Ok(sha_str)
+    }
+
+    /// Retrieves information about a local file or directory at the specified path and constructs
+    /// an `Item` instance.
     ///
     /// # Arguments
     ///
@@ -213,7 +237,7 @@ impl<'a> Diff<'a> {
             sha1_hash = Some(self.hash(path)?);
         }
 
-        // Normalize the path and convert it to a string.
+        // format the path and convert it to a string.
         let path_str = self.format_path(path)?;
 
         // Construct an `Item` instance with the gathered information.
@@ -231,15 +255,15 @@ impl<'a> Diff<'a> {
         })
     }
 
-    /// Populates the provided map with information about local items within the specified
-    /// path. Recursively scans subdirectories and adds their items as well.
+    /// Populates the provided map with information about local items at the specified path.
+    /// Recursively scans subdirectories of the path and adds items therein to the map.
     ///
     /// # Arguments
     ///
     /// - `self`:        A reference to the `Diff` instance invoking the method.
     /// - `map`:         A mutable reference to a `HashMap` where item information will
     ///                  be stored.
-    /// - `target_path`: The path to the directory to be scanned for local items.
+    /// - `target_path`: The file path to be scanned for local items.
     ///
     /// # Returns
     ///
@@ -280,98 +304,53 @@ impl<'a> Diff<'a> {
             }
         }
 
-        // Return Ok indicating successful completion.
         Ok(())
     }
 
-    // Fetch a list of all remote files from the Neocities API. Passing `None` as an argument
-    // retrieves a complete list of all files and subdirectories, where passing a path argument
-    // would retrieve a flat list of files for the path, not including the contents of
-    // subdirectories. See the [Neocities API reference](https://neocities.org/api).
-    fn get_nc_list_fetch(&self) -> Result<ListResponse, NeocitiesErr> {
-        let res = NcList::fetch(None)?;
-
-        Ok(res)
-    }
-
-    /// Fetches remote items from the Neocities API and populates the provided map with item
-    /// information that matches the specified target path.
+    /// Populates a HashMap with remote items that match a specified target path filter.
     ///
     /// # Arguments
     ///
-    /// - `self`:        A reference to the `Diff` instance invoking the method.
-    /// - `map`:         A mutable reference to a `HashMap` where remote item information will
-    ///                  be stored.
-    /// - `target_path`: The path used as a filter to retrieve remote items from the API.
+    /// * `self` - A reference to the `Diff` instance invoking the method.
+    /// * `map` - A mutable reference to a HashMap where remote item information will be stored.
+    /// * `target_path` - The path used as a filter to retrieve remote items from the API.
+    /// * `remote_list` - The list of remote items to filter.
     ///
     /// # Returns
     ///
-    /// Returns a `Result` indicating success or an error of type `NeocitiesErr`.
-    fn relevant_remote_items(
+    /// Returns a `Result` indicating success (`Ok`) or an error of type `NeocitiesErr`.
+    fn remote_items(
         &self,
         map: &mut HashMap<String, Item>,
         target_path: PathBuf,
-        list_fetch: ListResponse,
+        remote_list: ListResponse,
     ) -> Result<(), NeocitiesErr> {
-        // Fetch a list of all remote files from the Neocities API. Passing `None` as an argument
-        // retrieves a complete list of all files and subdirectories, where passing a path argument
-        // would retrieve a flat list of files for the path, not including the contents of
-        // subdirectories. See the [Neocities API reference](https://neocities.org/api).
-        // let list_response = NcList::fetch(None)?;
-
-        // Iterate over each file in the fetched list.
-        for file in list_fetch.files.iter() {
-            // Format the target path.
+        // Iterate over each file in the remote list.
+        for file in remote_list.files.iter() {
+            // Format the target path using a utility method, handling formatting errors if any.
             let target = self.format_path(&target_path)?;
 
-            // If the file's path contains the target path, it matches the filter.
+            // Check if the file's path contains the target path, indicating a match with the filter.
             if file.path.contains(&target) {
-                // Insert the remote item information into the map.
+                // Create a new Item struct and insert remote item information into the provided HashMap.
                 map.insert(
+                    // Use the file path as the key.
                     file.path.to_string(),
                     Item {
+                        // Clone the remote file information.
                         file: file.to_owned(),
+                        // Mark the item as present on the remote (true).
                         on_remote: Some(true),
+                        // Initialize the on_local field as None to indicate undetermined.
                         on_local: None,
+                        // Initialize the remark field as an empty string.
                         remark: String::new(),
                     },
                 );
             }
         }
 
-        // Return Ok indicating successful completion.
         Ok(())
-    }
-
-    /// Calculates the SHA-1 hash of the contents of the specified file.
-    ///
-    /// # Arguments
-    ///
-    /// - `self`:     A reference to the `Diff` instance invoking the method.
-    /// - `filepath`: A reference to the `PathBuf` representing the file's path.
-    ///
-    /// # Returns
-    ///
-    /// Returns a `Result` containing the hexadecimal representation of the calculated SHA-1 hash
-    /// if successful, or an error of type `NeocitiesErr` if an issue occurs.
-    fn hash(&self, filepath: &PathBuf) -> Result<String, NeocitiesErr> {
-        // Read the contents of the file into a byte vector.
-        let contents = fs::read(filepath)?;
-
-        // Initialize a SHA-1 hasher instance.
-        let mut hasher = Sha1::new();
-
-        // Update the hasher with the file contents.
-        hasher.update(contents);
-
-        // Finalize the hashing process and retrieve the result as an array of bytes.
-        let result = hasher.finalize();
-
-        // Format the result bytes as a hexadecimal string.
-        let sha_str = format!("{:02x}", result);
-
-        // Return the hexadecimal hash string.
-        Ok(sha_str)
     }
 
     /// Identifies and returns the keys of items that exist in the source map but are missing in
@@ -407,7 +386,6 @@ impl<'a> Diff<'a> {
             keys.push(k.to_owned());
         }
 
-        // Return the vector containing the keys of missing items.
         keys
     }
 
@@ -444,7 +422,6 @@ impl<'a> Diff<'a> {
             keys.push(k.to_owned());
         }
 
-        // Return the vector containing the keys of shared items.
         keys
     }
 
@@ -454,49 +431,30 @@ impl<'a> Diff<'a> {
     /// to determine the differences between them. It identifies files that exist remotely but not
     /// locally, files that exist locally but not remotely, and files that are shared between both
     /// locations. For shared files, it compares their SHA-1 hash values to detect modifications.
-    ///
-    /// # Arguments
-    ///
-    /// - `self`:  A reference to the `Diff` instance invoking the method.
-    /// - `local`: A `PathBuf` representing the local directory to compare.
-    ///
-    /// # Returns
-    ///
-    /// Returns a `Result` containing a vector of `Item` instances that represent the differences
-    /// between local and remote file information. If successful, the vector contains the files
-    /// with differences; otherwise, an error of type `NeocitiesErr` is returned.
-    fn diff(&self, local: PathBuf) -> Result<Vec<Item>, NeocitiesErr> {
-        // Create a HashMap to store local item information.
-        let mut local_map: HashMap<String, Item> = HashMap::new();
-
-        // Populate the local_map with information about local items.
-        self.local_items(&mut local_map, local.clone())?;
-
-        // Create a HashMap to store remote item information.
-        let mut remote_map: HashMap<String, Item> = HashMap::new();
-
-        let list_fetch = self.get_nc_list_fetch()?;
-
-        // Populate the remote_map with information about remote items.
-        self.relevant_remote_items(&mut remote_map, local, list_fetch)?;
-
+    fn diff(
+        &self,
+        mut local_map: HashMap<String, Item>,
+        mut remote_map: HashMap<String, Item>,
+    ) -> Result<Vec<Item>, NeocitiesErr> {
         // Create a vector to store items with differences.
         let mut diff_list: Vec<Item> = Vec::new();
 
         // Identify keys of items that exist remotely but not locally.
         for key in self.missing_items(&remote_map, &local_map) {
+            // Check if the remote item exists and remove it from remote_map.
             if let Some(mut item) = remote_map.remove(&key) {
+                // Mark the item as missing locally and add it to the diff_list.
                 item.remark = String::from("\x1b[;93m(missing) local not found\x1b[;0m");
-
                 diff_list.push(item);
             }
         }
 
         // Identify keys of items that exist locally but not remotely.
         for key in self.missing_items(&local_map, &remote_map) {
+            // Check if the local item exists and remove it from local_map.
             if let Some(mut item) = local_map.remove(&key) {
+                // Mark the item as missing remotely and add it to the diff_list.
                 item.remark = String::from("\x1b[;93m(missing) remote not found\x1b[;0m");
-
                 diff_list.push(item);
             }
         }
@@ -523,9 +481,11 @@ impl<'a> Diff<'a> {
 
             // Compare SHA-1 hash values to detect modifications.
             if remote_item.file.sha1_hash != local_item.file.sha1_hash {
+                // Parse timestamps from file objects.
                 let local_date = local_item.file.parse_timestamp()?;
                 let remote_date = remote_item.file.parse_timestamp()?;
 
+                // Check if the local version is ahead of the remote version or vice versa.
                 if local_date > remote_date {
                     local_item.remark = format!(
                         "\x1b[1;32m(ahead) local ahead of remote - {}\x1b[0m",
@@ -556,7 +516,6 @@ impl<'a> Diff<'a> {
             }
         }
 
-        // Return the vector containing items with differences.
         Ok(diff_list)
     }
 }
@@ -581,8 +540,26 @@ impl<'a> Executable for Diff<'a> {
         // Parse the provided arguments to obtain a local path.
         let local = self.parse_args(args)?;
 
+        // Create a HashMap to store local item information.
+        let mut local_map: HashMap<String, Item> = HashMap::new();
+
+        // Populate the local_map with information about local items.
+        self.local_items(&mut local_map, local.clone())?;
+
+        // Create a HashMap to store remote item information.
+        let mut remote_map: HashMap<String, Item> = HashMap::new();
+
+        // Fetch a list of all remote files from the Neocities API. Passing `None` as an argument
+        // retrieves a complete list of all files and subdirectories, where passing a path argument
+        // would retrieve a flat list of files for the path, not including the contents of
+        // subdirectories. See the [Neocities API reference](https://neocities.org/api).
+        let list_fetch = NcList::fetch(None)?;
+
+        // Populate the remote_map with information about remote items.
+        self.remote_items(&mut remote_map, local, list_fetch)?;
+
         // Get the differences between local and remote versions.
-        let items = self.diff(local)?;
+        let items = self.diff(local_map, remote_map)?;
 
         // Check if there are no differences.
         if items.len() < 1 {
@@ -597,7 +574,6 @@ impl<'a> Executable for Diff<'a> {
             self.write(output.as_str(), &stdout)?;
         }
 
-        // Execution completed successfully.
         Ok(())
     }
 
@@ -642,10 +618,8 @@ mod tests {
         error::NeocitiesErr,
     };
 
-    // use chrono::{TimeZone, Utc};
     use tempfile;
 
-    // Define a unit test function for the `new` function.
     #[test]
     fn test_new() {
         // Call the `new` function to create a `Diff` instance.
@@ -674,7 +648,6 @@ mod tests {
         assert_eq!(diff.usage, expected_usage);
     }
 
-    // Define a unit test function for the `write` method.
     #[test]
     fn test_write() {
         // Create a test message.
@@ -702,7 +675,6 @@ mod tests {
         assert_eq!(written_str, msg);
     }
 
-    // Define a unit test function for the `write_usage` method.
     #[test]
     fn test_write_usage() {
         // Create a test `Diff` instance with custom descriptions and usage information.
@@ -732,7 +704,6 @@ mod tests {
         assert!(written_str.contains("baz"));
     }
 
-    // Define a unit test function for the `parse_args` method when provided valid arguments.
     #[test]
     fn test_parse_args_valid() {
         // Create a test vector of arguments with a single valid directory path.
@@ -754,7 +725,6 @@ mod tests {
         assert_eq!(path_buf, PathBuf::from("tests/fixtures/"));
     }
 
-    // Define a unit test function for the `parse_args` method when provided an empty argument list.
     #[test]
     fn test_parse_args_invalid_empty() {
         // Create an empty vector of arguments.
@@ -770,7 +740,6 @@ mod tests {
         assert!(result.is_err());
     }
 
-    // Define a unit test function for the `parse_args` method when provided an invalid, nonexistent path.
     #[test]
     fn test_parse_args_invalid_nonexistent() {
         // Create a test vector of arguments with a nonexistent directory path.
@@ -786,7 +755,6 @@ mod tests {
         assert!(result.is_err());
     }
 
-    // Define a unit test function for the `parse_args` method when provided an invalid, non-directory path.
     #[test]
     fn test_parse_args_invalid_not_a_directory() {
         // Create a temporary file path for testing and convert it to a string.
@@ -810,7 +778,6 @@ mod tests {
         assert!(result.is_err());
     }
 
-    // Define a unit test function for the `format_path` method.
     #[test]
     fn test_format_path() -> Result<(), NeocitiesErr> {
         // Create a new `Diff` instance to use in the test.
@@ -856,11 +823,9 @@ mod tests {
         // Assert that the formatted path is "foo/bar/baz.html".
         assert_eq!(diff.format_path(&mock_path).unwrap(), "foo/bar/baz.html");
 
-        // Return Ok(()) to indicate that all test cases passed successfully.
         Ok(())
     }
 
-    // Define a unit test function for the `get_local_item` method.
     #[test]
     fn test_get_local_item_file() -> Result<(), NeocitiesErr> {
         // Create a temporary directory and a test file inside it.
@@ -889,11 +854,9 @@ mod tests {
         // Assert that the `item` represents a file (not a directory).
         assert_eq!(item.file.is_directory, false);
 
-        // Return Ok(()) to indicate that all test cases passed successfully.
         Ok(())
     }
 
-    // Define a unit test function for the `get_local_item` method when given a directory path.
     #[test]
     fn test_get_local_item_directory() -> Result<(), NeocitiesErr> {
         // Create a temporary directory.
@@ -920,11 +883,9 @@ mod tests {
         // Assert that the `item` represents a directory (not a file).
         assert_eq!(item.file.is_directory, true);
 
-        // Return Ok(()) to indicate that all test cases passed successfully.
         Ok(())
     }
 
-    // Define a unit test function for the `local_items` method.
     #[test]
     fn test_local_items() -> Result<(), NeocitiesErr> {
         // Create a temporary directory for testing.
@@ -957,13 +918,11 @@ mod tests {
         // Check that the map contains the expected number of items (3 in this case).
         assert_eq!(map.len(), 3);
 
-        // Return Ok(()) to indicate that all test cases passed successfully.
         Ok(())
     }
 
-    // Define a unit test function for the `relevant_remote_items` method.
     #[test]
-    fn test_relevant_remote_items() -> Result<(), NeocitiesErr> {
+    fn test_remote_items() -> Result<(), NeocitiesErr> {
         // Create a test `Diff` instance for testing.
         let diff = Diff::new();
 
@@ -1002,7 +961,7 @@ mod tests {
         let target_path = PathBuf::from("test_dir");
 
         // Call the `relevant_remote_items` method with the mock map, target path, and mock list response.
-        diff.relevant_remote_items(
+        diff.remote_items(
             &mut mock_remote_map,
             target_path.clone(),
             mock_list_response,
@@ -1019,13 +978,11 @@ mod tests {
         assert_eq!(remote_item.on_remote, Some(true));
         assert_eq!(remote_item.on_local, None);
 
-        // Return Ok(()) to indicate that the test passed successfully.
         Ok(())
     }
 
-    // Define a unit test function for the `hash` method.
     #[test]
-    fn test_hash_file() -> Result<(), NeocitiesErr> {
+    fn test_hash() -> Result<(), NeocitiesErr> {
         // Create a temporary directory for testing.
         let temp_dir = tempfile::tempdir()?;
 
@@ -1051,11 +1008,9 @@ mod tests {
         // Check that the result matches the expected SHA-1 hash.
         assert_eq!(result, expected_hash);
 
-        // Return Ok(()) to indicate that the test passed successfully.
         Ok(())
     }
 
-    // Define a unit test function for the `missing_items` method.
     #[test]
     fn test_missing_items() -> Result<(), NeocitiesErr> {
         // Create a test `Diff` instance for testing.
@@ -1149,11 +1104,9 @@ mod tests {
         // Check that there are no missing items in the updated `mock_map_b`.
         assert_eq!(result_2.len(), 0);
 
-        // Return Ok(()) to indicate that the test passed successfully.
         Ok(())
     }
 
-    // Define a unit test function for the `shared_items` method.
     #[test]
     fn test_shared_items() -> Result<(), NeocitiesErr> {
         // Create a test `Diff` instance for testing.
@@ -1214,7 +1167,72 @@ mod tests {
         // Check that there are no shared items in the updated `mock_map_b`.
         assert_eq!(result_2.len(), 0);
 
-        // Return Ok(()) to indicate that the test passed successfully.
         Ok(())
+    }
+
+    #[test]
+    fn test_diff() {
+        // Create a sample Neocities instance for testing.
+        let diff = Diff::new();
+
+        // Create sample HashMaps for local and remote items.
+        let mut local_map: HashMap<String, Item> = HashMap::new();
+        let mut remote_map: HashMap<String, Item> = HashMap::new();
+
+        // Populate the local and remote HashMaps with sample items.
+        // You can customize these items as needed for your test.
+        local_map.insert(
+            "local_item1".to_string(),
+            Item {
+                file: File {
+                    path: "path/to/local_item1".to_string(),
+                    size: Some(42),
+                    is_directory: false,
+                    sha1_hash: Some("local_hash1".to_string()),
+                    updated_at: "2023-09-03T12:00:00Z".to_string(),
+                },
+                on_remote: None,
+                on_local: Some(true),
+                remark: String::new(),
+            },
+        );
+
+        remote_map.insert(
+            "remote_item1".to_string(),
+            Item {
+                file: File {
+                    path: "path/to/remote_item1".to_string(),
+                    sha1_hash: Some("remote_hash1".to_string()),
+                    size: Some(42),
+                    is_directory: false,
+                    updated_at: "2023-09-03T12:00:00Z".to_string(),
+                },
+                on_remote: Some(true),
+                on_local: None,
+                remark: String::new(),
+            },
+        );
+
+        // Call the diff method to compare the local and remote items.
+        let result = diff.diff(local_map, remote_map);
+
+        // Check if the method completed successfully.
+        assert!(result.is_ok());
+
+        // Retrieve the diff list from the result.
+        let diff_list = result.unwrap();
+
+        // Add assertions to check the contents of the diff_list.
+        // You can customize these assertions based on your test data.
+        // Adjust this based on the number of expected differences.
+        assert_eq!(diff_list.len(), 2);
+
+        // Check if the expected items with differences are present in the diff_list.
+        assert!(diff_list
+            .iter()
+            .any(|item| item.file.path == "path/to/local_item1"));
+        assert!(diff_list
+            .iter()
+            .any(|item| item.file.path == "path/to/remote_item1"));
     }
 }
