@@ -69,14 +69,6 @@ impl Info {
 
         self.write("tags", format!("{:?}", &ir.info.tags).as_str(), &mut writer)?;
 
-        let hash_value: &str;
-        if let serde_json::Value::String(v) = &ir.info.latest_ipfs_hash {
-            hash_value = v.as_str();
-        } else {
-            hash_value = "null";
-        }
-
-        self.write("latest_ipfs_hash", &hash_value, &mut writer)?;
         Ok(())
     }
 }
@@ -151,7 +143,6 @@ mod tests {
             last_updated: String::from(date),
             domain: serde_json::Value::Null,
             tags: Vec::new(),
-            latest_ipfs_hash: serde_json::Value::Null,
         };
 
         let mock = info::InfoResponse {

@@ -40,9 +40,6 @@ pub struct Info {
     pub domain: Value,
     /// Tags a Neocities user sets about the site
     pub tags: Vec<String>,
-    /// A hash associated with the InterPlanetary File System protocol
-    #[serde(rename = "latest_ipfs_hash")]
-    pub latest_ipfs_hash: Value,
 }
 
 impl NcInfo {
@@ -120,7 +117,6 @@ mod tests {
                 "last_updated":  "Tue, 12 May 2013 18:49:21 +0000", 
                 "domain": null,
                 "tags": [],
-                "latest_ipfs_hash": null
             }
         }"#;
 
