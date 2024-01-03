@@ -8,7 +8,7 @@
   </a>
 </p>
 
-# A Neocities client written in Rust
+<h1 align="center">A Neocities client written in Rust</h1>
 
 [![Neocities CLI Crate](https://img.shields.io/crates/v/neocities_cli)](https://crates.io/crates/neocities_cli)
 [![Neocities CLI docs.rs](https://img.shields.io/docsrs/neocities_cli)](https://docs.rs/neocities_cli/0.1.2/neocities_cli/index.html)
