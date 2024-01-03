@@ -116,7 +116,7 @@ mod tests {
                 "created_at": "Tue, 12 May 2013 18:49:21 +0000",
                 "last_updated":  "Tue, 12 May 2013 18:49:21 +0000", 
                 "domain": null,
-                "tags": [],
+                "tags": []
             }
         }"#;
 
