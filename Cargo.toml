@@ -8,6 +8,7 @@ repository = "https://github.com/ge3224/neocities"
 license = "MIT"
 readme = "README.md"
 edition = "2021"
+include = ["**/*.rs", "Cargo.toml"]
 
 [dependencies]
 thiserror = "1.0.38"
