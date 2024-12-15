@@ -5,11 +5,16 @@ use crate::{
 };
 use chrono::{TimeZone, Utc};
 use sha1::{Digest, Sha1};
+#[cfg(target_os = "linux")]
+use std::os::linux::fs::MetadataExt;
+#[cfg(target_family = "unix")]
+use std::os::unix::fs::MetadataExt;
+#[cfg(target_os = "windows")]
+use std::os::windows::fs::MetadataExt;
 use std::{
     collections::HashMap,
     format,
     fs::{self, read_dir},
-    os::linux::fs::MetadataExt,
     path::{Component, Path, PathBuf},
 };
 
@@ -219,7 +224,16 @@ impl<'a> Diff<'a> {
         let meta = path.metadata()?;
 
         // Extract the modification time from the metadata.
+        #[cfg(target_os = "linux")]
         let mod_time = meta.st_mtime();
+        #[cfg(target_family = "unix")]
+        let mod_time = meta.mtime();
+        #[cfg(target_os = "windows")]
+        let mod_time = i64::try_from(
+            meta.modified()?
+                .duration_since(std::time::SystemTime::UNIX_EPOCH)?
+                .as_secs(),
+        )?;
 
         // Convert the modification time to a formatted string.
         let updated_at = match Utc.timestamp_opt(mod_time, 0) {
@@ -232,8 +246,14 @@ impl<'a> Diff<'a> {
         let mut sha1_hash: Option<String> = None;
 
         // If the path is a file, calculate and store its size and SHA-1 hash.
+        #[cfg(target_os = "linux")]
+        let file_size = meta.st_size();
+        #[cfg(target_family = "unix")]
+        let file_size = meta.size();
+        #[cfg(target_os = "windows")]
+        let file_size = meta.file_size();
         if path.is_file() {
-            size = Some(i64::try_from(meta.st_size())?);
+            size = Some(i64::try_from(file_size)?);
             sha1_hash = Some(self.hash(path)?);
         }
 
