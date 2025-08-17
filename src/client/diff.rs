@@ -7,7 +7,7 @@ use chrono::{TimeZone, Utc};
 use sha1::{Digest, Sha1};
 #[cfg(target_os = "linux")]
 use std::os::linux::fs::MetadataExt;
-#[cfg(target_family = "unix")]
+#[cfg(target_os = "macos")]
 use std::os::unix::fs::MetadataExt;
 #[cfg(target_os = "windows")]
 use std::os::windows::fs::MetadataExt;
